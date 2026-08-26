@@ -455,6 +455,7 @@ nav.tabs button:active{opacity:.6}
     <button class="btn ghost" id="newCancel" style="flex:0 0 96px" hidden>취소</button>
     <button class="btn" id="saveCust">고객카드 생성</button>
   </div>
+  <button class="btn line sm" id="newReset" style="width:100%;margin-top:10px" hidden>입력한 내용 지우기</button>
   <div class="note" id="newNote">사진과 기록은 이 기기에 저장되고, 구글 시트를 연결하면 자동으로 함께 보관됩니다.</div>
 </section>
 
@@ -465,7 +466,8 @@ nav.tabs button:active{opacity:.6}
 
   <h2 class="sec">담당자 이름</h2>
   <div class="card">
-    <div class="field"><input class="inp" id="s-owner" placeholder="예: 최환준"></div>
+    <div class="field"><input class="inp" id="s-owner" placeholder="아직 정하지 않았습니다" readonly></div>
+    <button class="btn ghost sm" id="s-ownerEdit" style="width:100%">담당자 이름 수정</button>
     <div class="note">여러 명이 나눠 쓸 때 누가 만든 기록인지 구분합니다. <b>팀원 명단과 똑같이 적어야</b> 공유가 연결됩니다.</div>
     <div class="ai" id="ownerStat" hidden></div>
   </div>
@@ -585,6 +587,26 @@ nav.tabs button:active{opacity:.6}
   <div class="btnrow" style="margin-top:6px">
     <button class="btn ghost" id="e-cancel" style="flex:0 0 96px">취소</button>
     <button class="btn" id="e-save">저장</button>
+  </div>
+</div>
+
+<div class="sheet" id="ownerSheet" hidden>
+  <div class="grab"></div>
+  <h3>담당자 이름을 바꿀까요?</h3>
+  <div class="warn">
+    이름을 바꾸면 <b>새 이름으로 담당·공유된 고객만</b> 이 기기에 남습니다.
+    지금 보이는 고객이 화면에서 사라질 수 있습니다.
+    <br><br>
+    사라진 고객은 <b>구글 시트에 그대로 있습니다.</b> 이름을 되돌리고 다시 저장하면 전부 돌아옵니다.
+  </div>
+  <div class="field" style="margin-top:14px">
+    <label for="s-ownerNew">새 담당자 이름</label>
+    <input class="inp" id="s-ownerNew" placeholder="예: 최환준" autocomplete="off">
+  </div>
+  <div class="ai" id="ownerHint" hidden></div>
+  <div class="btnrow" style="margin-top:14px">
+    <button class="btn ghost" id="ownerCancel" style="flex:0 0 108px">취소</button>
+    <button class="btn" id="ownerSave">이름 바꾸기</button>
   </div>
 </div>
 
@@ -1237,7 +1259,9 @@ async function usePhoto(file){
       $('cropMsg').textContent='테두리를 못 찾았습니다';
       setCropBtns(false);
     }
+    paintDraftState();
     await readCard(draftPhoto);
+    paintDraftState();
   }catch(e){ toast(e.message||'사진을 불러오지 못했습니다') }
 }
 function setCropBtns(on){
@@ -1289,7 +1313,7 @@ $('fGroups').addEventListener('click',e=>{
   const b=e.target.closest('button[data-g]'); if(!b) return;
   const g=b.dataset.g;
   draftGroups=draftGroups.includes(g)?draftGroups.filter(x=>x!==g):[...draftGroups,g];
-  renderFormGroups();
+  renderFormGroups(); paintDraftState();
 });
 
 function clearForm(){
@@ -1301,7 +1325,7 @@ function clearForm(){
   $('newSub').textContent='명함을 촬영하면 기본 정보가 자동으로 입력됩니다';
   $('saveCust').textContent='고객카드 생성';
   $('firstMemoWrap').hidden=false; $('newCancel').hidden=true; $('newNote').hidden=false;
-  renderFormGroups();
+  renderFormGroups(); paintDraftState();
 }
 function loadForm(c){
   editUid=c.uid;
@@ -1317,10 +1341,22 @@ function loadForm(c){
   $('newSub').textContent=(c.name||c.company||'고객')+' 님의 기본 정보를 고칩니다';
   $('saveCust').textContent='수정 내용 저장';
   $('firstMemoWrap').hidden=true; $('newCancel').hidden=false; $('newNote').hidden=true;
-  renderFormGroups();
+  renderFormGroups(); paintDraftState();
   go('new');
 }
 $('newCancel').addEventListener('click',()=>{ const u=editUid; clearForm(); if(u){ go('list'); openDetail(u) } });
+$('newReset').addEventListener('click',()=>{
+  if(!confirm('입력하던 내용을 지웁니다.')) return;
+  clearForm(); toast('지웠습니다');
+});
+/* 입력한 게 있을 때만 지우기 버튼을 보여 줍니다 */
+function paintDraftState(){
+  const has = !!draftPhoto || draftGroups.length>0 ||
+    ['f-name','f-company','f-title','f-phone','f-email','f-addr','f-memo'].some(id=>$(id).value.trim());
+  $('newReset').hidden = !has || !!editUid;
+}
+['f-name','f-company','f-title','f-phone','f-email','f-addr','f-memo']
+  .forEach(id=>$(id).addEventListener('input',paintDraftState));
 
 $('saveCust').addEventListener('click',async()=>{
   const name=$('f-name').value.trim(), company=$('f-company').value.trim();
@@ -1648,20 +1684,28 @@ function openSheet(auid){
   $('e-time').value=at.slice(11,16);
   $('e-due').value=a?(a.due||''):'';
   eDel.hidden=!a;
-  $('back').hidden=false; $('sheet').hidden=false;
-  requestAnimationFrame(()=>{ $('back').classList.add('on'); $('sheet').classList.add('on') });
+  openSheetEl('sheet');
   setTimeout(()=>$('e-body').focus(),240);
 }
-function closeSheet(){
-  if($('sheet').hidden) return;
-  $('sheet').classList.remove('on');
-  if($('askSheet').hidden && $('shareSheet').hidden) $('back').classList.remove('on');
-  setTimeout(()=>{ $('sheet').hidden=true;
-    if($('askSheet').hidden && $('shareSheet').hidden) $('back').hidden=true },240);
+const SHEET_IDS=['sheet','askSheet','shareSheet','ownerSheet'];
+function otherSheetOpen(except){
+  return SHEET_IDS.some(id=>id!==except && $(id) && !$(id).hidden);
 }
+function openSheetEl(id){
+  $('back').hidden=false; $(id).hidden=false;
+  requestAnimationFrame(()=>{ $('back').classList.add('on'); $(id).classList.add('on') });
+}
+function closeSheetEl(id){
+  if(!$(id) || $(id).hidden) return;
+  $(id).classList.remove('on');
+  if(!otherSheetOpen(id)) $('back').classList.remove('on');
+  setTimeout(()=>{ $(id).hidden=true; if(!otherSheetOpen(id)) $('back').hidden=true },240);
+}
+function closeAllSheets(){ SHEET_IDS.forEach(closeSheetEl) }
+function closeSheet(){ closeSheetEl('sheet') }
 $('addEntry').addEventListener('click',()=>openSheet(null));
 $('e-cancel').addEventListener('click',closeSheet);
-$('back').addEventListener('click',()=>{ closeSheet(); closeAsk(); closeShare() });
+$('back').addEventListener('click',closeAllSheets);
 $('e-save').addEventListener('click',async()=>{
   const body=$('e-body').value.trim();
   if(!body){ toast('내용을 입력해주세요'); $('e-body').focus(); return }
@@ -1741,26 +1785,6 @@ async function makeVCard(c){
   L.push('END:VCARD');
   return L.map(vFold).join('\r\n');
 }
-/* 안드로이드는 연락처 앱의 "새 연락처" 화면을 바로 열 수 있습니다.
-   파일을 거치지 않으므로 저장까지 한 번만 더 누르면 됩니다.
-   (다만 이 방식으로는 명함 사진을 같이 넘길 수 없습니다) */
-var IS_ANDROID = /Android/i.test(navigator.userAgent || '');
-
-function contactIntentUrl(c){
-  const e=v=>encodeURIComponent(String(v==null?'':v));
-  const p=['intent:#Intent','action=android.intent.action.INSERT','type=vnd.android.cursor.dir/contact'];
-  const name=(c.name||c.company||'').trim();
-  if(name)      p.push('S.name='+e(name));
-  if(c.phone)   p.push('S.phone='+e(c.phone));
-  if(c.email)   p.push('S.email='+e(c.email));
-  if(c.company) p.push('S.company='+e(c.company));
-  if(c.title)   p.push('S.job_title='+e(c.title));
-  if(c.addr)    p.push('S.postal='+e(c.addr));
-  const note=contactNote(c);
-  if(note)      p.push('S.notes='+e(note));
-  p.push('end');
-  return p.join(';');
-}
 function contactNote(c){
   const recent=custActs(c.uid).slice(0,5)
     .map(a=>'['+KIND[a.kind].ko+'] '+String(a.body).replace(/\s+/g,' ').slice(0,80));
@@ -1771,43 +1795,48 @@ function contactNote(c){
   ].filter(Boolean).join('\n');
 }
 
+/* 연락처 저장.
+   브라우저에서 주소록에 곧바로 쓰는 방법은 없습니다. 가장 짧은 길은 공유 시트로,
+   거기서 연락처를 고르면 곧장 "새 연락처" 화면이 뜹니다.
+   (안드로이드 인텐트로 연락처 앱을 직접 여는 방법은 크롬이 막아 둡니다 —
+    브라우저에서 열리도록 선언한 앱만 띄울 수 있는데 연락처 편집 화면은 그렇지 않습니다.) */
 async function saveContact(c){
   if(!c || !(c.name||c.company||c.phone||c.email)){ toast('저장할 정보가 없습니다'); return }
-
-  if(IS_ANDROID){
-    // 연락처 앱이 열리면 이 화면이 가려집니다. 그걸로 성공 여부를 판단합니다.
-    let left=false;
-    const mark=()=>{ left=true };
-    document.addEventListener('visibilitychange',mark);
-    window.addEventListener('pagehide',mark);
-    try{ window.location.href=contactIntentUrl(c) }catch(e){ left=false }
-    setTimeout(()=>{
-      document.removeEventListener('visibilitychange',mark);
-      window.removeEventListener('pagehide',mark);
-      if(!left && !document.hidden) shareVcf(c);   // 안 열렸으면 파일 방식으로
-    },1400);
-    return;
-  }
-  shareVcf(c);
-}
-
-/* 아이폰·PC 등 — 연락처 파일(.vcf)로 넘깁니다. 명함 사진도 함께 들어갑니다. */
-async function shareVcf(c){
   toast('연락처를 준비하는 중…');
-  const text=await makeVCard(c);
-  const blob=new Blob([text],{type:'text/vcard;charset=utf-8'});
+
+  let text;
+  try{ text=await makeVCard(c) }
+  catch(e){ toast('연락처를 만들지 못했습니다'); return }
+
   const fname=(c.name||c.company||'contact').replace(/[\\/:*?"<>|\s]/g,'').slice(0,24)+'.vcf';
-  try{
-    const file=new File([blob],fname,{type:'text/vcard'});
-    if(navigator.canShare && navigator.canShare({files:[file]})){
-      await navigator.share({files:[file],title:fname});
-      return;
+  const title=(c.name||c.company||'연락처');
+
+  // 브라우저마다 허용하는 형식이 달라 바꿔 가며 시도합니다
+  const mimes=['text/vcard','text/x-vcard','text/directory'];
+  for(let i=0;i<mimes.length;i++){
+    try{
+      const file=new File([new Blob([text],{type:mimes[i]})],fname,{type:mimes[i]});
+      if(navigator.canShare){
+        if(!navigator.canShare({files:[file]})) continue;
+        await navigator.share({files:[file],title:title});
+        return;
+      }
+      if(navigator.share){          // canShare 가 없는 예전 브라우저
+        await navigator.share({files:[file],title:title});
+        return;
+      }
+    }catch(e){
+      if(e && e.name==='AbortError') return;    // 사용자가 공유 시트를 닫음
+      // 형식이 거부된 경우이므로 다음 형식으로 넘어갑니다
     }
-  }catch(e){ if(e && e.name==='AbortError') return }
+  }
+
+  // 공유가 안 되는 환경 — 파일로 내려받습니다
+  const blob=new Blob([text],{type:'text/vcard;charset=utf-8'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob); a.download=fname; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),4000);
-  toast('연락처 파일을 만들었습니다 — 파일을 열면 주소록에 추가됩니다');
+  toast('연락처 파일을 내려받았습니다 — 알림을 눌러 열면 주소록에 추가됩니다');
 }
 
 /* ═════════ 공유 대상 고르기 ═════════ */
@@ -1816,16 +1845,9 @@ function openShare(){
   const c=custs.find(x=>x.uid===curUid); if(!c) return;
   sharePick=[...sharedOf(c)];
   renderShareList();
-  $('back').hidden=false; $('shareSheet').hidden=false;
-  requestAnimationFrame(()=>{ $('back').classList.add('on'); $('shareSheet').classList.add('on') });
+  openSheetEl('shareSheet');
 }
-function closeShare(){
-  if($('shareSheet').hidden) return;
-  $('shareSheet').classList.remove('on');
-  if($('sheet').hidden && $('askSheet').hidden) $('back').classList.remove('on');
-  setTimeout(()=>{ $('shareSheet').hidden=true;
-    if($('sheet').hidden && $('askSheet').hidden) $('back').hidden=true },240);
-}
+function closeShare(){ closeSheetEl('shareSheet') }
 function renderShareList(){
   const c=custs.find(x=>x.uid===curUid);
   const others=(cfg.members||[]).filter(m=>m!==(c&&String(c.owner||'').trim()));
@@ -1868,8 +1890,7 @@ function openAsk(c){
   const sub=[c.title,c.company].filter(Boolean).join(' · ') || c.phone || c.email || '';
   $('askWho').innerHTML=av+'<div class="m"><div class="nm">'+esc(c.name||c.company||'고객')+'</div>'+
     '<div class="sub">'+esc(sub)+'</div></div>';
-  $('back').hidden=false; $('askSheet').hidden=false;
-  requestAnimationFrame(()=>{ $('back').classList.add('on'); $('askSheet').classList.add('on') });
+  openSheetEl('askSheet');
 }
 function closeAsk(){
   if($('askSheet').hidden) return;
@@ -1996,9 +2017,41 @@ window.addEventListener('online',()=>{ pill(); syncNow(true) });
 window.addEventListener('offline',pill);
 
 /* ═════════ 설정 ═════════ */
-function paintOwner(){ $('ownerName').textContent=cfg.owner||'미설정' }
-$('s-owner').addEventListener('input',e=>{
-  cfg.owner=e.target.value.trim(); cfgSave(); paintOwner(); renderMembers(); renderChips();
+function paintOwner(){
+  $('ownerName').textContent=cfg.owner||'미설정';
+  $('s-owner').value=cfg.owner||'';
+}
+$('s-ownerEdit').addEventListener('click',()=>{
+  $('s-ownerNew').value=cfg.owner||'';
+  checkOwnerName();
+  openSheetEl('ownerSheet');
+  setTimeout(()=>$('s-ownerNew').focus(),260);
+});
+$('ownerCancel').addEventListener('click',()=>closeSheetEl('ownerSheet'));
+$('s-ownerNew').addEventListener('input',checkOwnerName);
+function checkOwnerName(){
+  const v=$('s-ownerNew').value.trim(), ms=cfg.members||[], h=$('ownerHint');
+  if(!v){ h.hidden=false; h.className='ai'; h.textContent='비워 두면 시트의 모든 고객을 받습니다'; return }
+  if(!ms.length){ h.hidden=true; return }
+  if(ms.includes(v)){ h.hidden=false; h.className='ai ok'; h.textContent='팀원 명단에 있는 이름입니다'; }
+  else { h.hidden=false; h.className='ai err'; h.textContent='명단에 없는 이름입니다 — 이대로는 공유를 못 받습니다'; }
+}
+$('ownerSave').addEventListener('click',async()=>{
+  const v=$('s-ownerNew').value.trim();
+  if(v===(cfg.owner||'')){ closeSheetEl('ownerSheet'); return }
+  cfg.owner=v;
+  // 이름이 바뀌면 받아올 기준 시각을 지웁니다.
+  // 이걸 안 하면 "그 시각 이후 바뀐 것"만 요청해서 시트에 있는 고객이 돌아오지 않습니다.
+  cfg.lastPull=0;
+  cfgSave(); paintOwner(); renderMembers(); render();
+  closeSheetEl('ownerSheet');
+  if(cfg.sync && navigator.onLine){
+    toast('이름을 바꿨습니다 — 시트에서 다시 받아오는 중…');
+    const r=await syncNow(true);
+    toast(r.ok?'받아왔습니다':'받아오지 못했습니다 — 설정에서 지금 동기화를 눌러주세요');
+  }else{
+    toast('담당자 이름을 바꿨습니다');
+  }
 });
 function renderMembers(){
   const box=$('memList'), ms=cfg.members||[];
@@ -2110,9 +2163,9 @@ $('s-syncTest').addEventListener('click',async()=>{
       body:JSON.stringify({cust:[],act:[],since:now()})});
     const d=await r.json();
     if(!d.ok) throw new Error(d.error||'서버 오류');
-    cfg.sync=u; cfgSave(); pill();
+    cfg.sync=u; cfg.lastPull=0; cfgSave(); pill();
     st.className='ai ok'; st.textContent='연결 성공 — 시트에 고객 '+(d.totalCust||0)+'명, 기록 '+(d.totalAct||0)+'건이 있습니다';
-    cfg.lastPull=0; cfgSave(); syncNow(true);
+    syncNow(true);
   }catch(e){
     st.className='ai err';
     st.textContent='실패: '+String(e.message||e).slice(0,90)+' (배포할 때 액세스 권한을 "모든 사용자"로 했는지 확인하세요)';
@@ -2121,6 +2174,8 @@ $('s-syncTest').addEventListener('click',async()=>{
 $('s-syncNow').addEventListener('click',async()=>{
   if(!cfg.sync){ toast('먼저 주소를 연결하세요'); return }
   const st=$('syncStat'); st.hidden=false; st.className='ai'; st.innerHTML='<span class="spin"></span>동기화 중…';
+  // 손으로 누른 동기화는 늘 전체를 다시 받습니다. 뭔가 어긋났을 때 되살리는 버튼이기도 합니다.
+  cfg.lastPull=0; cfgSave();
   const r=await syncNow(false);
   st.className=r.ok?'ai ok':'ai err';
   st.textContent=r.ok?'동기화 완료':('실패: '+(r.msg||''));
@@ -2179,11 +2234,11 @@ function go(p){
     $('t-'+k).setAttribute('aria-selected',String(k===p));
   });
   if(p==='set'){ renderGroupManage(); renderMembers(); paintUsage() }
-  if(p==='new') renderFormGroups();
+  if(p==='new'){ renderFormGroups(); paintDraftState() }
   window.scrollTo(0,0);
 }
 $('t-list').addEventListener('click',()=>go('list'));
-$('t-new').addEventListener('click',()=>{ if(!editUid) clearForm(); go('new') });
+$('t-new').addEventListener('click',()=>go('new'));
 $('t-set').addEventListener('click',()=>go('set'));
 
 window.addEventListener('scroll',()=>{ $('appbar').classList.toggle('stuck',window.scrollY>4) },{passive:true});
@@ -2201,7 +2256,6 @@ $('detail').addEventListener('scroll',()=>{ $('dbar').classList.toggle('stuck',$
   }
   custs.forEach(c=>{ c.groups=c.groups||[]; c.groups.forEach(ensureGroup) });
 
-  $('s-owner').value=cfg.owner||'';
   $('s-key').value=cfg.key||'';
   $('s-sync').value=cfg.sync||'';
   $('s-askContact').checked=cfg.askContact!==false;
