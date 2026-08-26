@@ -25,19 +25,19 @@ echo " 회사와 첫 관리자 계정 만들기"
 echo "──────────────────────────────────"
 echo
 
-read -r -p "회사 코드 (영문 대문자·숫자 4~12자) [ACTIVA]: " CODE
-CODE="${CODE:-ACTIVA}"
+read -r -p "회사 코드 (영문 대문자·숫자 4~12자): " CODE
+if [ -z "$CODE" ]; then echo "회사 코드를 입력해 주세요."; exit 1; fi
 CODE="$(echo "$CODE" | tr '[:lower:]' '[:upper:]')"
 
-read -r -p "회사 이름 [액티바코리아]: " CONAME
-CONAME="${CONAME:-액티바코리아}"
+read -r -p "회사 이름 (예: 홍길동컴퍼니): " CONAME
+if [ -z "$CONAME" ]; then echo "회사 이름을 입력해 주세요."; exit 1; fi
 
 read -r -p "관리자 아이디 (영문 소문자·숫자) [admin]: " LOGIN
 LOGIN="${LOGIN:-admin}"
 LOGIN="$(echo "$LOGIN" | tr '[:upper:]' '[:lower:]')"
 
-read -r -p "관리자 이름 [관리자]: " NAME
-NAME="${NAME:-관리자}"
+read -r -p "관리자 이름 (예: 홍길동): " NAME
+if [ -z "$NAME" ]; then echo "관리자 이름을 입력해 주세요."; exit 1; fi
 
 echo
 read -r -s -p "비밀번호 (10자 이상): " PW; echo

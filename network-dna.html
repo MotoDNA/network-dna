@@ -556,7 +556,7 @@ nav.tabs button:active{opacity:.6}
 
   <h2 class="sec">내 계정</h2>
   <div class="info">
-    <div class="irow"><span class="k">이름</span><span class="v" id="me-name">—</span></div>
+    <button class="irow" id="me-nameRow"><span class="k">이름</span><span class="v" id="me-name">—</span></button>
     <div class="irow"><span class="k">아이디</span><span class="v" id="me-id">—</span></div>
     <div class="irow"><span class="k">회사</span><span class="v" id="me-co">—</span></div>
     <div class="irow"><span class="k">권한</span><span class="v" id="me-role">—</span></div>
@@ -2587,6 +2587,21 @@ function paintOwner(){
     $('me-role').textContent = me ? (me.role === 'admin' ? '관리자' : '사용자') : '—';
   }
 }
+
+/* ───── 내 이름 바꾸기 ─────
+   회사·아이디·권한은 못 바꿉니다. 데이터베이스 규칙이 막습니다. */
+$('me-nameRow').addEventListener('click', async ()=>{
+  if(!me) return;
+  const v = (prompt('표시할 이름', me.name) || '').trim();
+  if(!v || v === me.name) return;
+  if(v.length > 30){ toast('이름이 너무 깁니다'); return }
+  const { error } = await sb.from('profiles').update({ name: v }).eq('id', me.id);
+  if(error){ toast('바꾸지 못했습니다: ' + String(error.message).slice(0,50)); return }
+  me.name = v;
+  await loadMembers();
+  paintOwner(); renderMembers(); render(); if(curUid) paintDetail();
+  toast('이름을 바꿨습니다');
+});
 
 /* ───── 로그아웃 ───── */
 $('s-logout').addEventListener('click', async ()=>{
