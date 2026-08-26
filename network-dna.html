@@ -80,6 +80,16 @@ h1.ptitle{font-size:1.6rem;font-weight:800;letter-spacing:-.035em;margin:14px 0 
 .titlerow .btn{flex:0 0 auto;height:38px;padding:0 14px;font-size:.82rem;border-radius:11px;margin-top:10px}
 p.psub{margin:0 0 18px;color:var(--mut);font-size:.86rem;font-weight:500}
 h2.sec{font-size:.8rem;font-weight:700;color:var(--mut);margin:26px 0 10px;letter-spacing:-.01em}
+/* 제목 줄 오른쪽에 붙는 작은 동작 버튼 (예: 명함 사진 저장) */
+h2.sec.withbtn{display:flex;align-items:center;justify-content:space-between;gap:10px}
+h2.sec .secbtn{
+  display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 11px;
+  border-radius:9px;background:var(--fill);color:var(--sub);
+  font-size:.76rem;font-weight:700;letter-spacing:-.01em;
+}
+h2.sec .secbtn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.2;
+  stroke-linecap:round;stroke-linejoin:round}
+h2.sec .secbtn:active{background:var(--line)}
 h2.sec:first-child{margin-top:18px}
 
 /* ───── 카드 · 폼 ───── */
@@ -1912,7 +1922,13 @@ function paintDetail(){
         : '<span class="none">아직 공유하지 않았습니다 — 눌러서 선택</span>')+
     '</span></button></div>';
 
-  if(c.photo) h+='<h2 class="sec">명함</h2><img class="cardimg" src="'+c.photo+'" alt="명함">';
+  if(c.photo){
+    h+='<h2 class="sec withbtn">명함'+
+       '<button class="secbtn" data-savephoto="1">'+
+       '<svg viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5"/>'+
+       '<path d="M4.5 18.5h15"/></svg>사진 저장</button></h2>'+
+       '<img class="cardimg" src="'+c.photo+'" alt="명함">';
+  }
 
   if(open.length){
     h+='<h2 class="sec">남은 할 일 '+open.length+'건</h2><div class="todos">'+
@@ -1969,6 +1985,10 @@ $('dBody').addEventListener('click',async e=>{
   if(e.target.closest('[data-share]')){ openShare(); return }
   if(e.target.closest('[data-vcf]')){
     const c=custs.find(x=>x.uid===curUid); if(c) saveContact(c);
+    return;
+  }
+  if(e.target.closest('[data-savephoto]')){
+    const c=custs.find(x=>x.uid===curUid); if(c) savePhoto(c);
     return;
   }
   const cp=e.target.closest('[data-copy]');
@@ -2211,6 +2231,41 @@ async function saveContact(c){
   a.href=URL.createObjectURL(blob); a.download=fname; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),4000);
   toast('연락처 파일을 받았습니다 — 알림의 "열기"를 누르면 주소록에 들어갑니다');
+}
+
+/* 명함 사진을 폰에 저장합니다.
+   웹앱은 갤러리에 곧바로 쓸 수 없습니다. 공유 시트를 띄우면
+   아이폰은 "이미지 저장", 안드로이드는 "갤러리에 저장" 같은 항목이 나옵니다.
+   공유가 안 되는 환경에서는 파일로 내려받습니다.
+
+   여기서는 사진을 준비하는 데 기다림이 없습니다 —
+   기다렸다가 부르면 "방금 눌렀음" 표시가 사라져 공유 시트가 안 뜹니다. */
+async function savePhoto(c){
+  if(!c || !c.photo){ toast('저장할 명함 사진이 없습니다'); return }
+  const base=(c.name||c.company||'명함').replace(/[\\/:*?"<>|\s]/g,'').slice(0,24);
+  const fname=base+'-명함.jpg';
+  let blob;
+  try{ blob=dataUrlToBlob(c.photo) }
+  catch(e){ toast('사진을 준비하지 못했습니다'); return }
+
+  if(navigator.share){
+    const file=new File([blob],fname,{type:'image/jpeg'});
+    const ok = navigator.canShare ? navigator.canShare({files:[file]}) : true;
+    if(ok){
+      try{
+        await navigator.share({files:[file],title:(c.name||c.company||'명함')});
+        return;
+      }catch(e){
+        if(e && e.name==='AbortError') return;   // 사용자가 공유 시트를 닫았습니다
+      }
+    }
+  }
+
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=fname; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
+  toast('명함 사진을 내려받았습니다');
 }
 
 /* ═════════ 그룹 고르기 (한 고객이 여러 그룹에 속할 수 있습니다) ═════════ */
