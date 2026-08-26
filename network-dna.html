@@ -807,7 +807,24 @@ let draftOrig=null, draftCrop=null;   /* 촬영 직후 원본 / 자동 크롭본
 let sheetKind='meeting', sheetEditUid=null, askTarget=null;
 
 /* ───────── 설정 저장 ───────── */
-function cfgLoad(){ try{const v=localStorage.getItem('ndna-cfg'); if(v)cfg={...cfg,...JSON.parse(v)}}catch(e){} }
+/* 예전 버전이 이 기기에 남긴 값들을 지웁니다.
+   특히 API 키는 서버로 옮겼으므로 기기에 남아 있을 이유가 없습니다. */
+const LEGACY_KEYS=['key','model','sync','owner','staff'];
+function cfgLoad(){
+  try{
+    const v=localStorage.getItem('ndna-cfg');
+    if(!v) return;
+    const saved=JSON.parse(v);
+    let dirty=false;
+    for(const k of LEGACY_KEYS){ if(k in saved){ delete saved[k]; dirty=true } }
+    cfg={...cfg,...saved};
+    if(dirty) cfgSave();          // 지운 상태로 다시 써 둡니다
+  }catch(e){}
+  // 더 예전 버전(전시회 앱)이 남긴 것도 함께 치웁니다
+  try{
+    for(const k of ['kp-cfg','kprint2026-mirror']) localStorage.removeItem(k);
+  }catch(e){}
+}
 function cfgSave(){ try{localStorage.setItem('ndna-cfg',JSON.stringify(cfg))}catch(e){} }
 
 /* ───────── IndexedDB ───────── */
