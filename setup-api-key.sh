@@ -1,7 +1,7 @@
 #!/bin/bash
 # Anthropic API 키를 서버에 넣습니다.
 #
-#   bash API키넣기.sh
+#   bash setup-api-key.sh
 #
 # 키는 화면에 보이지 않고, 셸 기록에도 남지 않습니다.
 # 빈 값이나 형식이 이상한 값은 보내기 전에 막습니다.
