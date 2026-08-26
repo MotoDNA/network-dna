@@ -3,7 +3,7 @@
 // service_role 키를 쓰는 유일한 곳입니다.
 // 키는 서버 환경변수에만 있고 브라우저로 내려가지 않습니다.
 import { createClient } from 'jsr:@supabase/supabase-js@2';
-import { cors, json } from '../_shared/cors.ts';
+import { mkJson } from '../_shared/cors.ts';
 
 const URL_ = Deno.env.get('SUPABASE_URL')!;
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -52,6 +52,9 @@ async function audit(company_id: string | null, actor_id: string | null,
 }
 
 Deno.serve(async (req) => {
+  // 부른 곳에 맞춘 cors 와 json 을 꺼냅니다
+  const { cors, json } = mkJson(req);
+
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
   if (req.method !== 'POST') return json({ ok: false, error: 'POST 만 받습니다.' }, 405);
 
