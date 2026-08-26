@@ -1,0 +1,1991 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF">
+<meta http-equiv="Cache-Control" content="no-store">
+<title>NETWORK DNA · 고객관리</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{
+  --bg:#F2F4F6; --card:#FFFFFF;
+  --ink:#191F28; --sub:#4E5968; --mut:#8B95A1; --dim:#B0B8C1;
+  --line:#E5E8EB; --fill:#F2F4F6; --fill2:#F9FAFB;
+  --blue:#3182F6; --blue-d:#1B64DA; --blue-bg:#E8F3FF;
+  --red:#F04452;  --red-bg:#FDEEF0;
+  --green:#00A66C; --green-bg:#E4F6EF;
+  --amber:#E08700; --amber-bg:#FFF4DF;
+  --violet:#6D4AE0; --violet-bg:#F0EBFF;
+  --teal:#0B93A8; --teal-bg:#E2F4F7;
+  --r:16px; --r2:20px; --rs:12px;
+  --sh:0 1px 2px rgba(25,31,40,.05);
+  --shx:0 4px 24px rgba(25,31,40,.10);
+  --nav:calc(62px + env(safe-area-inset-bottom));
+  --w:540px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html{font-size:17px;-webkit-text-size-adjust:100%}
+html,body{margin:0;height:100%}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;
+  font-size:1rem; line-height:1.5; letter-spacing:-.02em;
+  overscroll-behavior-y:none;
+}
+button,input,textarea,select{font-family:inherit;font-size:1rem;color:inherit;letter-spacing:-.02em}
+button{cursor:pointer;border:0;background:none;padding:0;color:inherit;-webkit-user-select:none;user-select:none}
+input,textarea,select{-webkit-appearance:none;appearance:none}
+textarea{resize:none}
+::placeholder{color:var(--dim)}
+
+/* ───── 레이아웃 ───── */
+.app{max-width:var(--w);margin:0 auto;min-height:100%;background:var(--bg);position:relative}
+main{padding:0 20px calc(var(--nav) + 28px)}
+.page{animation:fade .18s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+.appbar{
+  position:sticky;top:0;z-index:30;background:rgba(255,255,255,.86);
+  backdrop-filter:saturate(180%) blur(12px);-webkit-backdrop-filter:saturate(180%) blur(12px);
+  border-bottom:1px solid transparent;transition:border-color .2s;
+  max-width:var(--w);margin:0 auto;
+}
+.appbar.stuck{border-bottom-color:var(--line)}
+.appbar .in{height:56px;display:flex;align-items:center;gap:10px;padding:0 20px}
+.wordmark{font-size:.82rem;font-weight:800;letter-spacing:.14em;color:var(--ink)}
+.wordmark em{font-style:normal;color:var(--blue)}
+.appbar .sp{flex:1}
+.owner{display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--mut);font-weight:600}
+.owner b{color:var(--sub);font-weight:700}
+
+h1.ptitle{font-size:1.6rem;font-weight:800;letter-spacing:-.035em;margin:14px 0 4px}
+p.psub{margin:0 0 18px;color:var(--mut);font-size:.86rem;font-weight:500}
+h2.sec{font-size:.8rem;font-weight:700;color:var(--mut);margin:26px 0 10px;letter-spacing:-.01em}
+h2.sec:first-child{margin-top:18px}
+
+/* ───── 카드 · 폼 ───── */
+.card{background:var(--card);border-radius:var(--r2);padding:20px;box-shadow:var(--sh)}
+.card + .card{margin-top:12px}
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:.8rem;font-weight:700;color:var(--sub);margin:0 0 7px;padding-left:2px}
+.inp{
+  width:100%;background:var(--fill2);border:1px solid var(--line);border-radius:var(--rs);
+  padding:0 14px;height:52px;font-size:.95rem;font-weight:500;transition:border-color .15s,background .15s;
+}
+textarea.inp{padding:14px;height:auto;min-height:104px;line-height:1.55}
+.inp:focus{outline:none;border-color:var(--blue);background:#fff}
+.inp:disabled{color:var(--mut)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:54px;
+  border-radius:14px;background:var(--blue);color:#fff;font-size:1rem;font-weight:700;
+  transition:transform .08s,background .15s;
+}
+.btn:active{transform:scale(.985);background:var(--blue-d)}
+.btn:disabled{background:var(--line);color:var(--dim);transform:none}
+.btn.ghost{background:var(--fill);color:var(--sub)}
+.btn.ghost:active{background:#E8EAED}
+.btn.danger{background:var(--red-bg);color:var(--red)}
+.btn.sm{height:44px;font-size:.88rem;border-radius:12px;width:auto;padding:0 16px}
+.btn.line{background:#fff;border:1px solid var(--line);color:var(--sub)}
+.btnrow{display:flex;gap:10px;margin-top:16px}
+
+/* ───── 검색 ───── */
+.search{position:relative;margin-bottom:14px}
+.search svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:19px;height:19px;stroke:var(--mut);fill:none;stroke-width:2;pointer-events:none}
+.search input{
+  width:100%;height:50px;border:0;border-radius:14px;background:#fff;
+  padding:0 44px 0 44px;font-size:.94rem;font-weight:500;box-shadow:var(--sh);
+}
+.search input:focus{outline:2px solid var(--blue);outline-offset:-2px}
+.search .clr{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;color:var(--dim);font-size:1.1rem;display:flex;align-items:center;justify-content:center}
+
+/* ───── 그룹 칩 ───── */
+.chips{display:flex;gap:7px;overflow-x:auto;padding:2px 20px 2px;margin:0 -20px 16px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{
+  flex:0 0 auto;height:36px;padding:0 15px;border-radius:11px;background:#fff;
+  color:var(--sub);font-size:.85rem;font-weight:600;display:flex;align-items:center;gap:6px;
+  box-shadow:var(--sh);transition:background .15s,color .15s;
+}
+.chip[aria-pressed="true"]{background:var(--ink);color:#fff}
+.chip .n{font-size:.76rem;opacity:.55;font-weight:700}
+.chip.add{background:transparent;box-shadow:none;color:var(--mut);border:1px dashed var(--line)}
+
+/* ───── 요약 ───── */
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.stat{background:#fff;border-radius:var(--r);padding:14px 12px;box-shadow:var(--sh)}
+.stat b{display:block;font-size:1.35rem;font-weight:800;letter-spacing:-.04em;line-height:1.2}
+.stat span{display:block;font-size:.72rem;color:var(--mut);font-weight:600;margin-top:2px}
+.stat.due b{color:var(--red)}
+
+/* ───── 고객 리스트 ───── */
+.list{background:#fff;border-radius:var(--r2);box-shadow:var(--sh);overflow:hidden}
+.crow{display:flex;align-items:center;gap:13px;padding:15px 17px;width:100%;text-align:left;transition:background .12s}
+.crow:active{background:var(--fill2)}
+.crow + .crow{border-top:1px solid var(--line)}
+.av{
+  flex:0 0 auto;width:46px;height:46px;border-radius:15px;display:flex;align-items:center;justify-content:center;
+  font-size:1.02rem;font-weight:800;letter-spacing:-.03em;overflow:hidden;background:var(--fill)
+}
+.av img{width:100%;height:100%;object-fit:cover}
+.cmain{flex:1;min-width:0}
+.cname{font-size:.99rem;font-weight:700;letter-spacing:-.03em;display:flex;align-items:center;gap:6px}
+.cname .tt{font-size:.76rem;font-weight:600;color:var(--mut);flex:0 0 auto}
+.cco{font-size:.84rem;color:var(--sub);font-weight:500;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.clast{font-size:.79rem;color:var(--mut);margin-top:5px;display:flex;align-items:center;gap:5px;min-width:0}
+.clast .tx{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cside{flex:0 0 auto;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.cdate{font-size:.74rem;color:var(--dim);font-weight:600}
+.badge{background:var(--red);color:#fff;font-size:.68rem;font-weight:800;height:19px;min-width:19px;padding:0 6px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+.gtag{display:inline-flex;align-items:center;height:19px;padding:0 7px;border-radius:6px;font-size:.68rem;font-weight:700}
+
+.empty{text-align:center;padding:54px 20px;color:var(--mut)}
+.empty .ic{font-size:2.1rem;margin-bottom:10px;opacity:.5}
+.empty>b{display:block;color:var(--sub);font-size:.95rem;font-weight:700;margin-bottom:5px}
+.empty span b{color:var(--sub);font-weight:700}
+.empty span{font-size:.85rem}
+
+/* ───── 촬영 ───── */
+.shoot{
+  width:100%;background:#fff;border-radius:var(--r2);padding:30px 20px;text-align:center;
+  box-shadow:var(--sh);border:1.5px dashed var(--line);transition:border-color .15s,background .15s;
+}
+.shoot:active{border-color:var(--blue);background:var(--blue-bg)}
+.shoot .ic{width:54px;height:54px;border-radius:18px;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.shoot .ic svg{width:26px;height:26px;stroke:var(--blue);fill:none;stroke-width:1.7}
+.shoot b{display:block;font-size:1rem;font-weight:700;margin-bottom:3px}
+.shoot span{font-size:.83rem;color:var(--mut);font-weight:500}
+.shot{position:relative;border-radius:var(--r2);overflow:hidden;background:#000;box-shadow:var(--sh)}
+.shot img{width:100%;display:block;max-height:230px;object-fit:contain;background:#111}
+.shot .x{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:1rem;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.cropbar{display:flex;align-items:center;gap:10px;margin-top:10px}
+.cropmsg{flex:1;min-width:0;font-size:.78rem;font-weight:600;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rot{flex:0 0 auto;width:38px;height:38px;border-radius:10px;background:var(--fill);color:var(--sub);font-size:1.05rem;font-weight:700}
+.rot:active{background:#E8EAED}
+.segsm{flex:0 0 auto;display:flex;background:var(--fill);border-radius:10px;padding:3px;gap:2px}
+.segsm button{height:32px;padding:0 12px;border-radius:8px;font-size:.78rem;font-weight:700;color:var(--mut);transition:.15s}
+.segsm button[aria-pressed="true"]{background:#fff;color:var(--ink);box-shadow:var(--sh)}
+.ai{
+  display:flex;align-items:center;gap:8px;font-size:.83rem;font-weight:600;color:var(--mut);
+  background:var(--fill);border-radius:12px;padding:11px 14px;margin-top:10px;
+}
+.ai.on{background:var(--blue-bg);color:var(--blue-d)}
+.ai.err{background:var(--red-bg);color:var(--red)}
+.ai.ok{background:var(--green-bg);color:var(--green)}
+.spin{width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .7s linear infinite;flex:0 0 auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ───── 하단 탭 ───── */
+nav.tabs{
+  position:fixed;left:0;right:0;bottom:0;z-index:40;background:rgba(255,255,255,.94);
+  backdrop-filter:saturate(180%) blur(12px);-webkit-backdrop-filter:saturate(180%) blur(12px);
+  border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);
+}
+nav.tabs .in{max-width:var(--w);margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr)}
+nav.tabs button{height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--dim);font-size:.68rem;font-weight:700}
+nav.tabs svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs button[aria-selected="true"]{color:var(--blue)}
+nav.tabs button:active{opacity:.6}
+
+/* ───── 상세 화면 ───── */
+.sheetpage{
+  position:fixed;inset:0;z-index:60;background:var(--bg);overflow-y:auto;
+  animation:slide .24s cubic-bezier(.2,.8,.3,1);-webkit-overflow-scrolling:touch;
+}
+@keyframes slide{from{transform:translateY(14px);opacity:0}to{transform:none;opacity:1}}
+.sheetpage .inner{max-width:var(--w);margin:0 auto;padding:0 20px 130px}
+.dbar{
+  position:sticky;top:0;z-index:5;background:rgba(242,244,246,.9);backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);margin:0 -20px;padding:0 12px;height:56px;display:flex;align-items:center;gap:4px;
+}
+.iconbtn{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--sub)}
+.iconbtn:active{background:rgba(0,0,0,.05)}
+.iconbtn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.dbar .t{flex:1;font-size:.95rem;font-weight:700;text-align:center;opacity:0;transition:opacity .2s}
+.dbar.stuck .t{opacity:1}
+
+.profile{background:#fff;border-radius:var(--r2);padding:24px 20px 18px;box-shadow:var(--sh);text-align:center}
+.profile .av{width:66px;height:66px;border-radius:22px;margin:0 auto 12px;font-size:1.4rem}
+.profile h2{font-size:1.35rem;font-weight:800;letter-spacing:-.04em;margin:0}
+.profile .role{color:var(--sub);font-size:.9rem;font-weight:600;margin-top:4px}
+.profile .gs{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.acts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.acts a,.acts button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 0;border-radius:12px;color:var(--sub);font-size:.72rem;font-weight:700;text-decoration:none}
+.acts a:active,.acts button:active{background:var(--fill2)}
+.acts svg{width:21px;height:21px;stroke:var(--blue);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.acts .off{color:var(--dim);pointer-events:none}
+.acts .off svg{stroke:var(--dim)}
+
+.info{background:#fff;border-radius:var(--r2);box-shadow:var(--sh);overflow:hidden}
+.irow{display:flex;gap:12px;padding:14px 18px;align-items:flex-start;width:100%;text-align:left}
+.irow + .irow{border-top:1px solid var(--line)}
+.irow .k{flex:0 0 74px;font-size:.83rem;color:var(--mut);font-weight:600;padding-top:1px}
+.irow .v{flex:1;font-size:.9rem;font-weight:600;word-break:break-all}
+.irow .v.none{color:var(--dim);font-weight:500}
+.irow:active{background:var(--fill2)}
+.cardimg{width:100%;border-radius:var(--r);margin-top:10px;display:block;box-shadow:var(--sh)}
+
+/* ───── 할 일 ───── */
+.todos{background:#fff;border-radius:var(--r2);box-shadow:var(--sh);overflow:hidden}
+.todo{display:flex;gap:11px;padding:14px 17px;align-items:flex-start;width:100%;text-align:left}
+.todo + .todo{border-top:1px solid var(--line)}
+.cb{
+  flex:0 0 auto;width:22px;height:22px;border-radius:7px;border:2px solid var(--line);
+  display:flex;align-items:center;justify-content:center;margin-top:1px;transition:background .15s,border-color .15s;
+}
+.cb svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+.cb.on{background:var(--blue);border-color:var(--blue)}
+.cb.on svg{opacity:1}
+.todo .tx{flex:1;font-size:.91rem;font-weight:600;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.todo .due{font-size:.76rem;color:var(--mut);font-weight:600;margin-top:3px}
+.todo .due.over{color:var(--red)}
+.todo.done .tx{color:var(--dim);font-weight:400}
+.todo.done .due{color:var(--dim)}
+
+/* ───── 타임라인 ───── */
+.tl{position:relative;padding-left:26px}
+.tl:before{content:"";position:absolute;left:5px;top:8px;bottom:14px;width:2px;background:var(--line);border-radius:1px}
+.day{font-size:.78rem;font-weight:700;color:var(--mut);margin:20px 0 10px;position:relative}
+.day:first-child{margin-top:6px}
+.ent{position:relative;background:#fff;border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);margin-bottom:10px}
+.ent:before{content:"";position:absolute;left:-25px;top:19px;width:12px;height:12px;border-radius:50%;background:#fff;border:3px solid var(--blue)}
+.ent .top{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.kind{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:7px;font-size:.72rem;font-weight:800;letter-spacing:-.01em}
+.ent .tm{font-size:.75rem;color:var(--dim);font-weight:600;margin-left:auto}
+.ent .bd{font-size:.91rem;font-weight:500;line-height:1.6;white-space:pre-wrap;word-break:break-word;color:var(--ink)}
+.ent.done .bd{color:var(--dim);font-weight:400}
+.ent .del{position:absolute;right:8px;bottom:8px;width:30px;height:30px;border-radius:9px;color:var(--dim);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s}
+.ent:hover .del,.ent:focus-within .del{opacity:1}
+.ent svg.tr{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round}
+.k-meeting{background:var(--blue-bg);color:var(--blue-d)}    .d-meeting:before{border-color:var(--blue)}
+.k-request{background:var(--green-bg);color:var(--green)}    .d-request:before{border-color:var(--green)}
+.k-issue{background:var(--red-bg);color:var(--red)}          .d-issue:before{border-color:var(--red)}
+.k-note{background:var(--violet-bg);color:var(--violet)}     .d-note:before{border-color:var(--violet)}
+.k-sample{background:var(--amber-bg);color:var(--amber)}     .d-sample:before{border-color:var(--amber)}
+.k-todo{background:var(--teal-bg);color:var(--teal)}         .d-todo:before{border-color:var(--teal)}
+.ent .cbwrap{display:flex;gap:10px;align-items:flex-start}
+
+.fab{
+  position:fixed;left:0;right:0;bottom:0;z-index:61;padding:12px 20px calc(12px + env(safe-area-inset-bottom));
+  background:linear-gradient(to top,var(--bg) 62%,rgba(242,244,246,0));
+}
+.fab .in{max-width:var(--w);margin:0 auto}
+
+/* ───── 바텀시트 ───── */
+.back{position:fixed;inset:0;z-index:70;background:rgba(25,31,40,.42);opacity:0;transition:opacity .22s;backdrop-filter:blur(1px)}
+.back.on{opacity:1}
+.sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:71;background:#fff;
+  border-radius:24px 24px 0 0;padding:8px 20px calc(20px + env(safe-area-inset-bottom));
+  max-width:var(--w);margin:0 auto;transform:translateY(102%);transition:transform .26s cubic-bezier(.2,.85,.3,1);
+  max-height:92vh;overflow-y:auto;
+}
+.sheet.on{transform:none}
+.grab{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 14px}
+.sheet h3{font-size:1.18rem;font-weight:800;letter-spacing:-.035em;margin:0 0 16px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:16px}
+.seg button{height:44px;border-radius:12px;background:var(--fill);font-size:.85rem;font-weight:700;color:var(--sub);transition:.15s}
+.seg button[aria-pressed="true"]{color:#fff}
+.seg button[data-k="meeting"][aria-pressed="true"]{background:var(--blue)}
+.seg button[data-k="request"][aria-pressed="true"]{background:var(--green)}
+.seg button[data-k="issue"][aria-pressed="true"]{background:var(--red)}
+.seg button[data-k="note"][aria-pressed="true"]{background:var(--violet)}
+.seg button[data-k="sample"][aria-pressed="true"]{background:var(--amber)}
+.seg button[data-k="todo"][aria-pressed="true"]{background:var(--teal)}
+
+.swrow{display:flex;align-items:center;gap:12px;cursor:pointer}
+.swrow>span{flex:1;font-size:.9rem;font-weight:600}
+.sw{flex:0 0 auto;width:50px;height:30px;border-radius:15px;background:var(--line);position:relative;transition:background .2s;cursor:pointer}
+.sw:checked{background:var(--blue)}
+.sw:after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(25,31,40,.2)}
+.sw:checked:after{transform:translateX(20px)}
+.askwho{display:flex;align-items:center;gap:13px;background:var(--fill2);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.askwho .av{width:44px;height:44px;border-radius:14px;font-size:.98rem}
+.askwho .m{flex:1;min-width:0}
+.askwho .nm{font-size:.98rem;font-weight:700;letter-spacing:-.03em}
+.askwho .sub{font-size:.83rem;color:var(--sub);font-weight:500;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.asknever{display:block;width:100%;margin-top:12px;padding:8px 0;font-size:.82rem;font-weight:600;color:var(--mut)}
+.asknever:active{color:var(--sub)}
+.gpick{display:flex;flex-wrap:wrap;gap:7px}
+.gpick button{height:38px;padding:0 14px;border-radius:11px;background:var(--fill);color:var(--sub);font-size:.86rem;font-weight:600;transition:.15s}
+.gpick button[aria-pressed="true"]{background:var(--ink);color:#fff}
+
+.glist{background:#fff;border-radius:var(--r2);box-shadow:var(--sh);overflow:hidden}
+.grow{display:flex;align-items:center;gap:11px;padding:13px 17px}
+.grow + .grow{border-top:1px solid var(--line)}
+.dot{width:11px;height:11px;border-radius:4px;flex:0 0 auto}
+.grow .nm{flex:1;font-size:.92rem;font-weight:600}
+.grow .ct{font-size:.8rem;color:var(--mut);font-weight:600}
+.grow .rm{width:30px;height:30px;border-radius:9px;color:var(--dim);display:flex;align-items:center;justify-content:center}
+
+.note{font-size:.8rem;color:var(--mut);line-height:1.6;font-weight:500;margin-top:10px;padding-left:2px}
+.warn{background:var(--red-bg);color:var(--red);border-radius:14px;padding:14px 16px;font-size:.84rem;font-weight:600;line-height:1.55;margin-bottom:14px}
+.pill{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:8px;font-size:.72rem;font-weight:700;background:var(--fill);color:var(--mut)}
+.pill.on{background:var(--green-bg);color:var(--green)}
+.pill.wait{background:var(--amber-bg);color:var(--amber)}
+.pill.off{background:var(--fill);color:var(--dim)}
+
+#toast{
+  position:fixed;left:50%;bottom:calc(var(--nav) + 18px);transform:translate(-50%,10px);z-index:90;
+  background:rgba(25,31,40,.94);color:#fff;font-size:.87rem;font-weight:600;padding:13px 20px;border-radius:14px;
+  opacity:0;pointer-events:none;transition:.22s;max-width:calc(100% - 40px);text-align:center;
+}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+
+<div class="appbar" id="appbar">
+  <div class="in">
+    <div class="wordmark">NETWORK<em>DNA</em></div>
+    <div class="sp"></div>
+    <span class="pill" id="syncPill" hidden></span>
+    <div class="owner">담당자 <b id="ownerName">미설정</b></div>
+  </div>
+</div>
+
+<div class="app">
+<main>
+
+<!-- ════════ 고객 목록 ════════ -->
+<section class="page" id="p-list">
+  <div class="warn" id="storeWarn" hidden>저장 기능이 작동하지 않는 환경입니다. 기록이 화면을 닫는 순간 사라집니다. 배포한 https:// 주소에서 사용하세요.</div>
+  <h1 class="ptitle">고객</h1>
+  <p class="psub" id="listSub">고객카드를 만들면 여기에 모입니다</p>
+
+  <div class="search">
+    <svg viewBox="0 0 24 24" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+    <input id="q" type="search" placeholder="이름, 회사, 연락처, 이메일 검색" autocomplete="off">
+    <button class="clr" id="qClr" hidden aria-label="지우기">✕</button>
+  </div>
+
+  <div class="chips" id="groupChips"></div>
+
+  <div class="stats">
+    <div class="stat"><b id="stAll">0</b><span>전체 고객</span></div>
+    <div class="stat due"><b id="stTodo">0</b><span>남은 할 일</span></div>
+    <div class="stat"><b id="stWeek">0</b><span>이번 주 미팅</span></div>
+  </div>
+
+  <div id="listWrap"></div>
+</section>
+
+<!-- ════════ 새 고객 ════════ -->
+<section class="page" id="p-new" hidden>
+  <input type="file" id="cam" accept="image/*" capture="environment" hidden>
+  <input type="file" id="gal" accept="image/*" hidden>
+
+  <h1 class="ptitle" id="newTitle">새 고객</h1>
+  <p class="psub" id="newSub">명함을 촬영하면 기본 정보가 자동으로 입력됩니다</p>
+
+  <div id="shootWrap">
+    <button class="shoot" id="shootBtn">
+      <div class="ic"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.7l1.1-1.8A1 1 0 0 1 9.2 3.7h5.6a1 1 0 0 1 .9.5L16.8 6h1.7A2.5 2.5 0 0 1 21 8.5v9A2.5 2.5 0 0 1 18.5 20h-13A2.5 2.5 0 0 1 3 17.5z"/><circle cx="12" cy="12.7" r="3.6"/></svg></div>
+      <b>명함 촬영하기</b>
+      <span>카메라가 열립니다 · 사진첩도 선택할 수 있어요</span>
+    </button>
+  </div>
+  <div class="shot" id="shotWrap" hidden>
+    <img id="shotImg" alt="명함">
+    <button class="x" id="shotDel" aria-label="사진 삭제">✕</button>
+  </div>
+  <div class="cropbar" id="cropBar" hidden>
+    <span class="cropmsg" id="cropMsg"></span>
+    <button class="rot" id="rotBtn" aria-label="90도 회전" title="90도 회전">↻</button>
+    <div class="segsm">
+      <button id="cropOn" aria-pressed="true">자동 보정</button>
+      <button id="cropOff" aria-pressed="false">원본</button>
+    </div>
+  </div>
+  <div class="ai" id="aiStat" hidden></div>
+  <div class="btnrow" id="reshootRow" hidden>
+    <button class="btn ghost sm" id="reShoot" style="flex:1">다시 촬영</button>
+    <button class="btn ghost sm" id="rePick" style="flex:1">사진첩에서 선택</button>
+  </div>
+
+  <h2 class="sec">고객 정보</h2>
+  <div class="card">
+    <div class="field"><label for="f-name">성함</label><input class="inp" id="f-name" placeholder="예: 최환준"></div>
+    <div class="field"><label for="f-company">회사명</label><input class="inp" id="f-company" placeholder="예: 액티바코리아"></div>
+    <div class="row2">
+      <div class="field"><label for="f-title">직함</label><input class="inp" id="f-title" placeholder="예: 부장"></div>
+      <div class="field"><label for="f-phone">전화번호</label><input class="inp" id="f-phone" type="tel" inputmode="tel" placeholder="010-0000-0000"></div>
+    </div>
+    <div class="field"><label for="f-email">이메일</label><input class="inp" id="f-email" type="email" inputmode="email" autocapitalize="off" placeholder="name@company.com"></div>
+    <div class="field"><label for="f-addr">주소</label><input class="inp" id="f-addr" placeholder="예: 경기도 고양시 …"></div>
+  </div>
+
+  <h2 class="sec">고객 그룹</h2>
+  <div class="card">
+    <div class="gpick" id="fGroups"></div>
+    <div class="note">그룹은 설정 탭에서 추가하거나 이름을 바꿀 수 있습니다.</div>
+  </div>
+
+  <div id="firstMemoWrap">
+    <h2 class="sec">첫 미팅 메모 <span style="font-weight:500;color:var(--dim)">(선택)</span></h2>
+    <div class="card">
+      <textarea class="inp" id="f-memo" placeholder="오늘 나눈 이야기, 요청사항, 다음 약속 등을 적어두면 타임라인 첫 기록으로 저장됩니다."></textarea>
+    </div>
+  </div>
+
+  <div class="btnrow">
+    <button class="btn ghost" id="newCancel" style="flex:0 0 96px" hidden>취소</button>
+    <button class="btn" id="saveCust">고객카드 생성</button>
+  </div>
+  <div class="note" id="newNote">사진과 기록은 이 기기에 저장되고, 구글 시트를 연결하면 자동으로 함께 보관됩니다.</div>
+</section>
+
+<!-- ════════ 설정 ════════ -->
+<section class="page" id="p-set" hidden>
+  <h1 class="ptitle">설정</h1>
+  <p class="psub">담당자, 그룹, 자동 인식, 구글 시트 연동</p>
+
+  <h2 class="sec">담당자 이름</h2>
+  <div class="card">
+    <div class="field"><input class="inp" id="s-owner" placeholder="예: 최환준"></div>
+    <div class="note">여러 명이 나눠 쓸 때 누가 만든 기록인지 구분합니다.</div>
+  </div>
+
+  <h2 class="sec">고객 그룹 관리</h2>
+  <div class="glist" id="gManage"></div>
+  <div class="btnrow">
+    <input class="inp" id="s-newGroup" placeholder="새 그룹 이름" style="flex:1">
+    <button class="btn sm" id="s-addGroup" style="flex:0 0 84px;height:52px">추가</button>
+  </div>
+
+  <h2 class="sec">명함 자동 인식</h2>
+  <div class="card">
+    <div class="field">
+      <label for="s-key">Anthropic API 키</label>
+      <input class="inp" id="s-key" type="password" placeholder="sk-ant-..." autocomplete="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="btnrow" style="margin-top:0">
+      <button class="btn ghost sm" id="s-keyShow" style="flex:1">보기</button>
+      <button class="btn ghost sm" id="s-keyTest" style="flex:1">연결 확인</button>
+    </div>
+    <div class="ai" id="keyStat" hidden></div>
+    <div class="note">키는 이 기기에만 저장됩니다. 비워두면 명함 정보를 직접 입력하는 방식으로 동작합니다.</div>
+  </div>
+
+  <h2 class="sec">구글 시트 연동</h2>
+  <div class="card">
+    <div class="field">
+      <label for="s-sync">Apps Script 웹앱 주소</label>
+      <input class="inp" id="s-sync" placeholder="https://script.google.com/…/exec" autocomplete="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="btnrow" style="margin-top:0">
+      <button class="btn ghost sm" id="s-syncTest" style="flex:1">연결 확인</button>
+      <button class="btn ghost sm" id="s-syncNow" style="flex:1">지금 동기화</button>
+    </div>
+    <div class="ai" id="syncStat" hidden></div>
+    <div class="note">연결하면 고객카드와 타임라인 기록이 저장할 때마다 자동으로 시트에 반영됩니다. 같은 주소를 넣은 다른 기기와도 서로 합쳐집니다. 설치 방법은 함께 드린 <b>구글시트-연동방법.md</b> 파일을 참고하세요.</div>
+  </div>
+
+  <h2 class="sec">기타</h2>
+  <div class="card">
+    <label class="swrow" for="s-askContact">
+      <span>연락처 저장 물어보기</span>
+      <input type="checkbox" id="s-askContact" class="sw">
+    </label>
+    <div class="note">고객카드를 만들면 폰 주소록에도 저장할지 한 번 묻습니다. 꺼두어도 고객 상세 화면의 <b>연락처</b> 버튼으로 언제든 저장할 수 있습니다.</div>
+  </div>
+
+  <h2 class="sec">데이터</h2>
+  <div class="card">
+    <div class="btnrow" style="margin-top:0">
+      <button class="btn ghost sm" id="s-csvCust" style="flex:1">고객 CSV</button>
+      <button class="btn ghost sm" id="s-csvAct" style="flex:1">타임라인 CSV</button>
+    </div>
+    <div class="btnrow">
+      <button class="btn danger sm" id="s-wipe" style="flex:1">이 기기의 모든 기록 삭제</button>
+    </div>
+    <div class="ai" id="usageStat" hidden></div>
+  </div>
+  <div class="note" style="margin-bottom:8px">NETWORK DNA · 고객관리</div>
+</section>
+
+</main>
+</div>
+
+<nav class="tabs" role="tablist">
+  <div class="in">
+    <button role="tab" id="t-list" aria-selected="true">
+      <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>고객
+    </button>
+    <button role="tab" id="t-new" aria-selected="false">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8.5v7M8.5 12h7"/></svg>새 고객
+    </button>
+    <button role="tab" id="t-set" aria-selected="false">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 3.6 15a1.7 1.7 0 0 0-1.55-1H2a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 3.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 8 4.6h.08A1.7 1.7 0 0 0 9 3.05V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9v.08a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/></svg>설정
+    </button>
+  </div>
+</nav>
+
+<!-- ════════ 고객 상세 ════════ -->
+<div class="sheetpage" id="detail" hidden>
+  <div class="inner">
+    <div class="dbar" id="dbar">
+      <button class="iconbtn" id="dBack" aria-label="뒤로"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div class="t" id="dTitle"></div>
+      <button class="iconbtn" id="dEdit" aria-label="수정"><svg viewBox="0 0 24 24"><path d="M4 20h4l10-10a2.8 2.8 0 0 0-4-4L4 16z"/></svg></button>
+      <button class="iconbtn" id="dDel" aria-label="삭제"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg></button>
+    </div>
+    <div id="dBody"></div>
+  </div>
+</div>
+<div class="fab" id="fabWrap" hidden><div class="in"><button class="btn" id="addEntry">＋ 기록 추가</button></div></div>
+
+<!-- ════════ 기록 추가 시트 ════════ -->
+<div class="back" id="back" hidden></div>
+<div class="sheet" id="sheet" hidden>
+  <div class="grab"></div>
+  <h3 id="sheetTitle">기록 추가</h3>
+  <div class="seg" id="kindSeg">
+    <button data-k="meeting" aria-pressed="true">미팅</button>
+    <button data-k="request" aria-pressed="false">요청사항</button>
+    <button data-k="issue" aria-pressed="false">불만사항</button>
+    <button data-k="note" aria-pressed="false">특이사항</button>
+    <button data-k="sample" aria-pressed="false">제공 샘플</button>
+    <button data-k="todo" aria-pressed="false">할 일</button>
+  </div>
+  <div class="field"><textarea class="inp" id="e-body" placeholder="내용을 입력하세요"></textarea></div>
+  <div class="row2">
+    <div class="field"><label for="e-date">날짜</label><input class="inp" id="e-date" type="date"></div>
+    <div class="field" id="dueWrap" hidden><label for="e-due">마감일</label><input class="inp" id="e-due" type="date"></div>
+    <div class="field" id="timeWrap"><label for="e-time">시각</label><input class="inp" id="e-time" type="time"></div>
+  </div>
+  <div class="btnrow" style="margin-top:6px">
+    <button class="btn ghost" id="e-cancel" style="flex:0 0 96px">취소</button>
+    <button class="btn" id="e-save">저장</button>
+  </div>
+</div>
+
+<div class="sheet" id="askSheet" hidden>
+  <div class="grab"></div>
+  <h3>연락처에도 저장할까요?</h3>
+  <div class="askwho" id="askWho"></div>
+  <div class="btnrow" style="margin-top:16px">
+    <button class="btn ghost" id="askLater" style="flex:0 0 108px">나중에</button>
+    <button class="btn" id="askSave">연락처 저장</button>
+  </div>
+  <div class="note" style="text-align:center">지금 넘어가도 고객 상세의 <b>연락처</b> 버튼으로 저장할 수 있습니다.</div>
+  <button class="asknever" id="askNever">다시 묻지 않기</button>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════
+   NETWORK DNA · 고객관리
+   고객카드 + 타임라인 + 구글시트 동기화
+   ══════════════════════════════════════════════ */
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const now=()=>Date.now();
+
+const KIND={
+  meeting:{ko:'미팅'},   request:{ko:'요청사항'}, issue:{ko:'불만사항'},
+  note:{ko:'특이사항'},  sample:{ko:'제공 샘플'}, todo:{ko:'할 일'}
+};
+const GCOLORS=[
+  ['#E8F3FF','#1B64DA'],['#E4F6EF','#00A66C'],['#FFF4DF','#E08700'],
+  ['#F0EBFF','#6D4AE0'],['#FDEEF0','#F04452'],['#E2F4F7','#0B93A8'],
+  ['#FFEDF5','#C2258C'],['#EFF1F4','#4E5968']
+];
+/* 그룹 이름 → 색. 설정에 등록된 순서를 먼저 쓰고, 목록에 없는 이름만 해시로 정합니다. */
+function gColor(name){
+  const i=cfg.groups.indexOf(name);
+  if(i>=0) return GCOLORS[i%GCOLORS.length];
+  let h=0; for(const ch of String(name)) h=(h*31+ch.charCodeAt(0))>>>0;
+  return GCOLORS[h%GCOLORS.length];
+}
+
+let cfg={owner:'',key:'',model:'claude-sonnet-5',sync:'',lastPull:0,askContact:true,groups:['신규','진행 중','주요 고객']};
+let custs=[], acts=[];
+let filterG='', qs='';
+let curUid=null, editUid=null, draftPhoto=null, draftGroups=[];
+let draftOrig=null, draftCrop=null;   /* 촬영 직후 원본 / 자동 크롭본 */
+let sheetKind='meeting', sheetEditUid=null, askTarget=null;
+
+/* ───────── 설정 저장 ───────── */
+function cfgLoad(){ try{const v=localStorage.getItem('ndna-cfg'); if(v)cfg={...cfg,...JSON.parse(v)}}catch(e){} }
+function cfgSave(){ try{localStorage.setItem('ndna-cfg',JSON.stringify(cfg))}catch(e){} }
+
+/* ───────── IndexedDB ───────── */
+let db=null, dbReady=null, memOnly=false, lastErr='';
+function openDB(){
+  if(dbReady) return dbReady;
+  dbReady=new Promise(res=>{
+    try{
+      const r=indexedDB.open('ndna-crm',1);
+      r.onupgradeneeded=e=>{
+        const d=e.target.result;
+        if(!d.objectStoreNames.contains('cust')) d.createObjectStore('cust',{keyPath:'uid'});
+        if(!d.objectStoreNames.contains('act'))  d.createObjectStore('act',{keyPath:'uid'});
+      };
+      r.onsuccess=e=>{db=e.target.result;res(true)};
+      r.onerror=()=>{memOnly=true;lastErr='open';res(false)};
+      r.onblocked=()=>{memOnly=true;res(false)};
+    }catch(e){memOnly=true;res(false)}
+  });
+  return dbReady;
+}
+async function dbAll(store){
+  await openDB();
+  return new Promise(res=>{
+    if(!db) return res([]);
+    try{const q=db.transaction(store,'readonly').objectStore(store).getAll();
+      q.onsuccess=()=>res(q.result||[]); q.onerror=()=>res([]);
+    }catch(e){res([])}
+  });
+}
+async function dbPut(store,o){
+  await openDB();
+  return new Promise(res=>{
+    if(!db){ mirrorSave(); return res(false) }
+    try{const q=db.transaction(store,'readwrite').objectStore(store).put(o);
+      q.onsuccess=()=>res(true); q.onerror=()=>{lastErr='put';toast('저장하지 못했습니다');res(false)};
+    }catch(e){lastErr='put';res(false)}
+  });
+}
+async function dbDel(store,key){
+  await openDB();
+  return new Promise(res=>{
+    if(!db) return res();
+    try{const q=db.transaction(store,'readwrite').objectStore(store).delete(key);
+      q.onsuccess=()=>res(); q.onerror=()=>res();
+    }catch(e){res()}
+  });
+}
+async function dbClear(store){
+  await openDB();
+  return new Promise(res=>{
+    if(!db) return res();
+    try{const q=db.transaction(store,'readwrite').objectStore(store).clear();
+      q.onsuccess=()=>res(); q.onerror=()=>res();
+    }catch(e){res()}
+  });
+}
+/* 사진을 뺀 예비 저장본 */
+function mirrorSave(){
+  try{
+    localStorage.setItem('ndna-mirror',JSON.stringify({
+      cust:custs.map(c=>{const o={...c};delete o.photo;return o}), act:acts
+    }));
+  }catch(e){}
+}
+function mirrorLoad(){ try{const v=localStorage.getItem('ndna-mirror'); return v?JSON.parse(v):null}catch(e){return null} }
+
+/* ───────── 유틸 ───────── */
+function toast(m){
+  const el=$('toast'); el.textContent=m; el.classList.add('on');
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('on'),2200);
+}
+const pad2=n=>String(n).padStart(2,'0');
+function isoNow(d){ d=d||new Date();
+  return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+'T'+pad2(d.getHours())+':'+pad2(d.getMinutes());
+}
+function dayKey(iso){ return String(iso||'').slice(0,10) }
+function todayKey(){ return isoNow().slice(0,10) }
+const WD=['일','월','화','수','목','금','토'];
+function dayLabel(k){
+  if(!k) return '';
+  const t=todayKey();
+  if(k===t) return '오늘';
+  const y=new Date(); y.setDate(y.getDate()-1);
+  if(k===isoNow(y).slice(0,10)) return '어제';
+  const d=new Date(k+'T00:00:00');
+  if(isNaN(d)) return k;
+  const sameYear=d.getFullYear()===new Date().getFullYear();
+  return (sameYear?'':d.getFullYear()+'년 ')+(d.getMonth()+1)+'월 '+d.getDate()+'일 ('+WD[d.getDay()]+')';
+}
+function shortDate(iso){
+  const k=dayKey(iso); if(!k) return '';
+  if(k===todayKey()) return String(iso).slice(11,16);
+  const d=new Date(k+'T00:00:00'); if(isNaN(d)) return k;
+  const sameYear=d.getFullYear()===new Date().getFullYear();
+  return sameYear?((d.getMonth()+1)+'.'+d.getDate()):(String(d.getFullYear()).slice(2)+'.'+(d.getMonth()+1)+'.'+d.getDate());
+}
+function initial(c){
+  const s=(c.name||c.company||'?').trim();
+  return s ? s.slice(0, /[가-힣]/.test(s[0])?1:2).toUpperCase() : '?';
+}
+const digits=s=>String(s||'').replace(/\D/g,'');
+function fmtPhone(p){
+  const d=digits(p);
+  if(d.length===11) return d.slice(0,3)+'-'+d.slice(3,7)+'-'+d.slice(7);
+  if(d.length===10) return d.startsWith('02')?d.slice(0,2)+'-'+d.slice(2,6)+'-'+d.slice(6):d.slice(0,3)+'-'+d.slice(3,6)+'-'+d.slice(6);
+  return p||'';
+}
+
+/* ───────── 그룹 ───────── */
+function ensureGroup(n){
+  n=String(n||'').trim(); if(!n) return;
+  if(!cfg.groups.includes(n)){ cfg.groups.push(n); cfgSave() }
+}
+function gTag(n){
+  const [bg,fg]=gColor(n);
+  return '<span class="gtag" style="background:'+bg+';color:'+fg+'">'+esc(n)+'</span>';
+}
+
+/* ───────── 사진 ───────── */
+function shrink(file,max=1400,q=.72){
+  return new Promise((res,rej)=>{
+    const fr=new FileReader();
+    fr.onerror=()=>rej(new Error('사진을 읽지 못했습니다'));
+    fr.onload=()=>{
+      const img=new Image();
+      img.onerror=()=>rej(new Error('사진 형식을 인식하지 못했습니다'));
+      img.onload=()=>{
+        let w=img.naturalWidth, h=img.naturalHeight;
+        const s=Math.min(1,max/Math.max(w,h));
+        w=Math.max(1,Math.round(w*s)); h=Math.max(1,Math.round(h*s));
+        const c=document.createElement('canvas'); c.width=w; c.height=h;
+        const x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,w,h); x.drawImage(img,0,0,w,h);
+        res(c.toDataURL('image/jpeg',q));
+      };
+      img.src=fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+
+/* ═════ 명함 자동 크롭 ═════
+   1) 축소본에서 카드 테두리를 찾고
+   2) 원근을 펴서 반듯한 직사각형으로 되돌린 뒤
+   3) 조명 얼룩을 없애고 대비를 세웁니다.
+   테두리를 못 찾으면 원본을 그대로 씁니다. */
+
+function loadImg(src){
+  return new Promise((res,rej)=>{
+    const i=new Image();
+    i.onload=()=>res(i); i.onerror=()=>rej(new Error('이미지를 읽지 못했습니다'));
+    i.src=src;
+  });
+}
+function otsuTh(bins,total){
+  let sum=0; for(let i=0;i<256;i++) sum+=i*bins[i];
+  let sumB=0,wB=0,best=0,th=0;
+  for(let i=0;i<256;i++){
+    wB+=bins[i]; if(!wB) continue;
+    const wF=total-wB; if(!wF) break;
+    sumB+=i*bins[i];
+    const mB=sumB/wB, mF=(sum-sumB)/wF, v=wB*wF*(mB-mF)*(mB-mF);
+    if(v>best){ best=v; th=i }
+  }
+  return th;
+}
+/* 카드 네 꼭짓점 찾기 — 못 찾으면 null.
+   두 가지 방식을 모두 돌려 보고 더 반듯한 결과를 씁니다.
+   (1) 테두리(경계선) 방식 — 배경과 색이 다를 때 강함
+   (2) 배경색 방식 — 흰 명함을 밝은 책상에 놓았을 때처럼 테두리가 흐릴 때 강함 */
+function detectQuad(imgData,w,h){
+  const px=imgData.data, n=w*h;
+  const g=new Float32Array(n);
+  for(let i=0,j=0;i<px.length;i+=4,j++) g[j]=.299*px[i]+.587*px[i+1]+.114*px[i+2];
+
+  const mag=new Float32Array(n); let mx=0;
+  for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
+    const i=y*w+x;
+    const gx=-g[i-w-1]-2*g[i-1]-g[i+w-1]+g[i-w+1]+2*g[i+1]+g[i+w+1];
+    const gy=-g[i-w-1]-2*g[i-w]-g[i-w+1]+g[i+w-1]+2*g[i+w]+g[i+w+1];
+    const m=Math.sqrt(gx*gx+gy*gy); mag[i]=m; if(m>mx) mx=m;
+  }
+  if(mx<4) return null;
+
+  const cands=[];
+  const e=edgeCandidates(mag,mx,w,h);
+  for(let i=0;i<e.length;i++) cands.push(e[i]);
+  const c=quadFromColor(imgData,w,h);
+  if(c) cands.push(c);
+
+  // 후보 채점: 네 변을 따라 실제로 경계선이 있는지 (헛된 사각형 배제)
+  let best=null, bestScore=0;
+  for(let i=0;i<cands.length;i++){
+    const sc=edgeScore(mag,w,h,cands[i].quad)*cands[i].fill;
+    if(sc>bestScore){ bestScore=sc; best=cands[i] }
+  }
+  return best;
+}
+/* 사각형 네 변 위에서 경계선 세기를 잽니다 */
+function edgeScore(mag,w,h,quad){
+  let sum=0,cnt=0;
+  for(let e=0;e<4;e++){
+    const a=quad[e], b=quad[(e+1)%4];
+    const len=Math.hypot(b[0]-a[0],b[1]-a[1]);
+    const steps=Math.max(8,Math.min(140,Math.round(len)));
+    for(let i=1;i<steps;i++){
+      const t=i/steps;
+      const x=Math.round(a[0]+(b[0]-a[0])*t), y=Math.round(a[1]+(b[1]-a[1])*t);
+      let m=0;
+      for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){
+        const nx=x+dx, ny=y+dy;
+        if(nx<0||ny<0||nx>=w||ny>=h) continue;
+        const v=mag[ny*w+nx]; if(v>m) m=v;
+      }
+      sum+=m; cnt++;
+    }
+  }
+  return cnt?sum/cnt:0;
+}
+/* (1) 경계선 방식 — 문턱값을 낮춰 가며 여러 후보를 만듭니다 */
+function edgeCandidates(mag,mx,w,h){
+  const n=w*h;
+  const bins=new Int32Array(256);
+  for(let i=0;i<n;i++) bins[Math.min(255,(mag[i]/mx*255)|0)]++;
+  const base=otsuTh(bins,n)/255*mx;
+  const scales=[1,.7,.5,.35,.25,.16,.1];
+  const out=[];
+  for(let si=0;si<scales.length;si++){
+    const q=quadAtEdge(mag,w,h,base*scales[si]);
+    if(q) out.push(q);
+  }
+  return out;
+}
+function quadAtEdge(mag,w,h,th){
+  const n=w*h;
+  // 경계 이진화 + 팽창(끊긴 테두리 잇기)
+  const dil=new Uint8Array(n);
+  for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
+    if(mag[y*w+x]<=th) continue;
+    for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++) dil[(y+dy)*w+(x+dx)]=1;
+  }
+  // 사진 테두리에서 바깥 배경을 물채우기 → 물이 닿지 않은 곳이 카드 후보
+  const out=new Uint8Array(n), q=new Int32Array(n);
+  let qs=0,qe=0;
+  const push=i=>{ if(!out[i]&&!dil[i]){ out[i]=1; q[qe++]=i } };
+  for(let x=0;x<w;x++){ push(x); push((h-1)*w+x) }
+  for(let y=0;y<h;y++){ push(y*w); push(y*w+w-1) }
+  while(qs<qe){
+    const i=q[qs++], x=i%w, y=(i/w)|0;
+    if(x>0)   push(i-1);
+    if(x<w-1) push(i+1);
+    if(y>0)   push(i-w);
+    if(y<h-1) push(i+w);
+  }
+  const mask=new Uint8Array(n);
+  for(let i=0;i<n;i++) mask[i]=out[i]?0:1;
+  return quadFromMask(mask,w,h);
+}
+/* (2) 배경색 방식 — 사진 가장자리에서 배경색을 재고, 그와 다른 영역을 카드로 봅니다 */
+function quadFromColor(imgData,w,h){
+  const px=imgData.data, n=w*h;
+  const band=Math.max(2,Math.round(Math.min(w,h)*.05));
+  const rs=[],gs=[],bs=[];
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++){
+    if(x>=band && x<w-band && y>=band && y<h-band) continue;
+    const i=(y*w+x)*4; rs.push(px[i]); gs.push(px[i+1]); bs.push(px[i+2]);
+  }
+  if(rs.length<16) return null;
+  const med=a=>{ a.sort((p,q)=>p-q); return a[a.length>>1] };
+  const br=med(rs), bg=med(gs), bb=med(bs);
+
+  const dist=new Float32Array(n); let mx=0;
+  for(let j=0;j<n;j++){
+    const i=j*4, dr=px[i]-br, dg=px[i+1]-bg, db=px[i+2]-bb;
+    const d=Math.sqrt(dr*dr+dg*dg+db*db);
+    dist[j]=d; if(d>mx) mx=d;
+  }
+  if(mx<12) return null;
+  const bins=new Int32Array(256);
+  for(let j=0;j<n;j++) bins[Math.min(255,(dist[j]/mx*255)|0)]++;
+  const th=otsuTh(bins,n)/255*mx;
+
+  const mask=new Uint8Array(n);
+  for(let j=0;j<n;j++) mask[j]=dist[j]>th?1:0;
+  // 잔점 메우기 (3x3 닫기)
+  const dil=new Uint8Array(n);
+  for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
+    if(!mask[y*w+x]) continue;
+    for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++) dil[(y+dy)*w+(x+dx)]=1;
+  }
+  return quadFromMask(dil,w,h);
+}
+/* 마스크(1=카드 후보)에서 가장 큰 덩어리를 찾아 네 꼭짓점을 냅니다 */
+function quadFromMask(mask,w,h){
+  const n=w*h;
+  const lab=new Int32Array(n).fill(-1), q=new Int32Array(n);
+  let bestN=0,bestId=-1,id=0,qs=0,qe=0;
+  for(let s0=0;s0<n;s0++){
+    if(!mask[s0]||lab[s0]>=0) continue;
+    let cnt=0; qs=qe=0; q[qe++]=s0; lab[s0]=id;
+    while(qs<qe){
+      const i=q[qs++]; cnt++;
+      const x=i%w, y=(i/w)|0;
+      if(x>0   && mask[i-1] && lab[i-1]<0){ lab[i-1]=id; q[qe++]=i-1 }
+      if(x<w-1 && mask[i+1] && lab[i+1]<0){ lab[i+1]=id; q[qe++]=i+1 }
+      if(y>0   && mask[i-w] && lab[i-w]<0){ lab[i-w]=id; q[qe++]=i-w }
+      if(y<h-1 && mask[i+w] && lab[i+w]<0){ lab[i+w]=id; q[qe++]=i+w }
+    }
+    if(cnt>bestN){ bestN=cnt; bestId=id }
+    id++;
+  }
+  if(bestId<0 || bestN<n*.12 || bestN>n*.94) return null;
+
+  let tl=null,tr=null,br=null,bl=null;
+  let s1=Infinity,s2=-Infinity,d1=Infinity,d2=-Infinity;
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++){
+    if(lab[y*w+x]!==bestId) continue;
+    const su=x+y, df=x-y;
+    if(su<s1){ s1=su; tl=[x,y] }
+    if(su>s2){ s2=su; br=[x,y] }
+    if(df<d1){ d1=df; bl=[x,y] }
+    if(df>d2){ d2=df; tr=[x,y] }
+  }
+  if(!tl||!tr||!br||!bl) return null;
+
+  const quad=[tl,tr,br,bl];
+  // 사진 가장자리에 붙은 사각형은 물채우기가 샌 것입니다 — 자르지 않고 원본을 씁니다
+  const mg=Math.max(2,Math.round(Math.min(w,h)*.015));
+  let touch=0;
+  for(let i=0;i<4;i++){
+    const p=quad[i];
+    if(p[0]<=mg || p[1]<=mg || p[0]>=w-1-mg || p[1]>=h-1-mg) touch++;
+  }
+  if(touch>=2) return null;
+
+  const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+  const top=dist(tl,tr), right=dist(tr,br), bot=dist(br,bl), left=dist(bl,tl);
+  if(Math.min(top,right,bot,left) < Math.min(w,h)*.15) return null;
+
+  const cross=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);
+  let sign=0;
+  for(let i=0;i<4;i++){
+    const c=cross(quad[i],quad[(i+1)%4],quad[(i+2)%4]);
+    if(Math.abs(c)<1) return null;
+    const sg=c>0?1:-1;
+    if(!sign) sign=sg; else if(sg!==sign) return null;
+  }
+  const qArea=(Math.abs(cross(tl,tr,br))+Math.abs(cross(tl,br,bl)))/2;
+  if(qArea<1 || bestN<qArea*.72) return null;
+
+  const wOut=(top+bot)/2, hOut=(left+right)/2;
+  const ar=wOut/hOut;
+  if(ar<.35 || ar>3.6) return null;
+
+  return {quad,wOut,hOut,fill:Math.min(1,bestN/qArea)};
+}
+/* 원근으로 찌그러진 사각형에서 진짜 가로세로 비를 되찾습니다.
+   카메라 주점을 사진 중앙으로 보고 초점거리를 역산하는 방식
+   (Zhang & He, Whiteboard Scanning). 못 구하면 null */
+function trueAspect(quad,w,h){
+  const cx=w/2, cy=h/2;
+  const P=i=>[quad[i][0]-cx, quad[i][1]-cy, 1];
+  const m1=P(0), m2=P(1), m3=P(3), m4=P(2);      // 좌상, 우상, 좌하, 우하
+  const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+  const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+  const e1=dot(cross(m2,m4),m3), e2=dot(cross(m3,m4),m2);
+  if(Math.abs(e1)<1e-9 || Math.abs(e2)<1e-9) return null;
+  const k2=dot(cross(m1,m4),m3)/e1;
+  const k3=dot(cross(m1,m4),m2)/e2;
+  const n2=[k2*m2[0]-m1[0], k2*m2[1]-m1[1], k2*m2[2]-m1[2]];
+  const n3=[k3*m3[0]-m1[0], k3*m3[1]-m1[1], k3*m3[2]-m1[2]];
+  let r;
+  if(Math.abs(k2-1)<1e-3 && Math.abs(k3-1)<1e-3){   // 원근이 거의 없을 때
+    r=Math.sqrt((n2[0]*n2[0]+n2[1]*n2[1])/(n3[0]*n3[0]+n3[1]*n3[1]));
+  }else{
+    if(Math.abs(n2[2])<1e-9 || Math.abs(n3[2])<1e-9) return null;
+    const f2=-(n2[0]*n3[0]+n2[1]*n3[1])/(n2[2]*n3[2]);
+    if(!(f2>0)) return null;
+    const num=n2[0]*n2[0]+n2[1]*n2[1]+n2[2]*n2[2]*f2;
+    const den=n3[0]*n3[0]+n3[1]*n3[1]+n3[2]*n3[2]*f2;
+    if(!(den>0)) return null;
+    r=Math.sqrt(num/den);
+  }
+  return (isFinite(r) && r>.2 && r<5) ? r : null;
+}
+/* 8원 1차 연립방정식 (가우스 소거) */
+function solve8(A,b){
+  const n=8;
+  for(let i=0;i<n;i++){
+    let p=i;
+    for(let r=i+1;r<n;r++) if(Math.abs(A[r][i])>Math.abs(A[p][i])) p=r;
+    if(Math.abs(A[p][i])<1e-9) return null;
+    const ta=A[i]; A[i]=A[p]; A[p]=ta;
+    const tb=b[i]; b[i]=b[p]; b[p]=tb;
+    for(let r=0;r<n;r++){
+      if(r===i) continue;
+      const f=A[r][i]/A[i][i];
+      if(!f) continue;
+      for(let c=i;c<n;c++) A[r][c]-=f*A[i][c];
+      b[r]-=f*b[i];
+    }
+  }
+  const x=new Array(n);
+  for(let i=0;i<n;i++) x[i]=b[i]/A[i][i];
+  return x;
+}
+/* 사각형 → 직사각형 원근 펴기 */
+function warpQuad(img,quad,outW,outH){
+  const sw=img.naturalWidth||img.width, sh=img.naturalHeight||img.height;
+  const sc=document.createElement('canvas'); sc.width=sw; sc.height=sh;
+  const sx=sc.getContext('2d',{willReadFrequently:true});
+  sx.drawImage(img,0,0);
+  const sp=sx.getImageData(0,0,sw,sh).data;
+
+  const dst=[[0,0],[outW,0],[outW,outH],[0,outH]];
+  const A=[],b=[];
+  for(let i=0;i<4;i++){
+    const u=dst[i][0], v=dst[i][1], x=quad[i][0], y=quad[i][1];
+    A.push([u,v,1,0,0,0,-u*x,-v*x]); b.push(x);
+    A.push([0,0,0,u,v,1,-u*y,-v*y]); b.push(y);
+  }
+  const m=solve8(A,b);
+  if(!m) return null;
+  const a=m[0],bb=m[1],c=m[2],d=m[3],e=m[4],f=m[5],g=m[6],hh=m[7];
+
+  const oc=document.createElement('canvas'); oc.width=outW; oc.height=outH;
+  const ox=oc.getContext('2d');
+  const od=ox.createImageData(outW,outH), op=od.data;
+  for(let y=0;y<outH;y++){
+    for(let x=0;x<outW;x++){
+      const den=g*x+hh*y+1;
+      const fx0=(a*x+bb*y+c)/den, fy0=(d*x+e*y+f)/den;
+      const i0=(y*outW+x)*4;
+      op[i0+3]=255;
+      if(!(fx0>=0&&fy0>=0&&fx0<=sw-1&&fy0<=sh-1)){ op[i0]=op[i0+1]=op[i0+2]=255; continue }
+      const x0=fx0|0, y0=fy0|0;
+      const x1=x0<sw-1?x0+1:x0, y1=y0<sh-1?y0+1:y0;
+      const rx=fx0-x0, ry=fy0-y0;
+      const p00=(y0*sw+x0)*4, p10=(y0*sw+x1)*4, p01=(y1*sw+x0)*4, p11=(y1*sw+x1)*4;
+      for(let ch=0;ch<3;ch++){
+        const t0=sp[p00+ch]*(1-rx)+sp[p10+ch]*rx;
+        const t1=sp[p01+ch]*(1-rx)+sp[p11+ch]*rx;
+        op[i0+ch]=t0*(1-ry)+t1*ry;
+      }
+    }
+  }
+  ox.putImageData(od,0,0);
+  return oc;
+}
+/* 조명 얼룩 평탄화 + 대비 */
+function enhance(canvas){
+  const w=canvas.width, h=canvas.height;
+  const cx=canvas.getContext('2d',{willReadFrequently:true});
+  const d=cx.getImageData(0,0,w,h), px=d.data, n=w*h;
+  const g=new Float32Array(n);
+  for(let i=0,j=0;i<px.length;i+=4,j++) g[j]=.299*px[i]+.587*px[i+1]+.114*px[i+2];
+
+  const iw=w+1;
+  const ii=new Float64Array(iw*(h+1));
+  for(let y=0;y<h;y++){
+    let row=0;
+    for(let x=0;x<w;x++){ row+=g[y*w+x]; ii[(y+1)*iw+(x+1)]=ii[y*iw+(x+1)]+row }
+  }
+  const r=Math.max(10,Math.floor(Math.min(w,h)/10));
+  for(let y=0;y<h;y++){
+    const y0=y-r<0?0:y-r, y1=y+r>h-1?h-1:y+r;
+    for(let x=0;x<w;x++){
+      const x0=x-r<0?0:x-r, x1=x+r>w-1?w-1:x+r;
+      const sum=ii[(y1+1)*iw+(x1+1)]-ii[y0*iw+(x1+1)]-ii[(y1+1)*iw+x0]+ii[y0*iw+x0];
+      const bg=sum/((x1-x0+1)*(y1-y0+1))+1;
+      const k=Math.min(1.85,236/bg);
+      const i4=(y*w+x)*4;
+      for(let ch=0;ch<3;ch++){
+        let v=px[i4+ch]*k;
+        v=(v-18)*1.16+10;
+        px[i4+ch]=v<0?0:v>255?255:v;
+      }
+    }
+  }
+  cx.putImageData(d,0,0);
+  return canvas;
+}
+/* 전체 흐름 — 실패해도 원본을 돌려줍니다 */
+async function autoCrop(dataUrl){
+  try{
+    const img=await loadImg(dataUrl);
+    const sw=img.naturalWidth, sh=img.naturalHeight;
+    const DW=340;
+    const s=Math.min(1,DW/Math.max(sw,sh));
+    const dw=Math.max(8,Math.round(sw*s)), dh=Math.max(8,Math.round(sh*s));
+    const tc=document.createElement('canvas'); tc.width=dw; tc.height=dh;
+    const tx=tc.getContext('2d',{willReadFrequently:true});
+    tx.drawImage(img,0,0,dw,dh);
+
+    const det=detectQuad(tx.getImageData(0,0,dw,dh),dw,dh);
+    if(!det) return {url:dataUrl,cropped:false};
+
+    const k=1/s;
+    const quad=det.quad.map(p=>[p[0]*k,p[1]*k]);
+    const ar=trueAspect(quad,sw,sh) || (det.wOut/det.hOut);
+    // 명함 글자를 읽기에 1200px면 충분합니다. 더 키우면 저장 용량만 커집니다.
+    const outW=Math.round(Math.min(1200,Math.max(760,Math.max(det.wOut,det.hOut*ar)*k)));
+    const outH=Math.max(8,Math.round(outW/ar));
+    const oc=warpQuad(img,quad,outW,outH);
+    if(!oc) return {url:dataUrl,cropped:false};
+    enhance(oc);
+    return {url:oc.toDataURL('image/jpeg',.8),cropped:true};
+  }catch(e){
+    return {url:dataUrl,cropped:false};
+  }
+}
+
+/* ───────── 명함 자동 인식 ───────── */
+const OCR_PROMPT='명함 사진입니다. 인쇄된 글자를 읽어 아래 항목만 뽑아 주세요.\n'+
+'- company: 회사명 (한글이 있으면 한글 우선)\n'+
+'- name: 사람 이름만 (인쇄된 그대로. 한글과 영문이 함께 있으면 한글)\n'+
+'- title: 직함 (부장, 대표, Manager 등). 없으면 빈 문자열\n'+
+'- phone: 휴대폰 번호 우선, 없으면 대표번호. 숫자와 하이픈만\n'+
+'- email: 이메일 주소\n'+
+'- address: 회사 주소\n'+
+'읽을 수 없는 항목은 빈 문자열로 두세요. 추측하지 말고 보이는 대로만 적으세요.\n'+
+'오직 JSON만 출력하고 다른 말은 절대 쓰지 마세요.\n'+
+'{"company":"","name":"","title":"","phone":"","email":"","address":""}';
+
+async function readCard(dataUrl){
+  const st=$('aiStat'); st.hidden=false;
+  if(!cfg.key){ st.className='ai'; st.textContent='자동 인식 꺼짐 — 설정에서 API 키를 넣으면 켜집니다'; return }
+  st.className='ai'; st.innerHTML='<span class="spin"></span>명함을 읽는 중…';
+  try{
+    const b64=dataUrl.split(',')[1];
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'content-type':'application/json','x-api-key':cfg.key,
+        'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:cfg.model||'claude-sonnet-5',max_tokens:600,
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:'image/jpeg',data:b64}},
+          {type:'text',text:OCR_PROMPT}
+        ]}]})
+    });
+    if(!r.ok){ const e=await r.text(); throw new Error(r.status+' '+e.slice(0,110)) }
+    const d=await r.json();
+    const txt=(d.content||[]).map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+    const j=JSON.parse(txt.slice(txt.indexOf('{'),txt.lastIndexOf('}')+1));
+    const set=(id,v)=>{ if(v && !$(id).value) $(id).value=String(v).trim() };
+    set('f-company',j.company); set('f-name',j.name); set('f-title',j.title);
+    set('f-phone',fmtPhone(j.phone)); set('f-email',j.email); set('f-addr',j.address);
+    const got=[j.company,j.name,j.phone,j.email].filter(Boolean).length;
+    st.className=got?'ai ok':'ai';
+    st.textContent=got?'자동 입력했습니다 — 틀린 곳은 직접 고쳐주세요':'글자를 찾지 못했습니다 — 직접 입력해주세요';
+  }catch(e){
+    st.className='ai err';
+    st.textContent='인식 실패: '+String(e.message||e).slice(0,80)+' — 직접 입력해주세요';
+  }
+}
+
+/* ───────── 촬영 · 폼 ───────── */
+async function usePhoto(file){
+  if(!file) return;
+  try{
+    draftOrig=await shrink(file,1600,.84);
+    draftCrop=null; draftPhoto=draftOrig;
+    $('shotImg').src=draftOrig;
+    $('shotWrap').hidden=false; $('shootWrap').hidden=true; $('reshootRow').hidden=false;
+    $('cropBar').hidden=false; $('cropMsg').textContent='테두리 찾는 중…';
+    $('aiStat').hidden=true;
+    await new Promise(r=>setTimeout(r,30));           // 미리보기를 먼저 그립니다
+    const res=await autoCrop(draftOrig);
+    if(res.cropped){
+      draftCrop=res.url; draftPhoto=draftCrop; $('shotImg').src=draftCrop;
+      $('cropMsg').textContent='자동으로 잘라 폈습니다';
+      setCropBtns(true);
+    }else{
+      draftPhoto=draftOrig;
+      $('cropMsg').textContent='테두리를 못 찾았습니다';
+      setCropBtns(false);
+    }
+    await readCard(draftPhoto);
+  }catch(e){ toast(e.message||'사진을 불러오지 못했습니다') }
+}
+function setCropBtns(on){
+  $('cropOn').setAttribute('aria-pressed',String(!!on));
+  $('cropOff').setAttribute('aria-pressed',String(!on));
+  $('cropOn').disabled=!draftCrop;
+  $('cropOn').style.opacity=draftCrop?'1':'.35';
+}
+$('cropOn').addEventListener('click',()=>{
+  if(!draftCrop) return;
+  draftPhoto=draftCrop; $('shotImg').src=draftCrop; setCropBtns(true);
+});
+$('cropOff').addEventListener('click',()=>{
+  if(!draftOrig) return;
+  draftPhoto=draftOrig; $('shotImg').src=draftOrig; setCropBtns(false);
+});
+/* 명함을 눕혀 찍었을 때 직접 세울 수 있게 */
+$('rotBtn').addEventListener('click',async()=>{
+  if(!draftPhoto) return;
+  try{
+    const img=await loadImg(draftPhoto);
+    const w=img.naturalWidth, h=img.naturalHeight;
+    const c=document.createElement('canvas'); c.width=h; c.height=w;
+    const x=c.getContext('2d');
+    x.translate(h/2,w/2); x.rotate(Math.PI/2); x.drawImage(img,-w/2,-h/2);
+    const url=c.toDataURL('image/jpeg',.85);
+    if(draftPhoto===draftCrop) draftCrop=url; else draftOrig=url;
+    draftPhoto=url; $('shotImg').src=url;
+  }catch(e){ toast('회전하지 못했습니다') }
+});
+$('cam').addEventListener('change',e=>{usePhoto(e.target.files[0]); e.target.value=''});
+$('gal').addEventListener('change',e=>{usePhoto(e.target.files[0]); e.target.value=''});
+$('shootBtn').addEventListener('click',()=>$('cam').click());
+$('reShoot').addEventListener('click',()=>$('cam').click());
+$('rePick').addEventListener('click',()=>$('gal').click());
+$('shotDel').addEventListener('click',()=>{
+  draftPhoto=null; draftOrig=null; draftCrop=null;
+  $('shotWrap').hidden=true; $('shootWrap').hidden=false;
+  $('reshootRow').hidden=true; $('aiStat').hidden=true; $('cropBar').hidden=true;
+});
+
+function renderFormGroups(){
+  $('fGroups').innerHTML=cfg.groups.map(g=>
+    '<button type="button" data-g="'+esc(g)+'" aria-pressed="'+(draftGroups.includes(g)?'true':'false')+'">'+esc(g)+'</button>'
+  ).join('') || '<span class="note" style="margin:0">설정 탭에서 그룹을 먼저 만들어 주세요.</span>';
+}
+$('fGroups').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-g]'); if(!b) return;
+  const g=b.dataset.g;
+  draftGroups=draftGroups.includes(g)?draftGroups.filter(x=>x!==g):[...draftGroups,g];
+  renderFormGroups();
+});
+
+function clearForm(){
+  ['f-name','f-company','f-title','f-phone','f-email','f-addr','f-memo'].forEach(id=>$(id).value='');
+  draftPhoto=null; draftOrig=null; draftCrop=null; draftGroups=[]; editUid=null;
+  $('shotWrap').hidden=true; $('shootWrap').hidden=false; $('reshootRow').hidden=true;
+  $('aiStat').hidden=true; $('cropBar').hidden=true;
+  $('newTitle').textContent='새 고객';
+  $('newSub').textContent='명함을 촬영하면 기본 정보가 자동으로 입력됩니다';
+  $('saveCust').textContent='고객카드 생성';
+  $('firstMemoWrap').hidden=false; $('newCancel').hidden=true; $('newNote').hidden=false;
+  renderFormGroups();
+}
+function loadForm(c){
+  editUid=c.uid;
+  $('f-name').value=c.name||''; $('f-company').value=c.company||'';
+  $('f-title').value=c.title||''; $('f-phone').value=c.phone||'';
+  $('f-email').value=c.email||''; $('f-addr').value=c.addr||'';
+  draftGroups=[...(c.groups||[])]; draftPhoto=c.photo||null;
+  draftOrig=draftPhoto; draftCrop=null; $('cropBar').hidden=true;
+  if(draftPhoto){ $('shotImg').src=draftPhoto; $('shotWrap').hidden=false; $('shootWrap').hidden=true; $('reshootRow').hidden=false }
+  else { $('shotWrap').hidden=true; $('shootWrap').hidden=false; $('reshootRow').hidden=true }
+  $('aiStat').hidden=true;
+  $('newTitle').textContent='고객 정보 수정';
+  $('newSub').textContent=(c.name||c.company||'고객')+' 님의 기본 정보를 고칩니다';
+  $('saveCust').textContent='수정 내용 저장';
+  $('firstMemoWrap').hidden=true; $('newCancel').hidden=false; $('newNote').hidden=true;
+  renderFormGroups();
+  go('new');
+}
+$('newCancel').addEventListener('click',()=>{ const u=editUid; clearForm(); if(u){ go('list'); openDetail(u) } });
+
+$('saveCust').addEventListener('click',async()=>{
+  const name=$('f-name').value.trim(), company=$('f-company').value.trim();
+  if(!name && !company){ toast('성함이나 회사명 중 하나는 입력해주세요'); $('f-name').focus(); return }
+  const base={
+    name, company,
+    title:$('f-title').value.trim(),
+    phone:fmtPhone($('f-phone').value.trim()),
+    email:$('f-email').value.trim(),
+    addr:$('f-addr').value.trim(),
+    groups:[...draftGroups], photo:draftPhoto||null,
+    updated:now(), dirty:true, deleted:false
+  };
+  draftGroups.forEach(ensureGroup);
+
+  if(editUid){
+    const c=custs.find(x=>x.uid===editUid); if(!c){ clearForm(); return }
+    Object.assign(c,base);
+    await dbPut('cust',c); mirrorSave();
+    const u=c.uid; clearForm(); go('list'); openDetail(u);
+    toast('수정했습니다'); queueSync();
+  }else{
+    const c={uid:uid(),createdAt:isoNow(),owner:cfg.owner||'',lastAt:isoNow(),...base};
+    custs.unshift(c); await dbPut('cust',c);
+    const memo=$('f-memo').value.trim();
+    if(memo) await addAct(c.uid,'meeting',memo,isoNow(),null,true);
+    mirrorSave(); clearForm(); render(); go('list'); openDetail(c.uid);
+    toast('고객카드를 만들었습니다'); queueSync();
+    if(cfg.askContact && (c.phone||c.email)) setTimeout(()=>openAsk(c),420);
+  }
+});
+
+/* ═════════ 타임라인 기록 ═════════ */
+async function addAct(cid,kind,body,at,due,silent){
+  const a={uid:uid(),cid,kind,body:String(body||'').trim(),at:at||isoNow(),
+    due:due||'',done:false,by:cfg.owner||'',updated:now(),dirty:true,deleted:false};
+  acts.push(a); await dbPut('act',a);
+  await touchCust(cid,a.at);
+  mirrorSave();
+  if(!silent){ render(); if(curUid===cid) paintDetail(); queueSync() }
+  return a;
+}
+async function touchCust(cid,at){
+  const c=custs.find(x=>x.uid===cid); if(!c) return;
+  if(!c.lastAt || String(at)>String(c.lastAt)){ c.lastAt=at }
+  c.updated=now(); c.dirty=true; await dbPut('cust',c);
+}
+function custActs(cid){
+  return acts.filter(a=>a.cid===cid && !a.deleted).sort((x,y)=>String(y.at).localeCompare(String(x.at)));
+}
+function openTodos(cid){ return acts.filter(a=>a.cid===cid && !a.deleted && a.kind==='todo' && !a.done) }
+
+async function toggleTodo(auid){
+  const a=acts.find(x=>x.uid===auid); if(!a) return;
+  a.done=!a.done; a.updated=now(); a.dirty=true;
+  await dbPut('act',a); mirrorSave(); paintDetail(); render(); queueSync();
+}
+
+/* ═════════ 목록 ═════════ */
+function matches(c,q){
+  if(!q) return true;
+  const dq=digits(q);
+  const hay=[c.name,c.company,c.title,c.email,c.addr,(c.groups||[]).join(' ')].join(' ').toLowerCase();
+  if(hay.includes(q.toLowerCase())) return true;
+  if(dq.length>=3 && digits(c.phone).includes(dq)) return true;
+  return false;
+}
+function visible(){
+  return custs
+    .filter(c=>!c.deleted)
+    .filter(c=>!filterG || (c.groups||[]).includes(filterG))
+    .filter(c=>matches(c,qs))
+    .sort((a,b)=>String(b.lastAt||b.createdAt||'').localeCompare(String(a.lastAt||a.createdAt||'')));
+}
+function weekStart(){
+  const d=new Date(); const w=(d.getDay()+6)%7;
+  d.setDate(d.getDate()-w); d.setHours(0,0,0,0); return isoNow(d).slice(0,10);
+}
+function renderChips(){
+  const live=custs.filter(c=>!c.deleted);
+  const cnt=g=>live.filter(c=>(c.groups||[]).includes(g)).length;
+  let h='<button class="chip" data-g="" aria-pressed="'+(!filterG?'true':'false')+'">전체 <span class="n">'+live.length+'</span></button>';
+  h+=cfg.groups.map(g=>'<button class="chip" data-g="'+esc(g)+'" aria-pressed="'+(filterG===g?'true':'false')+'">'+esc(g)+' <span class="n">'+cnt(g)+'</span></button>').join('');
+  h+='<button class="chip add" id="chipAdd">＋ 그룹</button>';
+  $('groupChips').innerHTML=h;
+}
+function renderList(){
+  const vis=visible();
+  const live=custs.filter(c=>!c.deleted);
+  $('stAll').textContent=live.length;
+  $('stTodo').textContent=acts.filter(a=>!a.deleted&&a.kind==='todo'&&!a.done).length;
+  const ws=weekStart();
+  $('stWeek').textContent=acts.filter(a=>!a.deleted&&a.kind==='meeting'&&dayKey(a.at)>=ws).length;
+  $('listSub').textContent = live.length ? live.length+'명의 고객을 관리하고 있습니다' : '고객카드를 만들면 여기에 모입니다';
+
+  const w=$('listWrap');
+  if(!vis.length){
+    w.innerHTML='<div class="empty"><div class="ic">👤</div><b>'+
+      (live.length? '조건에 맞는 고객이 없습니다':'아직 등록된 고객이 없습니다')+'</b><span>'+
+      (live.length? '검색어나 그룹 필터를 바꿔보세요':'아래 <b>새 고객</b> 탭에서 명함을 촬영해보세요')+'</span></div>';
+    return;
+  }
+  w.innerHTML='<div class="list">'+vis.map(c=>{
+    const [bg,fg]=gColor(c.groups&&c.groups[0]||c.company||c.name||'x');
+    const last=custActs(c.uid)[0];
+    const td=openTodos(c.uid).length;
+    const av=c.photo
+      ? '<div class="av"><img src="'+c.photo+'" alt=""></div>'
+      : '<div class="av" style="background:'+bg+';color:'+fg+'">'+esc(initial(c))+'</div>';
+    return '<button class="crow" data-u="'+c.uid+'">'+av+
+      '<div class="cmain">'+
+        '<div class="cname">'+esc(c.name||c.company||'(이름 없음)')+(c.title?'<span class="tt">'+esc(c.title)+'</span>':'')+'</div>'+
+        (c.name&&c.company?'<div class="cco">'+esc(c.company)+'</div>':'')+
+        (last?'<div class="clast">'+kindTag(last.kind)+'<span class="tx">'+esc(last.body.replace(/\s+/g,' '))+'</span></div>'
+             :'<div class="clast" style="color:var(--dim)">아직 기록이 없습니다</div>')+
+      '</div>'+
+      '<div class="cside">'+
+        '<span class="cdate">'+esc(shortDate(c.lastAt||c.createdAt))+'</span>'+
+        (td?'<span class="badge">'+td+'</span>':(c.groups&&c.groups.length?gTag(c.groups[0]):''))+
+      '</div></button>';
+  }).join('')+'</div>';
+}
+function kindTag(k){
+  return '<span class="kind k-'+k+'" style="height:18px;padding:0 6px;font-size:.66rem">'+KIND[k].ko+'</span>';
+}
+function render(){ renderChips(); renderList() }
+
+$('q').addEventListener('input',e=>{ qs=e.target.value.trim(); $('qClr').hidden=!qs; renderList() });
+$('qClr').addEventListener('click',()=>{ $('q').value=''; qs=''; $('qClr').hidden=true; renderList() });
+$('groupChips').addEventListener('click',e=>{
+  if(e.target.closest('#chipAdd')){ go('set'); setTimeout(()=>$('s-newGroup').focus(),260); return }
+  const b=e.target.closest('.chip[data-g]'); if(!b) return;
+  filterG=b.dataset.g; render();
+});
+$('listWrap').addEventListener('click',e=>{
+  const b=e.target.closest('.crow[data-u]'); if(b) openDetail(b.dataset.u);
+});
+
+/* ═════════ 고객 상세 ═════════ */
+function openDetail(u){
+  curUid=u; $('detail').hidden=false; $('fabWrap').hidden=false;
+  document.body.style.overflow='hidden';
+  paintDetail(); $('detail').scrollTop=0;
+  try{ history.pushState({d:1},'') }catch(e){}
+}
+function closeDetail(){
+  curUid=null; $('detail').hidden=true; $('fabWrap').hidden=true;
+  document.body.style.overflow='';
+}
+$('dBack').addEventListener('click',()=>{ try{history.back()}catch(e){ closeDetail() } });
+window.addEventListener('popstate',()=>{ if(curUid) closeDetail() });
+
+function paintDetail(){
+  const c=custs.find(x=>x.uid===curUid); if(!c){ closeDetail(); return }
+  const [bg,fg]=gColor(c.groups&&c.groups[0]||c.company||c.name||'x');
+  $('dTitle').textContent=c.name||c.company||'고객';
+  const av=c.photo?'<div class="av"><img src="'+c.photo+'" alt=""></div>'
+                   :'<div class="av" style="background:'+bg+';color:'+fg+'">'+esc(initial(c))+'</div>';
+  const tel=digits(c.phone), mail=(c.email||'').trim();
+  const list=custActs(c.uid), open=list.filter(a=>a.kind==='todo'&&!a.done);
+
+  let h='<div class="profile">'+av+
+    '<h2>'+esc(c.name||c.company||'(이름 없음)')+'</h2>'+
+    '<div class="role">'+esc([c.title,c.company].filter(Boolean).join(' · ')||'—')+'</div>'+
+    ((c.groups&&c.groups.length)?'<div class="gs">'+c.groups.map(gTag).join('')+'</div>':'')+
+    '<div class="acts">'+
+      (tel?'<a href="tel:'+tel+'"><svg viewBox="0 0 24 24"><path d="M5 4h3l2 5-2.5 1.5a12 12 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>전화</a>'
+           :'<button class="off"><svg viewBox="0 0 24 24"><path d="M5 4h3l2 5-2.5 1.5a12 12 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>전화</button>')+
+      (tel?'<a href="sms:'+tel+'"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20.5l1.4-5A8 8 0 1 1 21 12z"/></svg>문자</a>'
+           :'<button class="off"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20.5l1.4-5A8 8 0 1 1 21 12z"/></svg>문자</button>')+
+      (mail?'<a href="mailto:'+esc(mail)+'"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M4 7l8 6 8-6"/></svg>메일</a>'
+            :'<button class="off"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M4 7l8 6 8-6"/></svg>메일</button>')+
+      '<button data-vcf="1"><svg viewBox="0 0 24 24"><path d="M15.5 20v-1.6a3.4 3.4 0 0 0-3.4-3.4H6.9a3.4 3.4 0 0 0-3.4 3.4V20"/><circle cx="9.5" cy="8" r="3.4"/><path d="M18.5 8.5v5M21 11h-5"/></svg>연락처</button>'+
+    '</div></div>';
+
+  const row=(k,v,cp)=>'<button class="irow"'+(cp?' data-copy="'+esc(v)+'"':'')+'><span class="k">'+k+'</span><span class="v'+(v?'':' none')+'">'+(v?esc(v):'—')+'</span></button>';
+  h+='<h2 class="sec">고객 정보</h2><div class="info">'+
+    row('전화',c.phone,!!c.phone)+row('이메일',c.email,!!c.email)+
+    row('회사',c.company,false)+row('주소',c.addr,!!c.addr)+
+    row('등록일',(c.createdAt||'').slice(0,10),false)+
+    (c.owner?row('담당자',c.owner,false):'')+
+    '</div>';
+  if(c.photo) h+='<h2 class="sec">명함</h2><img class="cardimg" src="'+c.photo+'" alt="명함">';
+
+  if(open.length){
+    h+='<h2 class="sec">남은 할 일 '+open.length+'건</h2><div class="todos">'+
+      open.map(a=>todoRow(a)).join('')+'</div>';
+  }
+
+  h+='<h2 class="sec">타임라인 '+list.length+'건</h2>';
+  if(!list.length){
+    h+='<div class="empty" style="padding:36px 20px"><b>아직 기록이 없습니다</b><span>아래 <b>기록 추가</b>를 눌러 미팅 내용을 남겨보세요</span></div>';
+  }else{
+    h+='<div class="tl">';
+    let day='';
+    for(const a of list){
+      const k=dayKey(a.at);
+      if(k!==day){ day=k; h+='<div class="day">'+esc(dayLabel(k))+'</div>' }
+      h+=entryHTML(a);
+    }
+    h+='</div>';
+  }
+  $('dBody').innerHTML=h;
+}
+function todoRow(a){
+  const over=a.due && !a.done && a.due<todayKey();
+  return '<button class="todo'+(a.done?' done':'')+'" data-t="'+a.uid+'">'+
+    '<span class="cb'+(a.done?' on':'')+'"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>'+
+    '<span class="tx">'+esc(a.body)+
+      (a.due?'<span class="due'+(over?' over':'')+'" style="display:block">마감 '+esc(a.due.slice(5).replace('-','/'))+(over?' · 지남':'')+'</span>':'')+
+    '</span></button>';
+}
+function entryHTML(a){
+  const tm=String(a.at).slice(11,16);
+  if(a.kind==='todo'){
+    const over=a.due && !a.done && a.due<todayKey();
+    return '<div class="ent d-todo'+(a.done?' done':'')+'" data-e="'+a.uid+'">'+
+      '<div class="top"><span class="kind k-todo">할 일</span><span class="tm">'+tm+'</span></div>'+
+      '<div class="cbwrap">'+
+        '<button class="cb'+(a.done?' on':'')+'" data-t="'+a.uid+'" aria-label="완료"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>'+
+        '<div class="bd">'+esc(a.body)+
+          (a.due?'<span class="due'+(over?' over':'')+'" style="display:block;font-size:.76rem;font-weight:600;margin-top:4px;color:'+(over?'var(--red)':'var(--mut)')+'">마감 '+esc(a.due.slice(5).replace('-','/'))+(over?' · 지남':'')+'</span>':'')+
+        '</div>'+
+      '</div></div>';
+  }
+  return '<div class="ent d-'+a.kind+'" data-e="'+a.uid+'">'+
+    '<div class="top"><span class="kind k-'+a.kind+'">'+KIND[a.kind].ko+'</span><span class="tm">'+tm+'</span></div>'+
+    '<div class="bd">'+esc(a.body)+'</div></div>';
+}
+
+$('dBody').addEventListener('click',async e=>{
+  const cb=e.target.closest('[data-t]');
+  if(cb){ await toggleTodo(cb.dataset.t); return }
+  const ent=e.target.closest('.ent[data-e]');
+  if(ent){ openSheet(ent.dataset.e); return }
+  if(e.target.closest('[data-vcf]')){
+    const c=custs.find(x=>x.uid===curUid); if(c) saveContact(c);
+    return;
+  }
+  const cp=e.target.closest('[data-copy]');
+  if(cp && cp.dataset.copy){
+    try{ await navigator.clipboard.writeText(cp.dataset.copy); toast('복사했습니다') }catch(err){}
+  }
+});
+$('dEdit').addEventListener('click',()=>{
+  const c=custs.find(x=>x.uid===curUid); if(!c) return;
+  closeDetail(); loadForm(c);
+});
+$('dDel').addEventListener('click',async()=>{
+  const c=custs.find(x=>x.uid===curUid); if(!c) return;
+  const n=custActs(c.uid).length;
+  if(!confirm((c.name||c.company)+' 고객카드를 삭제합니다.\n타임라인 기록 '+n+'건도 함께 지워집니다. 되돌릴 수 없습니다.')) return;
+  c.deleted=true; c.updated=now(); c.dirty=true; await dbPut('cust',c);
+  for(const a of acts.filter(x=>x.cid===c.uid&&!x.deleted)){
+    a.deleted=true; a.updated=now(); a.dirty=true; await dbPut('act',a);
+  }
+  mirrorSave(); closeDetail(); render(); toast('삭제했습니다'); queueSync();
+});
+
+/* ═════════ 기록 추가 시트 ═════════ */
+const eDel=document.createElement('button');
+eDel.className='btn danger'; eDel.textContent='삭제'; eDel.style.flex='0 0 84px'; eDel.hidden=true;
+$('e-cancel').parentNode.insertBefore(eDel,$('e-cancel'));
+
+function setKind(k){
+  sheetKind=k;
+  [...$('kindSeg').children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.k===k)));
+  $('dueWrap').hidden = k!=='todo';
+  $('timeWrap').hidden = k==='todo';
+  $('e-body').placeholder = k==='todo' ? '다음에 할 일을 적어주세요 (예: 단가표 회신)'
+    : k==='sample' ? '전달한 샘플 품번이나 수량을 적어주세요'
+    : k==='issue' ? '고객이 말한 불편·클레임 내용을 적어주세요'
+    : k==='request' ? '고객이 요청한 사항을 적어주세요'
+    : k==='note' ? '기억해둘 특이사항을 적어주세요'
+    : '오늘 미팅에서 나눈 이야기를 적어주세요';
+}
+$('kindSeg').addEventListener('click',e=>{ const b=e.target.closest('button[data-k]'); if(b) setKind(b.dataset.k) });
+
+function openSheet(auid){
+  sheetEditUid=auid||null;
+  const a=auid?acts.find(x=>x.uid===auid):null;
+  $('sheetTitle').textContent=a?'기록 수정':'기록 추가';
+  setKind(a?a.kind:'meeting');
+  $('e-body').value=a?a.body:'';
+  const at=a?a.at:isoNow();
+  $('e-date').value=at.slice(0,10);
+  $('e-time').value=at.slice(11,16);
+  $('e-due').value=a?(a.due||''):'';
+  eDel.hidden=!a;
+  $('back').hidden=false; $('sheet').hidden=false;
+  requestAnimationFrame(()=>{ $('back').classList.add('on'); $('sheet').classList.add('on') });
+  setTimeout(()=>$('e-body').focus(),240);
+}
+function closeSheet(){
+  if($('sheet').hidden) return;
+  $('sheet').classList.remove('on');
+  if($('askSheet').hidden) $('back').classList.remove('on');
+  setTimeout(()=>{ $('sheet').hidden=true; if($('askSheet').hidden) $('back').hidden=true },240);
+}
+$('addEntry').addEventListener('click',()=>openSheet(null));
+$('e-cancel').addEventListener('click',closeSheet);
+$('back').addEventListener('click',()=>{ closeSheet(); closeAsk() });
+$('e-save').addEventListener('click',async()=>{
+  const body=$('e-body').value.trim();
+  if(!body){ toast('내용을 입력해주세요'); $('e-body').focus(); return }
+  const d=$('e-date').value||todayKey();
+  const t=(sheetKind==='todo')?'09:00':($('e-time').value||'09:00');
+  const at=d+'T'+t;
+  const due=sheetKind==='todo'?($('e-due').value||''):'';
+  if(sheetEditUid){
+    const a=acts.find(x=>x.uid===sheetEditUid);
+    if(a){ Object.assign(a,{kind:sheetKind,body,at,due,updated:now(),dirty:true});
+      await dbPut('act',a); await touchCust(a.cid,at); mirrorSave(); toast('수정했습니다') }
+  }else{
+    await addAct(curUid,sheetKind,body,at,due,true); toast('기록했습니다');
+  }
+  closeSheet(); paintDetail(); render(); queueSync();
+});
+eDel.addEventListener('click',async()=>{
+  const a=acts.find(x=>x.uid===sheetEditUid); if(!a) return;
+  if(!confirm('이 기록을 삭제합니다.')) return;
+  a.deleted=true; a.updated=now(); a.dirty=true;
+  await dbPut('act',a); mirrorSave(); closeSheet(); paintDetail(); render(); toast('삭제했습니다'); queueSync();
+});
+
+/* ═════ 연락처(주소록) 저장 — vCard ═════
+   웹에서는 주소록에 곧바로 쓸 수 없습니다. .vcf 파일을 만들어 넘기면
+   폰이 "연락처에 추가" 화면을 띄워 주고, 사용자가 한 번 확인하면 저장됩니다. */
+function vEsc(v){
+  return String(v==null?'':v).replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\;');
+}
+/* vCard 줄 접기. 규격은 75옥텟 기준이라 한글은 글자 수로 세면 안 됩니다.
+   글자 중간에서 잘리지 않도록 바이트를 세어 가며 접습니다. */
+function vFold(line){
+  if(!/[^\x00-\x7F]/.test(line)){            // 아스키 전용 — 빠른 길
+    if(line.length<=74) return line;
+    let out=line.slice(0,74), rest=line.slice(74);
+    while(rest.length){ out+='\r\n '+rest.slice(0,73); rest=rest.slice(73) }
+    return out;
+  }
+  const enc=new TextEncoder();
+  const parts=[]; let cur='', bytes=0, lim=74;
+  for(const ch of line){
+    const b=enc.encode(ch).length;
+    if(bytes+b>lim){ parts.push(cur); cur=ch; bytes=b; lim=73 }
+    else { cur+=ch; bytes+=b }
+  }
+  if(cur) parts.push(cur);
+  return parts.join('\r\n ');
+}
+/* 주소록에 넣을 작은 명함 이미지 */
+async function smallPhoto(dataUrl,max){
+  try{
+    const img=await loadImg(dataUrl);
+    const w0=img.naturalWidth, h0=img.naturalHeight;
+    const s=Math.min(1,(max||420)/Math.max(w0,h0));
+    const c=document.createElement('canvas');
+    c.width=Math.max(1,Math.round(w0*s)); c.height=Math.max(1,Math.round(h0*s));
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+    return c.toDataURL('image/jpeg',.7).split(',')[1];
+  }catch(e){ return null }
+}
+async function makeVCard(c){
+  const recent=custActs(c.uid).slice(0,5)
+    .map(a=>'['+KIND[a.kind].ko+'] '+String(a.body).replace(/\s+/g,' ').slice(0,80));
+  const note=[
+    (c.groups&&c.groups.length)?('[그룹] '+c.groups.join(', ')):'',
+    recent.join('\n'),
+    c.owner?('담당 '+c.owner):''
+  ].filter(Boolean).join('\n');
+
+  const name=(c.name||c.company||'고객').trim();
+  const L=['BEGIN:VCARD','VERSION:3.0'];
+  L.push('N:'+vEsc(name)+';;;;');
+  L.push('FN:'+vEsc(name));
+  if(c.company) L.push('ORG:'+vEsc(c.company));
+  if(c.title)   L.push('TITLE:'+vEsc(c.title));
+  if(c.phone)   L.push('TEL;TYPE=CELL,VOICE:'+vEsc(String(c.phone).replace(/[^0-9+\-]/g,'')));
+  if(c.email)   L.push('EMAIL;TYPE=WORK,INTERNET:'+vEsc(c.email));
+  if(c.addr)    L.push('ADR;TYPE=WORK:;;'+vEsc(c.addr)+';;;;');
+  if(note)      L.push('NOTE:'+vEsc(note));
+  if(c.photo){
+    const b64=await smallPhoto(c.photo,420);
+    if(b64) L.push('PHOTO;ENCODING=b;TYPE=JPEG:'+b64);
+  }
+  L.push('END:VCARD');
+  return L.map(vFold).join('\r\n');
+}
+async function saveContact(c){
+  if(!c || !(c.name||c.company||c.phone||c.email)){ toast('저장할 정보가 없습니다'); return }
+  toast('연락처를 준비하는 중…');
+  const text=await makeVCard(c);
+  const blob=new Blob([text],{type:'text/vcard;charset=utf-8'});
+  const fname=(c.name||c.company||'contact').replace(/[\\/:*?"<>|\s]/g,'').slice(0,24)+'.vcf';
+  try{
+    const file=new File([blob],fname,{type:'text/vcard'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:fname});
+      return;   // 공유 시트에서 "연락처에 추가"를 고르면 끝납니다
+    }
+  }catch(e){ if(e && e.name==='AbortError') return }
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=fname; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  toast('연락처 파일을 만들었습니다 — 파일을 열면 주소록에 추가됩니다');
+}
+
+/* 고객카드를 만든 직후 한 번 물어보는 확인 시트.
+   설정에서 끌 수 있고, 꺼도 상세 화면의 연락처 버튼은 그대로 남습니다. */
+function openAsk(c){
+  askTarget=c;
+  const [bg,fg]=gColor((c.groups&&c.groups[0])||c.company||c.name||'x');
+  const av=c.photo ? '<div class="av"><img src="'+c.photo+'" alt=""></div>'
+                   : '<div class="av" style="background:'+bg+';color:'+fg+'">'+esc(initial(c))+'</div>';
+  const sub=[c.title,c.company].filter(Boolean).join(' · ') || c.phone || c.email || '';
+  $('askWho').innerHTML=av+'<div class="m"><div class="nm">'+esc(c.name||c.company||'고객')+'</div>'+
+    '<div class="sub">'+esc(sub)+'</div></div>';
+  $('back').hidden=false; $('askSheet').hidden=false;
+  requestAnimationFrame(()=>{ $('back').classList.add('on'); $('askSheet').classList.add('on') });
+}
+function closeAsk(){
+  if($('askSheet').hidden) return;
+  $('askSheet').classList.remove('on'); $('back').classList.remove('on');
+  setTimeout(()=>{ $('askSheet').hidden=true; if($('sheet').hidden) $('back').hidden=true },240);
+}
+$('askLater').addEventListener('click',closeAsk);
+$('askSave').addEventListener('click',()=>{ const c=askTarget; closeAsk(); if(c) saveContact(c) });
+$('askNever').addEventListener('click',()=>{
+  cfg.askContact=false; cfgSave();
+  const t=$('s-askContact'); if(t) t.checked=false;
+  closeAsk(); toast('설정 → 기타 에서 다시 켤 수 있습니다');
+});
+
+/* ═════════ 구글 시트 동기화 ═════════ */
+let syncing=false, syncTimer=null;
+function stripC(c){
+  return {uid:c.uid,createdAt:c.createdAt||'',name:c.name||'',company:c.company||'',title:c.title||'',
+    phone:c.phone||'',email:c.email||'',addr:c.addr||'',groups:(c.groups||[]).join('|'),
+    owner:c.owner||'',lastAt:c.lastAt||'',updated:c.updated||0,deleted:c.deleted?1:0};
+}
+function stripA(a){
+  return {uid:a.uid,cid:a.cid,kind:a.kind,body:a.body||'',at:a.at||'',due:a.due||'',
+    done:a.done?1:0,by:a.by||'',updated:a.updated||0,deleted:a.deleted?1:0};
+}
+function pill(){
+  const p=$('syncPill');
+  if(!cfg.sync){ p.hidden=true; return }
+  p.hidden=false;
+  if(syncing){ p.className='pill wait'; p.textContent='전송 중' }
+  else if(!navigator.onLine){ p.className='pill off'; p.textContent='오프라인' }
+  else if(custs.some(c=>c.dirty)||acts.some(a=>a.dirty)){ p.className='pill wait'; p.textContent='대기' }
+  else { p.className='pill on'; p.textContent='동기화됨' }
+}
+function queueSync(){
+  pill();
+  if(!cfg.sync) return;
+  clearTimeout(syncTimer);
+  syncTimer=setTimeout(()=>syncNow(true),1500);
+}
+async function syncNow(quiet){
+  if(!cfg.sync || syncing) return {ok:false};
+  if(!navigator.onLine){ pill(); return {ok:false,msg:'인터넷 연결 없음'} }
+  syncing=true; pill();
+  try{
+    const pc=custs.filter(c=>c.dirty).map(stripC);
+    const pa=acts.filter(a=>a.dirty).map(stripA);
+    const r=await fetch(cfg.sync,{method:'POST',
+      headers:{'content-type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({cust:pc,act:pa,since:cfg.lastPull||0})});
+    if(!r.ok) throw new Error('서버 응답 '+r.status);
+    const d=await r.json();
+    if(!d.ok) throw new Error(d.error||'서버 오류');
+
+    for(const c of custs){ if(c.dirty){ c.dirty=false; await dbPut('cust',c) } }
+    for(const a of acts){ if(a.dirty){ a.dirty=false; await dbPut('act',a) } }
+
+    let add=0;
+    for(const o of (d.cust||[])){
+      const inc={uid:o.uid,createdAt:o.createdAt||'',name:o.name||'',company:o.company||'',title:o.title||'',
+        phone:o.phone||'',email:o.email||'',addr:o.addr||'',
+        groups:String(o.groups||'').split('|').filter(Boolean),owner:o.owner||'',lastAt:o.lastAt||'',
+        updated:Number(o.updated)||0,deleted:!!Number(o.deleted),dirty:false};
+      const cur=custs.find(x=>x.uid===o.uid);
+      if(cur){
+        if(!cur.dirty && inc.updated>(cur.updated||0)){ Object.assign(cur,inc); await dbPut('cust',cur) }
+      }else{
+        inc.photo=null; custs.push(inc); await dbPut('cust',inc); add++;
+      }
+      inc.groups.forEach(ensureGroup);
+    }
+    for(const o of (d.act||[])){
+      const inc={uid:o.uid,cid:o.cid,kind:KIND[o.kind]?o.kind:'note',body:o.body||'',at:o.at||'',
+        due:o.due||'',done:!!Number(o.done),by:o.by||'',updated:Number(o.updated)||0,
+        deleted:!!Number(o.deleted),dirty:false};
+      const cur=acts.find(x=>x.uid===o.uid);
+      if(cur){ if(!cur.dirty && inc.updated>(cur.updated||0)){ Object.assign(cur,inc); await dbPut('act',cur) } }
+      else { acts.push(inc); await dbPut('act',inc) }
+    }
+    cfg.lastPull=d.now||now(); cfgSave(); mirrorSave();
+    syncing=false; render(); if(curUid) paintDetail(); pill();
+    if(!quiet) toast(add?('동기화 완료 · 고객 '+add+'명 추가'):'동기화 완료');
+    return {ok:true,add};
+  }catch(e){
+    syncing=false; pill();
+    if(!quiet) toast('동기화 실패: '+String(e.message||e).slice(0,50));
+    return {ok:false,msg:String(e.message||e)};
+  }
+}
+setInterval(()=>{ if(cfg.sync && navigator.onLine && !syncing) syncNow(true) },20000);
+window.addEventListener('online',()=>{ pill(); syncNow(true) });
+window.addEventListener('offline',pill);
+
+/* ═════════ 설정 ═════════ */
+function paintOwner(){ $('ownerName').textContent=cfg.owner||'미설정' }
+$('s-owner').addEventListener('input',e=>{
+  cfg.owner=e.target.value.trim(); cfgSave(); paintOwner();
+});
+function renderGroupManage(){
+  const live=custs.filter(c=>!c.deleted);
+  const box=$('gManage');
+  if(!cfg.groups.length){ box.innerHTML='<div class="grow"><span class="nm" style="color:var(--dim);font-weight:500">그룹이 없습니다. 아래에서 추가해주세요.</span></div>'; return }
+  box.innerHTML=cfg.groups.map(g=>{
+    const [bg,fg]=gColor(g);
+    const n=live.filter(c=>(c.groups||[]).includes(g)).length;
+    return '<div class="grow"><span class="dot" style="background:'+fg+'"></span>'+
+      '<button class="nm" style="text-align:left" data-ren="'+esc(g)+'">'+esc(g)+'</button>'+
+      '<span class="ct">'+n+'명</span>'+
+      '<button class="rm" data-rm="'+esc(g)+'" aria-label="삭제"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>';
+  }).join('');
+}
+$('s-addGroup').addEventListener('click',async()=>{
+  const v=$('s-newGroup').value.trim();
+  if(!v) return;
+  if(cfg.groups.includes(v)){ toast('이미 있는 그룹입니다'); return }
+  cfg.groups.push(v); cfgSave(); $('s-newGroup').value='';
+  renderGroupManage(); renderChips(); renderFormGroups(); toast('그룹을 추가했습니다');
+});
+$('s-newGroup').addEventListener('keydown',e=>{ if(e.key==='Enter') $('s-addGroup').click() });
+$('gManage').addEventListener('click',async e=>{
+  const ren=e.target.closest('[data-ren]');
+  if(ren){
+    const old=ren.dataset.ren;
+    const nv=(prompt('그룹 이름 변경',old)||'').trim();
+    if(!nv||nv===old) return;
+    if(cfg.groups.includes(nv)){ toast('이미 있는 그룹입니다'); return }
+    cfg.groups=cfg.groups.map(g=>g===old?nv:g); cfgSave();
+    for(const c of custs){
+      if((c.groups||[]).includes(old)){
+        c.groups=c.groups.map(g=>g===old?nv:g); c.updated=now(); c.dirty=true; await dbPut('cust',c);
+      }
+    }
+    if(filterG===old) filterG=nv;
+    mirrorSave(); renderGroupManage(); render(); renderFormGroups(); queueSync(); toast('이름을 바꿨습니다');
+    return;
+  }
+  const rm=e.target.closest('[data-rm]');
+  if(rm){
+    const g=rm.dataset.rm;
+    const n=custs.filter(c=>!c.deleted&&(c.groups||[]).includes(g)).length;
+    if(!confirm('"'+g+'" 그룹을 삭제합니다.'+(n?'\n고객 '+n+'명에서 이 그룹만 빠지고, 고객카드는 그대로 남습니다.':''))) return;
+    cfg.groups=cfg.groups.filter(x=>x!==g); cfgSave();
+    for(const c of custs){
+      if((c.groups||[]).includes(g)){
+        c.groups=c.groups.filter(x=>x!==g); c.updated=now(); c.dirty=true; await dbPut('cust',c);
+      }
+    }
+    if(filterG===g) filterG='';
+    mirrorSave(); renderGroupManage(); render(); renderFormGroups(); queueSync(); toast('그룹을 삭제했습니다');
+  }
+});
+
+$('s-askContact').addEventListener('change',e=>{ cfg.askContact=e.target.checked; cfgSave() });
+$('s-key').addEventListener('input',e=>{ cfg.key=e.target.value.trim(); cfgSave() });
+$('s-keyShow').addEventListener('click',()=>{
+  const i=$('s-key'), on=i.type==='password';
+  i.type=on?'text':'password'; $('s-keyShow').textContent=on?'가리기':'보기';
+});
+$('s-keyTest').addEventListener('click',async()=>{
+  const st=$('keyStat'); st.hidden=false;
+  if(!cfg.key){ st.className='ai err'; st.textContent='키를 먼저 입력하세요'; return }
+  st.className='ai'; st.innerHTML='<span class="spin"></span>확인 중…';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'content-type':'application/json','x-api-key':cfg.key,
+        'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:cfg.model||'claude-sonnet-5',max_tokens:8,
+        messages:[{role:'user',content:'ok'}]})
+    });
+    if(!r.ok){ const t=await r.text(); throw new Error(r.status+' '+t.slice(0,90)) }
+    st.className='ai ok'; st.textContent='연결 성공 — 명함 자동 인식이 켜졌습니다';
+  }catch(e){ st.className='ai err'; st.textContent='실패: '+String(e.message||e).slice(0,100) }
+});
+
+$('s-syncTest').addEventListener('click',async()=>{
+  const st=$('syncStat'), u=$('s-sync').value.trim(); st.hidden=false;
+  if(!/^https:\/\/script\.google\.com\/.+\/exec$/.test(u)){
+    st.className='ai err'; st.textContent='주소가 script.google.com 으로 시작하고 /exec 로 끝나야 합니다'; return;
+  }
+  st.className='ai'; st.innerHTML='<span class="spin"></span>연결 확인 중…';
+  try{
+    const r=await fetch(u,{method:'POST',headers:{'content-type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({cust:[],act:[],since:now()})});
+    const d=await r.json();
+    if(!d.ok) throw new Error(d.error||'서버 오류');
+    cfg.sync=u; cfgSave(); pill();
+    st.className='ai ok'; st.textContent='연결 성공 — 시트에 고객 '+(d.totalCust||0)+'명, 기록 '+(d.totalAct||0)+'건이 있습니다';
+    cfg.lastPull=0; cfgSave(); syncNow(true);
+  }catch(e){
+    st.className='ai err';
+    st.textContent='실패: '+String(e.message||e).slice(0,90)+' (배포할 때 액세스 권한을 "모든 사용자"로 했는지 확인하세요)';
+  }
+});
+$('s-syncNow').addEventListener('click',async()=>{
+  if(!cfg.sync){ toast('먼저 주소를 연결하세요'); return }
+  const st=$('syncStat'); st.hidden=false; st.className='ai'; st.innerHTML='<span class="spin"></span>동기화 중…';
+  const r=await syncNow(false);
+  st.className=r.ok?'ai ok':'ai err';
+  st.textContent=r.ok?'동기화 완료':('실패: '+(r.msg||''));
+});
+
+/* ───── CSV ───── */
+function csvCell(v){ return '"'+String(v==null?'':v).replace(/"/g,'""')+'"' }
+function download(name,text){
+  const b=new Blob(['﻿'+text],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(b); a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+function stampName(p){ const d=new Date(); return p+'_'+d.getFullYear()+pad2(d.getMonth()+1)+pad2(d.getDate())+'.csv' }
+$('s-csvCust').addEventListener('click',()=>{
+  const live=custs.filter(c=>!c.deleted);
+  if(!live.length){ toast('내보낼 고객이 없습니다'); return }
+  const head=['등록일','성함','회사명','직함','전화번호','이메일','주소','그룹','담당자','최근활동','기록수','남은할일'];
+  const body=live.map(c=>[ (c.createdAt||'').slice(0,10),c.name,c.company,c.title,c.phone,c.email,c.addr,
+    (c.groups||[]).join(' / '),c.owner,(c.lastAt||'').slice(0,16).replace('T',' '),
+    custActs(c.uid).length, openTodos(c.uid).length ].map(csvCell).join(','));
+  download(stampName('고객명부'),[head.map(csvCell).join(','),...body].join('\r\n'));
+  toast('고객 CSV를 저장했습니다');
+});
+$('s-csvAct').addEventListener('click',()=>{
+  const live=acts.filter(a=>!a.deleted);
+  if(!live.length){ toast('내보낼 기록이 없습니다'); return }
+  const byId=new Map(custs.map(c=>[c.uid,c]));
+  const head=['일시','고객명','회사명','유형','내용','마감일','완료','작성자'];
+  const body=live.sort((a,b)=>String(b.at).localeCompare(String(a.at))).map(a=>{
+    const c=byId.get(a.cid)||{};
+    return [ String(a.at).replace('T',' '),c.name||'',c.company||'',KIND[a.kind].ko,a.body,
+      a.due||'',a.kind==='todo'?(a.done?'완료':'미완료'):'',a.by||'' ].map(csvCell).join(',');
+  });
+  download(stampName('타임라인'),[head.map(csvCell).join(','),...body].join('\r\n'));
+  toast('타임라인 CSV를 저장했습니다');
+});
+$('s-wipe').addEventListener('click',async()=>{
+  if(!confirm('이 기기에 저장된 고객 '+custs.filter(c=>!c.deleted).length+'명과 기록 '+acts.filter(a=>!a.deleted).length+'건을 모두 지웁니다.\n되돌릴 수 없습니다. 계속할까요?')) return;
+  if(!confirm('정말 삭제할까요? 구글 시트에 올라간 내용은 시트에 그대로 남습니다.')) return;
+  await dbClear('cust'); await dbClear('act');
+  custs=[]; acts=[]; try{localStorage.removeItem('ndna-mirror')}catch(e){}
+  cfg.lastPull=0; cfgSave();
+  render(); renderGroupManage(); paintUsage(); toast('모두 삭제했습니다');
+});
+function paintUsage(){
+  const u=$('usageStat'); u.hidden=false; u.className='ai';
+  u.textContent='이 기기에 고객 '+custs.filter(c=>!c.deleted).length+'명 · 기록 '+
+    acts.filter(a=>!a.deleted).length+'건이 저장되어 있습니다'+(memOnly?' (저장소 사용 불가)':'');
+}
+
+/* ═════════ 탭 이동 ═════════ */
+function go(p){
+  ['list','new','set'].forEach(k=>{
+    $('p-'+k).hidden = k!==p;
+    $('t-'+k).setAttribute('aria-selected',String(k===p));
+  });
+  if(p==='set'){ renderGroupManage(); paintUsage() }
+  if(p==='new') renderFormGroups();
+  window.scrollTo(0,0);
+}
+$('t-list').addEventListener('click',()=>go('list'));
+$('t-new').addEventListener('click',()=>{ if(!editUid) clearForm(); go('new') });
+$('t-set').addEventListener('click',()=>go('set'));
+
+window.addEventListener('scroll',()=>{ $('appbar').classList.toggle('stuck',window.scrollY>4) },{passive:true});
+$('detail').addEventListener('scroll',()=>{ $('dbar').classList.toggle('stuck',$('detail').scrollTop>10) },{passive:true});
+
+/* ═════════ 시작 ═════════ */
+(async function boot(){
+  cfgLoad();
+  await openDB();
+  custs=await dbAll('cust');
+  acts=await dbAll('act');
+  if(!custs.length && !acts.length){
+    const m=mirrorLoad();
+    if(m && (m.cust||[]).length){ custs=m.cust||[]; acts=m.act||[] }
+  }
+  custs.forEach(c=>{ c.groups=c.groups||[]; c.groups.forEach(ensureGroup) });
+
+  $('s-owner').value=cfg.owner||'';
+  $('s-key').value=cfg.key||'';
+  $('s-sync').value=cfg.sync||'';
+  $('s-askContact').checked=cfg.askContact!==false;
+  $('e-date').value=todayKey();
+  $('e-time').value=isoNow().slice(11,16);
+  paintOwner(); renderFormGroups(); render(); pill();
+
+  let ok=false;
+  try{ localStorage.setItem('ndna-t','1'); localStorage.removeItem('ndna-t'); ok=true }catch(e){}
+  if(memOnly || !ok) $('storeWarn').hidden=false;
+
+  if(cfg.sync && navigator.onLine) syncNow(true);
+})();
+</script>
+</body>
+</html>
