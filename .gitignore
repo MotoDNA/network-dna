@@ -9,3 +9,15 @@ network-dna.sheets-backup.html
 network-dna.booth-backup.html
 appsscript-고객관리.v1-backup.gs
 .setup-secret
+
+# ── 앱(Capacitor) 빌드 산물 ──
+app/node_modules/
+app/www/
+app/android/build/
+app/android/app/build/
+app/android/.gradle/
+app/android/local.properties
+app/android/capacitor-cordova-android-plugins/
+app/android/app/src/main/assets/public/
+app/android/app/src/main/assets/capacitor.config.json
+app/android/app/src/main/assets/capacitor.plugins.json
