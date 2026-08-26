@@ -161,9 +161,11 @@ begin
   perform pg_temp.expect(n = 0, '일반 사용자가 감사 기록을 봅니다');
 
   perform set_config('role', 'postgres', true);
-  raise notice '───────────────────────────';
-  raise notice '  모든 시험 통과 (12/12)';
-  raise notice '───────────────────────────';
 end $$;
+
+-- 여기까지 왔다는 것은 12가지가 모두 막혔다는 뜻입니다.
+-- 하나라도 뚫렸으면 위에서 예외가 나고 멈춥니다.
+select '모든 시험 통과 (12/12)' as "결과",
+       '회사 격리 · 담당/공유 범위 · 권한 상승 차단 모두 확인' as "확인한 것";
 
 rollback;

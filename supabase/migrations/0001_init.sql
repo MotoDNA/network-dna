@@ -302,3 +302,24 @@ returns boolean language sql stable security definer set search_path = public as
 $$;
 revoke all on function public.company_exists(text) from public;
 grant execute on function public.company_exists(text) to anon, authenticated;
+
+-- ═══════════════════════════════════════════════════════════════
+-- 표 권한
+--
+-- 프로젝트를 만들 때 "새 표 자동 노출"을 껐습니다.
+-- 그래서 어떤 표를 어디까지 열지 여기서 하나하나 적습니다.
+-- 권한을 줘도 위의 행 단위 규칙은 그대로 적용됩니다.
+-- (권한 = 문을 여는 것, 규칙 = 문 안에서 볼 수 있는 범위)
+-- ═══════════════════════════════════════════════════════════════
+grant usage on schema public to anon, authenticated;
+
+-- 로그인하지 않은 상태에서 할 수 있는 일은 회사 코드 확인뿐입니다
+-- (company_exists 함수는 위에서 이미 anon 에게 열어 두었습니다)
+
+grant select                          on public.companies  to authenticated;
+grant select, update                  on public.profiles   to authenticated;
+grant select, insert, update, delete  on public.customers  to authenticated;
+grant select, insert, update, delete  on public.activities to authenticated;
+grant select                          on public.audit_log  to authenticated;
+
+-- 감사 기록은 서버 함수(service_role)만 씁니다. 사용자에게 insert 를 주지 않습니다.
