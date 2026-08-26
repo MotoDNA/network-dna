@@ -334,16 +334,22 @@ nav.tabs button:active{opacity:.6}
 .fab .in{max-width:var(--w);margin:0 auto}
 
 /* ───── 바텀시트 ───── */
-.back{position:fixed;inset:0;z-index:70;background:rgba(25,31,40,.42);opacity:0;transition:opacity .22s;backdrop-filter:blur(1px)}
+.back{position:fixed;inset:0;z-index:70;background:rgba(25,31,40,.42);opacity:0;transition:opacity .22s;backdrop-filter:blur(1px);
+  overscroll-behavior:contain;touch-action:none}
 .back.on{opacity:1}
 .sheet{
   position:fixed;left:0;right:0;bottom:0;z-index:71;background:#fff;
   border-radius:24px 24px 0 0;padding:8px 20px calc(20px + env(safe-area-inset-bottom));
   max-width:var(--w);margin:0 auto;transform:translateY(102%);transition:transform .26s cubic-bezier(.2,.85,.3,1);
   max-height:92vh;overflow-y:auto;
+  /* 시트 끝까지 밀어도 뒤쪽 화면으로 스크롤이 넘어가지 않게 합니다 */
+  overscroll-behavior:contain;
 }
 .sheet.on{transform:none}
 .grab{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 14px}
+.pwhint{font-size:.78rem;font-weight:600;color:var(--mut);margin:7px 0 0;padding-left:2px;line-height:1.5}
+.pwhint.ok{color:var(--green)}
+.pwhint.bad{color:var(--red)}
 .sheet h3{font-size:1.18rem;font-weight:800;letter-spacing:-.035em;margin:0 0 16px}
 .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:16px}
 .seg button{height:44px;border-radius:12px;background:var(--fill);font-size:.85rem;font-weight:700;color:var(--sub);transition:.15s}
@@ -767,11 +773,13 @@ nav.tabs button:active{opacity:.6}
     </div>
     <div class="field">
       <label for="u-pw">첫 비밀번호</label>
-      <input class="inp" id="u-pw" type="password" autocomplete="new-password" placeholder="10자 이상">
+      <input class="inp" id="u-pw" type="password" autocomplete="new-password" placeholder="영문과 숫자를 섞어 10자 이상">
+      <div class="pwhint" id="u-pwHint">영문과 숫자를 섞어 <b>10자 이상</b>으로 정해 주세요.</div>
     </div>
     <div class="field">
       <label for="u-pw2">비밀번호 확인</label>
       <input class="inp" id="u-pw2" type="password" autocomplete="new-password">
+      <div class="pwhint" id="u-pw2Hint"></div>
     </div>
     <label class="swrow" for="u-admin">
       <span>관리자 권한</span>
@@ -785,7 +793,8 @@ nav.tabs button:active{opacity:.6}
     <div class="note" id="userWho"></div>
     <div class="field" style="margin-top:12px">
       <label for="u-newpw">새 비밀번호</label>
-      <input class="inp" id="u-newpw" type="password" autocomplete="new-password" placeholder="10자 이상">
+      <input class="inp" id="u-newpw" type="password" autocomplete="new-password" placeholder="영문과 숫자를 섞어 10자 이상">
+      <div class="pwhint" id="u-newpwHint">영문과 숫자를 섞어 <b>10자 이상</b>으로 정해 주세요.</div>
     </div>
     <button class="btn line" id="u-reset" style="width:100%">비밀번호 재발급</button>
     <div class="note">재발급하면 그 사람이 열어 둔 로그인은 모두 끊깁니다. 새 비밀번호를 직접 전해 주세요.</div>
@@ -1420,6 +1429,10 @@ async function autoCrop(dataUrl){
 /* 명함 인식은 서버 함수가 대신합니다.
    읽는 규칙(프롬프트)과 API 키가 모두 서버에 있어,
    이 기기에서는 새어 나갈 것이 없습니다. */
+/* 자동 인식이 채워 넣은 칸과 그 값을 기억해 둡니다.
+   폼을 비우거나 기존 고객을 불러올 때 함께 비웁니다. */
+let aiFilled = {};
+
 async function readCard(dataUrl){
   const st = $('aiStat'); st.hidden = false;
   if(!me){ st.className='ai err'; st.textContent='로그인이 필요합니다'; return }
@@ -1441,7 +1454,17 @@ async function readCard(dataUrl){
       return;
     }
     const c = d.card || {};
-    const set = (id,v)=>{ if(v && !$(id).value) $(id).value = String(v).trim() };
+    /* 명함을 다시 찍으면 다른 사람입니다. 앞 명함에서 자동으로 채운 칸은 새 값으로 바꿉니다.
+       직접 손으로 적거나 고친 칸은 그대로 둡니다 — 애써 적은 것을 지우면 안 되니까요.
+       새 명함에 그 항목이 없으면 앞 명함 값이 남지 않도록 비웁니다. */
+    const set = (id,v)=>{
+      const el = $(id), cur = el.value.trim();
+      const 자동으로넣었던값 = aiFilled[id] || '';
+      if(cur !== '' && cur !== 자동으로넣었던값) return;   // 사람이 손댄 칸
+      const nv = v ? String(v).trim() : '';
+      el.value = nv;
+      if(nv) aiFilled[id] = nv; else delete aiFilled[id];
+    };
     set('f-company', c.company); set('f-name', c.name); set('f-title', c.title);
     set('f-phone', fmtPhone(c.phone)); set('f-email', c.email); set('f-addr', c.address);
     const got = [c.company, c.name, c.phone, c.email].filter(Boolean).length;
@@ -1534,6 +1557,7 @@ $('fGroups').addEventListener('click',e=>{
 
 function clearForm(){
   ['f-name','f-company','f-title','f-phone','f-email','f-addr','f-memo'].forEach(id=>$(id).value='');
+  aiFilled={};
   draftPhoto=null; draftOrig=null; draftCrop=null; draftGroups=[]; editUid=null;
   $('shotWrap').hidden=true; $('shootWrap').hidden=false; $('reshootRow').hidden=true;
   $('aiStat').hidden=true; $('cropBar').hidden=true;
@@ -1545,6 +1569,7 @@ function clearForm(){
 }
 function loadForm(c){
   editUid=c.uid;
+  aiFilled={};                      // 저장된 고객 정보를 자동 인식이 덮어쓰지 않게 합니다
   $('f-name').value=c.name||''; $('f-company').value=c.company||'';
   $('f-title').value=c.title||''; $('f-phone').value=c.phone||'';
   $('f-email').value=c.email||''; $('f-addr').value=c.addr||'';
@@ -1828,13 +1853,13 @@ $('selOwner').addEventListener('click',()=>{ if(picked.size){ assignGroup=''; op
 /* ═════════ 고객 상세 ═════════ */
 function openDetail(u){
   curUid=u; $('detail').hidden=false; $('fabWrap').hidden=false;
-  document.body.style.overflow='hidden';
+  lockScroll();
   paintDetail(); $('detail').scrollTop=0;
   try{ history.pushState({d:1},'') }catch(e){}
 }
 function closeDetail(){
   curUid=null; $('detail').hidden=true; $('fabWrap').hidden=true;
-  document.body.style.overflow='';
+  lockScroll();
 }
 $('dBack').addEventListener('click',()=>{ try{history.back()}catch(e){ closeDetail() } });
 window.addEventListener('popstate',()=>{ if(curUid) closeDetail() });
@@ -2003,15 +2028,29 @@ const SHEET_IDS=['sheet','askSheet','shareSheet','groupSheet','assignSheet','pwS
 function otherSheetOpen(except){
   return SHEET_IDS.some(id=>id!==except && $(id) && !$(id).hidden);
 }
+/* 화면을 덮는 것이 하나라도 열려 있으면 뒤쪽이 스크롤되지 않게 잠급니다.
+   상세 화면 위에 시트가 겹쳐 열리기도 해서, 각자 풀지 않고 여기서 한 번에 셉니다.
+   (시트만 닫혔는데 상세까지 풀려 버리는 일을 막습니다) */
+function lockScroll(){
+  const open = !$('gate').hidden || !$('detail').hidden ||
+               SHEET_IDS.some(id=>{ const el=$(id); return el && !el.hidden });
+  document.body.style.overflow = open ? 'hidden' : '';
+}
+
 function openSheetEl(id){
   $('back').hidden=false; $(id).hidden=false;
+  lockScroll();
   requestAnimationFrame(()=>{ $('back').classList.add('on'); $(id).classList.add('on') });
 }
 function closeSheetEl(id){
   if(!$(id) || $(id).hidden) return;
   $(id).classList.remove('on');
   if(!otherSheetOpen(id)) $('back').classList.remove('on');
-  setTimeout(()=>{ $(id).hidden=true; if(!otherSheetOpen(id)) $('back').hidden=true },240);
+  setTimeout(()=>{
+    $(id).hidden=true;
+    if(!otherSheetOpen(id)) $('back').hidden=true;
+    lockScroll();
+  },240);
 }
 function closeAllSheets(){ SHEET_IDS.forEach(closeSheetEl) }
 function closeSheet(){ closeSheetEl('sheet') }
@@ -2147,23 +2186,22 @@ async function saveContact(c){
     return;
   }
 
-  // 브라우저마다 허용하는 형식이 달라 바꿔 가며 시도합니다
-  const mimes=['text/vcard','text/x-vcard','text/directory'];
-  for(let i=0;i<mimes.length;i++){
-    try{
-      const file=new File([new Blob([text],{type:mimes[i]})],fname,{type:mimes[i]});
-      if(navigator.canShare){
-        if(!navigator.canShare({files:[file]})) continue;
+  /* 공유 시트는 "방금 눌렀음" 표시가 살아 있을 때만 열립니다.
+     그 표시는 navigator.share 를 한 번 부르면 사라집니다.
+     그래서 형식을 바꿔 가며 여러 번 부르면 첫 번째만 진짜 시도이고
+     나머지는 무조건 거부됩니다 — 한 번만 시도합니다.
+     (Android 15 크롬에서 canShare 는 vcard 계열 형식을 모두 받아 줍니다) */
+  if(navigator.share){
+    const file=new File([new Blob([text],{type:'text/vcard'})],fname,{type:'text/vcard'});
+    const ok = navigator.canShare ? navigator.canShare({files:[file]}) : true;
+    if(ok){
+      try{
         await navigator.share({files:[file],title:title});
         return;
+      }catch(e){
+        if(e && e.name==='AbortError') return;   // 사용자가 공유 시트를 닫았습니다
+        // 그 밖의 이유로 안 되면 아래 내려받기로 갑니다
       }
-      if(navigator.share){          // canShare 가 없는 예전 브라우저
-        await navigator.share({files:[file],title:title});
-        return;
-      }
-    }catch(e){
-      if(e && e.name==='AbortError') return;    // 사용자가 공유 시트를 닫음
-      // 형식이 거부된 경우이므로 다음 형식으로 넘어갑니다
     }
   }
 
@@ -2172,7 +2210,7 @@ async function saveContact(c){
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob); a.download=fname; a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),4000);
-  toast('연락처 파일을 내려받았습니다 — 알림을 눌러 열면 주소록에 추가됩니다');
+  toast('연락처 파일을 받았습니다 — 알림의 "열기"를 누르면 주소록에 들어갑니다');
 }
 
 /* ═════════ 그룹 고르기 (한 고객이 여러 그룹에 속할 수 있습니다) ═════════ */
@@ -2749,13 +2787,13 @@ window.addEventListener('offline', pill);
 /* ═════════ 로그인 화면 ═════════ */
 function showGate(){
   $('gate').hidden = false;
-  document.body.style.overflow = 'hidden';
+  lockScroll();
   $('gateMsg').className = 'msg';
   $('g-pw').value = '';
 }
 function hideGate(){
   $('gate').hidden = true;
-  document.body.style.overflow = '';
+  lockScroll();
 }
 function gateMsg(kind, text){
   const m = $('gateMsg');
@@ -2904,6 +2942,37 @@ async function adminCall(payload){
   }catch(e){ return { ok:false, error:'서버에 닿지 못했습니다.' } }
 }
 
+/* 비밀번호 규칙 — 서버(admin-user 의 checkPw)와 같은 기준입니다.
+   한쪽만 고치면 앱에서는 통과하고 서버가 거절하는 일이 생기니 함께 고쳐야 합니다. */
+function pwProblem(pw){
+  if(pw.length < 10) return '10자 이상이어야 합니다';
+  if(/^[0-9]+$/.test(pw)) return '숫자만으로는 안 됩니다';
+  if(/^(.)\1+$/.test(pw)) return '같은 글자만 반복할 수 없습니다';
+  const weak = ['password12','1234567890','qwertyuiop','admin12345','qwer1234!@'];
+  if(weak.includes(pw.toLowerCase())) return '너무 흔한 비밀번호입니다';
+  return null;
+}
+const PW_GUIDE = '영문과 숫자를 섞어 <b>10자 이상</b>으로 정해 주세요.';
+
+function pwPaint(inputId, hintId){
+  const pw = $(inputId).value, el = $(hintId);
+  if(!pw){ el.className = 'pwhint'; el.innerHTML = PW_GUIDE; return }
+  const bad = pwProblem(pw);
+  if(bad){ el.className = 'pwhint bad'; el.textContent = bad; return }
+  const 섞임 = /[A-Za-z]/.test(pw) && /[0-9]/.test(pw);
+  el.className = 'pwhint ok';
+  el.textContent = 섞임 ? '쓸 수 있습니다' : '쓸 수 있습니다 — 숫자를 섞으면 더 안전합니다';
+}
+function pwPaintMatch(){
+  const a = $('u-pw').value, b = $('u-pw2').value, el = $('u-pw2Hint');
+  if(!b){ el.className = 'pwhint'; el.textContent = ''; return }
+  el.className = 'pwhint ' + (a === b ? 'ok' : 'bad');
+  el.textContent = a === b ? '위와 같습니다' : '위와 다릅니다';
+}
+$('u-pw').addEventListener('input', ()=>{ pwPaint('u-pw','u-pwHint'); pwPaintMatch() });
+$('u-pw2').addEventListener('input', pwPaintMatch);
+$('u-newpw').addEventListener('input', ()=>pwPaint('u-newpw','u-newpwHint'));
+
 function userStat(kind, html){
   const el = $('userStat');
   if(!html){ el.hidden = true; return }
@@ -2924,6 +2993,8 @@ function openUserNew(){
   $('u-code').textContent = me ? me.companyCode : '—';
   ['u-id','u-name','u-pw','u-pw2'].forEach(id=>$(id).value = '');
   $('u-admin').checked = false;
+  $('u-pwHint').className = 'pwhint'; $('u-pwHint').innerHTML = PW_GUIDE;
+  $('u-pw2Hint').className = 'pwhint'; $('u-pw2Hint').textContent = '';
   userStat('', ''); userBusy(false);
   openSheetEl('userSheet');
 }
@@ -2934,6 +3005,7 @@ function openUserManage(m){
   $('userManage').hidden = false;
   $('userSave').hidden = true;
   $('u-newpw').value = '';
+  $('u-newpwHint').className = 'pwhint'; $('u-newpwHint').innerHTML = PW_GUIDE;
   $('userWho').innerHTML = '아이디 <b>' + esc(m.loginId) + '</b>' +
     (m.role === 'admin' ? ' · 관리자' : '') +
     (m.disabled ? ' · <b>지금은 중지되어 있습니다</b>' : '');
@@ -2967,7 +3039,8 @@ $('userSave').addEventListener('click', async ()=>{
     userStat('err','아이디는 영문 소문자·숫자와 - _ . 만 쓸 수 있고 2~32자입니다.'); return;
   }
   if(!name){ userStat('err','이름을 입력해 주세요.'); return }
-  if(pw.length < 10){ userStat('err','비밀번호는 10자 이상이어야 합니다.'); return }
+  const pwBad = pwProblem(pw);
+  if(pwBad){ userStat('err','비밀번호는 ' + pwBad + '.'); return }
   if(pw !== pw2){ userStat('err','비밀번호가 서로 다릅니다.'); return }
 
   userBusy(true); userStat('', '<span class="spin"></span>만드는 중…');
@@ -2985,7 +3058,8 @@ $('userSave').addEventListener('click', async ()=>{
 $('u-reset').addEventListener('click', async ()=>{
   if(!userTarget) return;
   const pw = $('u-newpw').value;
-  if(pw.length < 10){ userStat('err','비밀번호는 10자 이상이어야 합니다.'); return }
+  const bad = pwProblem(pw);
+  if(bad){ userStat('err','비밀번호는 ' + bad + '.'); return }
   if(!confirm(userTarget.name + ' 님의 비밀번호를 새로 정합니다.\n지금 열려 있는 로그인은 모두 끊깁니다.')) return;
 
   userBusy(true); userStat('', '<span class="spin"></span>바꾸는 중…');
