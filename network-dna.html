@@ -1752,7 +1752,7 @@ async function syncNow(quiet){
     for(const c of custs){ if(c.dirty){ c.dirty=false; await dbPut('cust',c) } }
     for(const a of acts){ if(a.dirty){ a.dirty=false; await dbPut('act',a) } }
 
-    let add=0;
+    let add=0; const touched=new Set();
     for(const o of (d.cust||[])){
       const inc={uid:o.uid,createdAt:o.createdAt||'',name:o.name||'',company:o.company||'',title:o.title||'',
         phone:o.phone||'',email:o.email||'',addr:o.addr||'',
@@ -1773,6 +1773,16 @@ async function syncNow(quiet){
       const cur=acts.find(x=>x.uid===o.uid);
       if(cur){ if(!cur.dirty && inc.updated>(cur.updated||0)){ Object.assign(cur,inc); await dbPut('act',cur) } }
       else { acts.push(inc); await dbPut('act',inc) }
+      touched.add(inc.cid);
+    }
+    // 시트에서 들어온 기록도 목록 정렬(최근활동)에 반영합니다.
+    // 시트로 되돌려 보낼 필요는 없으므로 dirty 로 표시하지 않습니다.
+    for(const cid of touched){
+      const c=custs.find(x=>x.uid===cid); if(!c) continue;
+      const newest=custActs(cid)[0];
+      if(newest && String(newest.at)>String(c.lastAt||'')){
+        c.lastAt=newest.at; await dbPut('cust',c);
+      }
     }
     cfg.lastPull=d.now||now(); cfgSave(); mirrorSave();
     syncing=false; render(); if(curUid) paintDetail(); pill();
