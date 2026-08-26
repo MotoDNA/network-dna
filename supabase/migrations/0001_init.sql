@@ -323,3 +323,14 @@ grant select, insert, update, delete  on public.activities to authenticated;
 grant select                          on public.audit_log  to authenticated;
 
 -- 감사 기록은 서버 함수(service_role)만 씁니다. 사용자에게 insert 를 주지 않습니다.
+
+-- 서버 함수(계정 관리·명함 인식)가 쓰는 역할입니다.
+-- 이 역할은 행 단위 규칙을 건너뛰지만, 표 권한은 따로 줘야 합니다.
+-- "새 표 자동 노출"을 껐으므로 여기에 적지 않으면 서버 함수가 아무것도 못 합니다.
+grant usage on schema public to service_role;
+grant all privileges on public.companies  to service_role;
+grant all privileges on public.profiles   to service_role;
+grant all privileges on public.customers  to service_role;
+grant all privileges on public.activities to service_role;
+grant all privileges on public.audit_log  to service_role;
+grant usage, select on all sequences in schema public to service_role;
