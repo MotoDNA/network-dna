@@ -76,11 +76,20 @@ declare t record; n int; okay boolean;
 begin
   select * into t from t_ids;
 
-  -- 1) 로그인 안 한 상태에서는 아무것도 안 보여야 합니다
+  -- 1) 로그인 안 한 상태에서는 접근 자체가 막혀야 합니다
+  --    두 가지 중 하나면 통과입니다.
+  --      · 권한이 아예 없어 거부  (지금 설정. 더 강함)
+  --      · 권한은 있으나 규칙이 걸러 0건
   perform set_config('request.jwt.claims', null, true);
   perform set_config('role', 'anon', true);
-  select count(*) into n from public.customers;
-  perform pg_temp.expect(n = 0, '로그인하지 않았는데 고객이 보입니다 (' || n || '건)');
+  okay := false;
+  begin
+    select count(*) into n from public.customers;
+    okay := (n = 0);
+  exception when insufficient_privilege then
+    okay := true;
+  end;
+  perform pg_temp.expect(okay, '로그인하지 않았는데 고객에 접근됩니다');
 
   -- 2) A사 영업1: 자기 담당 2건만 (B사 것은 안 보임)
   perform pg_temp.act_as(t.u1);
