@@ -7,6 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-store">
 <title>NETWORK DNA · 고객관리</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 :root{
   --bg:#F2F4F6; --card:#FFFFFF;
@@ -373,6 +374,34 @@ nav.tabs button:active{opacity:.6}
 .pill.wait{background:var(--amber-bg);color:var(--amber)}
 .pill.off{background:var(--fill);color:var(--dim)}
 
+/* ───── 로그인 화면 ───── */
+#gate{
+  position:fixed;inset:0;z-index:100;background:var(--ink);color:#fff;
+  display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto;
+}
+#gate .box{width:100%;max-width:400px}
+#gate .mark{font-size:.86rem;font-weight:800;letter-spacing:.16em;margin-bottom:28px}
+#gate .mark em{font-style:normal;color:var(--blue)}
+#gate h1{font-size:1.75rem;font-weight:800;letter-spacing:-.04em;margin:0 0 8px;line-height:1.3}
+#gate p.sub{color:#8B95A1;font-size:.9rem;margin:0 0 26px;line-height:1.5}
+#gate label{display:block;font-size:.8rem;font-weight:700;color:#B0B8C1;margin:0 0 7px;padding-left:2px}
+#gate .field{margin-bottom:14px}
+#gate input{
+  width:100%;height:54px;border-radius:13px;border:1px solid #2A3441;background:#202833;
+  color:#fff;padding:0 15px;font-size:.98rem;font-weight:500;transition:border-color .15s;
+}
+#gate input:focus{outline:none;border-color:var(--blue);background:#242D3A}
+#gate input::placeholder{color:#5C6675}
+#gate .btn{margin-top:8px}
+#gate .msg{
+  display:none;margin-top:14px;padding:13px 15px;border-radius:12px;
+  font-size:.86rem;font-weight:600;line-height:1.5;
+}
+#gate .msg.on{display:block}
+#gate .msg.err{background:#3A2226;color:#FF8A94}
+#gate .msg.wait{background:#232B36;color:#B0B8C1}
+#gate .foot{margin-top:22px;font-size:.8rem;color:#6B7684;line-height:1.6}
+#gate .foot b{color:#8B95A1}
 #toast{
   position:fixed;left:50%;bottom:calc(var(--nav) + 18px);transform:translate(-50%,10px);z-index:90;
   background:rgba(25,31,40,.94);color:#fff;font-size:.87rem;font-weight:600;padding:13px 20px;border-radius:14px;
@@ -382,6 +411,37 @@ nav.tabs button:active{opacity:.6}
 </style>
 </head>
 <body>
+
+<div id="gate" hidden>
+  <div class="box">
+    <div class="mark">NETWORK<em>DNA</em></div>
+    <h1>고객관리</h1>
+    <p class="sub">회사에서 받은 코드와 아이디로 들어옵니다</p>
+    <form id="gateForm" autocomplete="on">
+      <div class="field">
+        <label for="g-code">회사 코드</label>
+        <input id="g-code" name="organization" placeholder="예: ACTIVA" autocapitalize="characters"
+               autocorrect="off" spellcheck="false" maxlength="12">
+      </div>
+      <div class="field">
+        <label for="g-id">아이디</label>
+        <input id="g-id" name="username" placeholder="예: hjchoi" autocapitalize="off"
+               autocorrect="off" spellcheck="false" autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="g-pw">비밀번호</label>
+        <input id="g-pw" name="password" type="password" placeholder="비밀번호"
+               autocomplete="current-password">
+      </div>
+      <button class="btn" id="g-go" type="submit">들어가기</button>
+    </form>
+    <div class="msg" id="gateMsg"></div>
+    <div class="foot">
+      계정은 <b>회사 관리자</b>가 만들어 줍니다.<br>
+      비밀번호를 잊으셨다면 관리자에게 재발급을 요청하세요.
+    </div>
+  </div>
+</div>
 
 <div class="appbar" id="appbar">
   <div class="in">
@@ -494,51 +554,29 @@ nav.tabs button:active{opacity:.6}
   <h1 class="ptitle">설정</h1>
   <p class="psub">담당자, 그룹, 자동 인식, 구글 시트 연동</p>
 
-  <h2 class="sec">담당자 이름</h2>
-  <div class="card">
-    <div class="field"><input class="inp" id="s-owner" placeholder="아직 정하지 않았습니다" readonly></div>
-    <button class="btn ghost sm" id="s-ownerEdit" style="width:100%">담당자 이름 수정</button>
-    <div class="note">여러 명이 나눠 쓸 때 누가 만든 기록인지 구분합니다. <b>팀원 명단과 똑같이 적어야</b> 공유가 연결됩니다.</div>
-    <div class="ai" id="ownerStat" hidden></div>
+  <h2 class="sec">내 계정</h2>
+  <div class="info">
+    <div class="irow"><span class="k">이름</span><span class="v" id="me-name">—</span></div>
+    <div class="irow"><span class="k">아이디</span><span class="v" id="me-id">—</span></div>
+    <div class="irow"><span class="k">회사</span><span class="v" id="me-co">—</span></div>
+    <div class="irow"><span class="k">권한</span><span class="v" id="me-role">—</span></div>
   </div>
+  <div class="btnrow">
+    <button class="btn ghost sm" id="s-pw" style="flex:1">비밀번호 변경</button>
+    <button class="btn ghost sm" id="s-logout" style="flex:1">로그아웃</button>
+  </div>
+  <div class="note">로그아웃하면 이 기기에 받아 둔 고객 정보를 지웁니다. 남의 기기에서 쓰셨다면 꼭 눌러 주세요.</div>
 
   <h2 class="sec">팀원</h2>
   <div class="glist" id="memList"></div>
-  <div class="note">구글 시트의 <b>Members</b> 탭에서 관리합니다. 한 곳만 고치면 동기화할 때 모든 기기에 같은 명단이 내려옵니다.</div>
+  <div class="note" id="memNote">계정 추가와 비밀번호 재발급은 <b>회사 관리자</b>가 합니다.</div>
+  <button class="btn ghost sm" id="s-addUser" style="width:100%;margin-top:8px" hidden>직원 계정 추가</button>
 
   <h2 class="sec">고객 그룹 관리</h2>
   <div class="glist" id="gManage"></div>
   <div class="btnrow">
     <input class="inp" id="s-newGroup" placeholder="새 그룹 이름" style="flex:1">
     <button class="btn sm" id="s-addGroup" style="flex:0 0 84px;height:52px">추가</button>
-  </div>
-
-  <h2 class="sec">명함 자동 인식</h2>
-  <div class="card">
-    <div class="field">
-      <label for="s-key">Anthropic API 키</label>
-      <input class="inp" id="s-key" type="password" placeholder="sk-ant-..." autocomplete="off" autocapitalize="off" spellcheck="false">
-    </div>
-    <div class="btnrow" style="margin-top:0">
-      <button class="btn ghost sm" id="s-keyShow" style="flex:1">보기</button>
-      <button class="btn ghost sm" id="s-keyTest" style="flex:1">연결 확인</button>
-    </div>
-    <div class="ai" id="keyStat" hidden></div>
-    <div class="note">키는 이 기기에만 저장됩니다. 비워두면 명함 정보를 직접 입력하는 방식으로 동작합니다.</div>
-  </div>
-
-  <h2 class="sec">구글 시트 연동</h2>
-  <div class="card">
-    <div class="field">
-      <label for="s-sync">Apps Script 웹앱 주소</label>
-      <input class="inp" id="s-sync" placeholder="https://script.google.com/…/exec" autocomplete="off" autocapitalize="off" spellcheck="false">
-    </div>
-    <div class="btnrow" style="margin-top:0">
-      <button class="btn ghost sm" id="s-syncTest" style="flex:1">연결 확인</button>
-      <button class="btn ghost sm" id="s-syncNow" style="flex:1">지금 동기화</button>
-    </div>
-    <div class="ai" id="syncStat" hidden></div>
-    <div class="note">연결하면 고객카드와 타임라인 기록이 저장할 때마다 자동으로 시트에 반영됩니다. 같은 주소를 넣은 다른 기기와도 서로 합쳐집니다. 설치 방법은 함께 드린 <b>구글시트-연동방법.md</b> 파일을 참고하세요.</div>
   </div>
 
   <h2 class="sec">기타</h2>
@@ -670,23 +708,25 @@ nav.tabs button:active{opacity:.6}
   </div>
 </div>
 
-<div class="sheet" id="ownerSheet" hidden>
+<div class="sheet" id="pwSheet" hidden>
   <div class="grab"></div>
-  <h3>담당자 이름을 바꿀까요?</h3>
-  <div class="warn">
-    이름을 바꾸면 <b>새 이름으로 담당·공유된 고객만</b> 이 기기에 남습니다.
-    지금 보이는 고객이 화면에서 사라질 수 있습니다.
-    <br><br>
-    사라진 고객은 <b>구글 시트에 그대로 있습니다.</b> 이름을 되돌리고 다시 저장하면 전부 돌아옵니다.
+  <h3>비밀번호 변경</h3>
+  <div class="field">
+    <label for="pw-old">지금 비밀번호</label>
+    <input class="inp" id="pw-old" type="password" autocomplete="current-password">
   </div>
-  <div class="field" style="margin-top:14px">
-    <label for="s-ownerNew">새 담당자 이름</label>
-    <input class="inp" id="s-ownerNew" placeholder="예: 최환준" autocomplete="off">
+  <div class="field">
+    <label for="pw-new">새 비밀번호</label>
+    <input class="inp" id="pw-new" type="password" autocomplete="new-password" placeholder="10자 이상">
   </div>
-  <div class="ai" id="ownerHint" hidden></div>
-  <div class="btnrow" style="margin-top:14px">
-    <button class="btn ghost" id="ownerCancel" style="flex:0 0 108px">취소</button>
-    <button class="btn" id="ownerSave">이름 바꾸기</button>
+  <div class="field">
+    <label for="pw-new2">새 비밀번호 확인</label>
+    <input class="inp" id="pw-new2" type="password" autocomplete="new-password">
+  </div>
+  <div class="ai" id="pwStat" hidden></div>
+  <div class="btnrow" style="margin-top:12px">
+    <button class="btn ghost" id="pwCancel" style="flex:0 0 108px">취소</button>
+    <button class="btn" id="pwSave">바꾸기</button>
   </div>
 </div>
 
@@ -725,7 +765,10 @@ const $=id=>document.getElementById(id);
 /* 홑따옴표까지 막아 둡니다. 지금은 속성을 모두 쌍따옴표로 쓰지만
    나중에 홑따옴표를 쓰는 곳이 생겨도 뚫리지 않게 합니다. */
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+/* 데이터베이스 기본키가 UUID 라 처음부터 UUID 로 만듭니다 */
+const uid=()=> (crypto.randomUUID ? crypto.randomUUID()
+  : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{
+      const r=Math.random()*16|0, v=(c==='x'?r:(r&0x3|0x8)); return v.toString(16) }));
 const now=()=>Date.now();
 
 const KIND={
@@ -747,15 +790,16 @@ function hColor(name){
   return GCOLORS[h%GCOLORS.length];
 }
 /* 팀원 이니셜 동그라미 */
-function memDot(n,cls){
+/* 팀원 동그라미. id 를 받아 이름으로 그립니다. */
+function memDot(id,cls){
+  const n=memName(id)||'?';
   const [bg,fg]=hColor(n);
-  const t=String(n||'?').trim().slice(0,/[가-힣]/.test(String(n)[0]||'')?1:2);
+  const t=String(n).trim().slice(0,/[가-힣]/.test(String(n)[0]||'')?1:2);
   return '<span class="'+(cls||'mini')+'" style="background:'+bg+';color:'+fg+'" title="'+esc(n)+'">'+esc(t)+'</span>';
 }
-function sharedOf(c){ return (c&&c.shared)||[] }
-function isMine(c){ return !cfg.owner || String(c.owner||'').trim()===cfg.owner }
+/* sharedOf · isMine · memName 은 Supabase 계층에 있습니다 */
 
-let cfg={owner:'',key:'',model:'claude-sonnet-5',sync:'',lastPull:0,askContact:true,members:[],groups:['신규','진행 중','주요 고객']};
+let cfg={lastPull:0,askContact:true,members:[],groups:['신규','진행 중','주요 고객']};
 let custs=[], acts=[];
 let filterG='', filterScope='', qs='';
 let curUid=null, editUid=null, draftPhoto=null, draftGroups=[];
@@ -1286,46 +1330,40 @@ async function autoCrop(dataUrl){
 }
 
 /* ───────── 명함 자동 인식 ───────── */
-const OCR_PROMPT='명함 사진입니다. 인쇄된 글자를 읽어 아래 항목만 뽑아 주세요.\n'+
-'- company: 회사명 (한글이 있으면 한글 우선)\n'+
-'- name: 사람 이름만 (인쇄된 그대로. 한글과 영문이 함께 있으면 한글)\n'+
-'- title: 직함 (부장, 대표, Manager 등). 없으면 빈 문자열\n'+
-'- phone: 휴대폰 번호 우선, 없으면 대표번호. 숫자와 하이픈만\n'+
-'- email: 이메일 주소\n'+
-'- address: 회사 주소\n'+
-'읽을 수 없는 항목은 빈 문자열로 두세요. 추측하지 말고 보이는 대로만 적으세요.\n'+
-'오직 JSON만 출력하고 다른 말은 절대 쓰지 마세요.\n'+
-'{"company":"","name":"","title":"","phone":"","email":"","address":""}';
-
+/* 명함 인식은 서버 함수가 대신합니다.
+   읽는 규칙(프롬프트)과 API 키가 모두 서버에 있어,
+   이 기기에서는 새어 나갈 것이 없습니다. */
 async function readCard(dataUrl){
-  const st=$('aiStat'); st.hidden=false;
-  if(!cfg.key){ st.className='ai'; st.textContent='자동 인식 꺼짐 — 설정에서 API 키를 넣으면 켜집니다'; return }
+  const st = $('aiStat'); st.hidden = false;
+  if(!me){ st.className='ai err'; st.textContent='로그인이 필요합니다'; return }
   st.className='ai'; st.innerHTML='<span class="spin"></span>명함을 읽는 중…';
   try{
-    const b64=dataUrl.split(',')[1];
-    const r=await fetch('https://api.anthropic.com/v1/messages',{
+    const { data:sess } = await sb.auth.getSession();
+    const token = sess && sess.session ? sess.session.access_token : '';
+    if(!token) throw new Error('로그인이 만료되었습니다');
+
+    const r = await fetch(FN_BASE + '/read-card', {
       method:'POST',
-      headers:{'content-type':'application/json','x-api-key':cfg.key,
-        'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:cfg.model||'claude-sonnet-5',max_tokens:600,
-        messages:[{role:'user',content:[
-          {type:'image',source:{type:'base64',media_type:'image/jpeg',data:b64}},
-          {type:'text',text:OCR_PROMPT}
-        ]}]})
+      headers:{ 'content-type':'application/json', 'authorization':'Bearer ' + token },
+      body: JSON.stringify({ image: dataUrl.split(',')[1] })
     });
-    if(!r.ok){ const e=await r.text(); throw new Error(r.status+' '+e.slice(0,110)) }
-    const d=await r.json();
-    const txt=(d.content||[]).map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
-    const j=JSON.parse(txt.slice(txt.indexOf('{'),txt.lastIndexOf('}')+1));
-    const set=(id,v)=>{ if(v && !$(id).value) $(id).value=String(v).trim() };
-    set('f-company',j.company); set('f-name',j.name); set('f-title',j.title);
-    set('f-phone',fmtPhone(j.phone)); set('f-email',j.email); set('f-addr',j.address);
-    const got=[j.company,j.name,j.phone,j.email].filter(Boolean).length;
-    st.className=got?'ai ok':'ai';
-    st.textContent=got?'자동 입력했습니다 — 틀린 곳은 직접 고쳐주세요':'글자를 찾지 못했습니다 — 직접 입력해주세요';
+    const d = await r.json().catch(()=>({ ok:false, error:'응답을 읽지 못했습니다' }));
+    if(!d.ok){
+      st.className='ai err';
+      st.textContent = (d.error || '인식에 실패했습니다') + ' — 직접 입력해주세요';
+      return;
+    }
+    const c = d.card || {};
+    const set = (id,v)=>{ if(v && !$(id).value) $(id).value = String(v).trim() };
+    set('f-company', c.company); set('f-name', c.name); set('f-title', c.title);
+    set('f-phone', fmtPhone(c.phone)); set('f-email', c.email); set('f-addr', c.address);
+    const got = [c.company, c.name, c.phone, c.email].filter(Boolean).length;
+    st.className = got ? 'ai ok' : 'ai';
+    st.textContent = got ? '자동 입력했습니다 — 틀린 곳은 직접 고쳐주세요'
+                         : '글자를 찾지 못했습니다 — 직접 입력해주세요';
   }catch(e){
     st.className='ai err';
-    st.textContent='인식 실패: '+String(e.message||e).slice(0,80)+' — 직접 입력해주세요';
+    st.textContent = '인식 실패: ' + String(e.message||e).slice(0,60) + ' — 직접 입력해주세요';
   }
 }
 
@@ -1470,7 +1508,7 @@ $('saveCust').addEventListener('click',async()=>{
     const u=c.uid; clearForm(); go('list'); openDetail(u);
     toast('수정했습니다'); queueSync();
   }else{
-    const c={uid:uid(),createdAt:isoNow(),owner:cfg.owner||'',shared:[],lastAt:isoNow(),...base};
+    const c={uid:uid(),createdAt:isoNow(),owner:(me?me.id:''),shared:[],lastAt:isoNow(),...base};
     custs.unshift(c); await dbPut('cust',c);
     const memo=$('f-memo').value.trim();
     if(memo) await addAct(c.uid,'meeting',memo,isoNow(),null,true);
@@ -1483,7 +1521,7 @@ $('saveCust').addEventListener('click',async()=>{
 /* ═════════ 타임라인 기록 ═════════ */
 async function addAct(cid,kind,body,at,due,silent){
   const a={uid:uid(),cid,kind,body:String(body||'').trim(),at:at||isoNow(),
-    due:due||'',done:false,by:cfg.owner||'',updated:now(),dirty:true,deleted:false};
+    due:due||'',done:false,by:(me?me.id:''),updated:now(),dirty:true,deleted:false};
   acts.push(a); await dbPut('act',a);
   await touchCust(cid,a.at);
   mirrorSave();
@@ -1532,7 +1570,7 @@ function renderChips(){
   const cnt=g=>live.filter(c=>(c.groups||[]).includes(g)).length;
   const mine=live.filter(isMine).length, got=live.length-mine;
   let h='<button class="chip" data-s="" aria-pressed="'+(!filterScope?'true':'false')+'">전체 <span class="n">'+live.length+'</span></button>';
-  const scopeShown = !!(cfg.owner && got);
+  const scopeShown = !!(me && got);
   if(scopeShown){
     h+='<button class="chip" data-s="mine" aria-pressed="'+(filterScope==='mine'?'true':'false')+'">내 담당 <span class="n">'+mine+'</span></button>';
     h+='<button class="chip" data-s="shared" aria-pressed="'+(filterScope==='shared'?'true':'false')+'">공유받음 <span class="n">'+got+'</span></button>';
@@ -1747,11 +1785,11 @@ function paintDetail(){
         : '<span class="none">그룹 없음 — 눌러서 선택 (여러 개 가능)</span>')+
     '</span></button>'+
     '<div class="irow"><span class="k">담당자</span><span class="v'+(c.owner?'':' none')+'">'+
-      (c.owner?(memDot(c.owner,'big')+' <span style="vertical-align:middle;margin-left:6px">'+esc(c.owner)+(isMine(c)?' (나)':'')+'</span>'):'—')+
+      (c.owner?(memDot(c.owner,'big')+' <span style="vertical-align:middle;margin-left:6px">'+esc(memName(c.owner)||'(알 수 없음)')+(isMine(c)?' (나)':'')+'</span>'):'—')+
     '</span></div>'+
     '<button class="irow" data-share="1"><span class="k">공유 중</span><span class="v">'+
       (sh.length
-        ? '<span class="memrow">'+sh.map(n=>memDot(n,'big')+'<span style="margin-left:-3px;margin-right:4px">'+esc(n)+'</span>').join('')+'</span>'
+        ? '<span class="memrow">'+sh.map(n=>memDot(n,'big')+'<span style="margin-left:-3px;margin-right:4px">'+esc(memName(n))+'</span>').join('')+'</span>'
         : '<span class="none">아직 공유하지 않았습니다 — 눌러서 선택</span>')+
     '</span></button></div>';
 
@@ -1867,7 +1905,7 @@ function openSheet(auid){
   openSheetEl('sheet');
   setTimeout(()=>$('e-body').focus(),240);
 }
-const SHEET_IDS=['sheet','askSheet','shareSheet','ownerSheet','groupSheet','assignSheet'];
+const SHEET_IDS=['sheet','askSheet','shareSheet','groupSheet','assignSheet','pwSheet'];
 function otherSheetOpen(except){
   return SHEET_IDS.some(id=>id!==except && $(id) && !$(id).hidden);
 }
@@ -2108,10 +2146,10 @@ function renderAssign(){
     ? '고른 팀원에게 선택한 '+picked.size+'명을 공유합니다. 원래 담당자는 그대로입니다.'
     : '선택한 '+picked.size+'명의 담당자를 바꿉니다. <b>나를 고르지 않으면 이 기기에서 사라질 수 있습니다.</b> (구글 시트에는 남습니다)';
   $('assignList').innerHTML=ms.map(m=>{
-    const on=assignPick.includes(m);
-    return '<button class="mempick" data-m="'+esc(m)+'">'+memDot(m,'big')+
-      '<span class="nm">'+esc(m)+'</span>'+
-      (m===cfg.owner?'<span class="me">나</span>':'')+
+    const on=assignPick.includes(m.id);
+    return '<button class="mempick" data-m="'+esc(m.id)+'">'+memDot(m.id,'big')+
+      '<span class="nm">'+esc(m.name)+'</span>'+
+      (me&&m.id===me.id?'<span class="me">나</span>':'')+
       '<span class="cb'+(on?' on':'')+'"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></button>';
   }).join('');
 }
@@ -2134,8 +2172,8 @@ $('assignSave').addEventListener('click',async()=>{
   const list=pickedList();
   if(assignMode==='owner'){
     const to=assignPick[0];
-    const away = to!==cfg.owner;
-    if(!confirm('고객 '+list.length+'명의 담당자를 "'+to+'"(으)로 바꿉니다.'+
+    const away = !me || to!==me.id;
+    if(!confirm('고객 '+list.length+'명의 담당자를 "'+memName(to)+'"(으)로 바꿉니다.'+
       (away?'\n\n나에게 공유되어 있지 않은 고객은 이 기기에서 사라집니다. 구글 시트에는 그대로 남습니다.':''))) return;
     for(const c of list){
       c.owner=to;
@@ -2166,7 +2204,7 @@ function openShare(){
 function closeShare(){ closeSheetEl('shareSheet') }
 function renderShareList(){
   const c=custs.find(x=>x.uid===curUid);
-  const others=(cfg.members||[]).filter(m=>m!==(c&&String(c.owner||'').trim()));
+  const others=(cfg.members||[]).filter(m=>m.id!==(c&&String(c.owner||'')));
   if(!others.length){
     $('shareList').innerHTML='<div class="grow"><span class="nm" style="color:var(--dim);font-weight:500">팀원 명단이 비어 있습니다</span></div>';
     $('shareNote').innerHTML='구글 시트의 <b>Members</b> 탭에 팀원 이름을 적으면 여기에 나타납니다.';
@@ -2174,10 +2212,10 @@ function renderShareList(){
   }
   $('shareNote').textContent='고른 팀원의 폰으로 이 고객카드와 모든 기록이 함께 넘어갑니다.';
   $('shareList').innerHTML=others.map(m=>{
-    const on=sharePick.includes(m);
-    return '<button class="mempick" data-m="'+esc(m)+'">'+memDot(m,'big')+
-      '<span class="nm">'+esc(m)+'</span>'+
-      (m===cfg.owner?'<span class="me">나</span>':'')+
+    const on=sharePick.includes(m.id);
+    return '<button class="mempick" data-m="'+esc(m.id)+'">'+memDot(m.id,'big')+
+      '<span class="nm">'+esc(m.name)+'</span>'+
+      (me&&m.id===me.id?'<span class="me">나</span>':'')+
       '<span class="cb'+(on?' on':'')+'"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></button>';
   }).join('');
 }
@@ -2222,281 +2260,444 @@ $('askNever').addEventListener('click',()=>{
   closeAsk(); toast('설정 → 기타 에서 다시 켤 수 있습니다');
 });
 
-/* ═════════ 구글 시트 동기화 ═════════ */
-let syncing=false, syncTimer=null;
-function stripC(c){
-  return {uid:c.uid,createdAt:c.createdAt||'',name:c.name||'',company:c.company||'',title:c.title||'',
-    phone:c.phone||'',email:c.email||'',addr:c.addr||'',groups:(c.groups||[]).join('|'),
-    owner:c.owner||'',shared:(c.shared||[]).join('|'),
-    lastAt:c.lastAt||'',updated:c.updated||0,deleted:c.deleted?1:0};
+/* ═════════ Supabase 연결 ═════════
+   주소와 아래 키는 브라우저에 그대로 들어가는 공개 값입니다.
+   접근 제어는 키가 아니라 데이터베이스의 행 단위 규칙이 합니다. */
+const SB_URL = 'https://izrtclsqhsgkuwsffifn.supabase.co';
+const SB_KEY = 'sb_publishable_G5wx-YdgwUU630x1vKmZmQ_15BgxvEX';
+const FN_BASE = SB_URL + '/functions/v1';
+
+let sb = null, me = null, syncing = false, syncTimer = null;
+
+function sbInit(){
+  if(sb) return sb;
+  if(!window.supabase){ return null }
+  sb = window.supabase.createClient(SB_URL, SB_KEY, {
+    auth:{ persistSession:true, autoRefreshToken:true, storageKey:'ndna-auth' }
+  });
+  return sb;
 }
-function stripA(a){
-  return {uid:a.uid,cid:a.cid,kind:a.kind,body:a.body||'',at:a.at||'',due:a.due||'',
-    done:a.done?1:0,by:a.by||'',updated:a.updated||0,deleted:a.deleted?1:0};
+
+/* 아이디는 메일로 보내지 않습니다. .invalid 는 규격상 없는 도메인입니다. */
+const emailFor = (id, code) => String(id).trim().toLowerCase() + '@' +
+                               String(code).trim().toLowerCase() + '.ndna.invalid';
+
+async function signIn(code, id, pw){
+  if(!sbInit()) return { ok:false, error:'연결 준비에 실패했습니다. 새로고침해 주세요.' };
+  const { error } = await sb.auth.signInWithPassword({ email: emailFor(id, code), password: pw });
+  if(error){
+    const m = String(error.message||'');
+    if(/Invalid login/i.test(m)) return { ok:false, error:'회사 코드, 아이디, 비밀번호를 확인해 주세요.' };
+    return { ok:false, error:'들어가지 못했습니다: ' + m.slice(0,80) };
+  }
+  return await loadMe();
 }
+async function loadMe(){
+  if(!sbInit()) return { ok:false };
+  const { data:u } = await sb.auth.getUser();
+  if(!u || !u.user) return { ok:false };
+  const { data:p, error } = await sb
+    .from('profiles')
+    .select('id, company_id, login_id, name, role, companies(code,name)')
+    .eq('id', u.user.id).single();
+  if(error || !p){
+    await sb.auth.signOut();
+    return { ok:false, error:'계정 정보를 불러오지 못했습니다. 관리자에게 문의하세요.' };
+  }
+  me = { id:p.id, companyId:p.company_id, loginId:p.login_id, name:p.name || p.login_id,
+         role:p.role, companyCode:(p.companies&&p.companies.code)||'',
+         companyName:(p.companies&&p.companies.name)||'' };
+  return { ok:true };
+}
+async function signOut(){
+  try{ await sb.auth.signOut() }catch(e){}
+  me = null;
+  // 이 기기에 남은 회사 데이터를 지웁니다. 남의 폰에 두고 나가지 않도록.
+  await dbClear('cust'); await dbClear('act');
+  custs = []; acts = [];
+  try{ localStorage.removeItem('ndna-mirror') }catch(e){}
+  cfg.lastPull = 0; cfgSave();
+  showGate();
+}
+
+/* ───── 팀원 명단 (같은 회사만 내려옵니다) ───── */
+async function loadMembers(){
+  const { data } = await sb.from('profiles')
+    .select('id, login_id, name, role, disabled').eq('disabled', false);
+  cfg.members = (data||[]).map(p=>({ id:p.id, loginId:p.login_id,
+                                     name:p.name || p.login_id, role:p.role }));
+  cfgSave();
+}
+function memName(id){
+  const m = (cfg.members||[]).find(x=>x.id===id);
+  return m ? m.name : (id===((me&&me.id)||'') ? (me?me.name:'') : '');
+}
+function sharedOf(c){ return (c && c.shared) || [] }
+function isMine(c){ return !!me && String(c.owner||'') === me.id }
+
+/* ───── 시각 변환 ─────
+   화면과 저장소는 'YYYY-MM-DDTHH:mm' 지역시각, 서버는 UTC 를 씁니다. */
+function toIso(local){
+  if(!local) return new Date().toISOString();
+  const d = new Date(String(local));
+  return isNaN(d) ? new Date().toISOString() : d.toISOString();
+}
+function fromIso(iso){
+  if(!iso) return isoNow();
+  const d = new Date(iso);
+  return isNaN(d) ? isoNow() : isoNow(d);
+}
+
+/* ───── 우리 형식 ↔ 데이터베이스 형식 ───── */
+function toRowC(c){
+  return {
+    id:c.uid, company_id:me.companyId, owner_id:c.owner || me.id,
+    shared_ids:(c.shared||[]).filter(Boolean),
+    name:c.name||'', company_name:c.company||'', title:c.title||'',
+    phone:c.phone||'', email:c.email||'', addr:c.addr||'',
+    groups:(c.groups||[]).filter(Boolean),
+    last_at:toIso(c.lastAt), created_at:toIso(c.createdAt),
+    deleted:!!c.deleted
+  };
+}
+function fromRowC(r, prev){
+  return {
+    uid:r.id, owner:r.owner_id, shared:r.shared_ids||[],
+    name:r.name||'', company:r.company_name||'', title:r.title||'',
+    phone:r.phone||'', email:r.email||'', addr:r.addr||'',
+    groups:r.groups||[], lastAt:fromIso(r.last_at), createdAt:fromIso(r.created_at),
+    updated:new Date(r.updated_at).getTime(), deleted:!!r.deleted, dirty:false,
+    photo:(prev && prev.photo) || null            // 사진은 이 기기에만 있습니다
+  };
+}
+function toRowA(a){
+  return {
+    id:a.uid, company_id:me.companyId, customer_id:a.cid,
+    kind:a.kind||'meeting', body:a.body||'', at:toIso(a.at),
+    due:a.due || null, done:!!a.done, by_id:a.by || me.id, deleted:!!a.deleted
+  };
+}
+function fromRowA(r){
+  return {
+    uid:r.id, cid:r.customer_id, kind:r.kind||'meeting', body:r.body||'',
+    at:fromIso(r.at), due:r.due||'', done:!!r.done, by:r.by_id||'',
+    updated:new Date(r.updated_at).getTime(), deleted:!!r.deleted, dirty:false
+  };
+}
+
+/* ───── 동기화 상태 표시 ───── */
 function pill(){
-  const p=$('syncPill');
-  if(!cfg.sync){ p.hidden=true; return }
-  p.hidden=false;
+  const p = $('syncPill');
+  if(!me){ p.hidden = true; return }
+  p.hidden = false;
   if(syncing){ p.className='pill wait'; p.textContent='전송 중' }
   else if(!navigator.onLine){ p.className='pill off'; p.textContent='오프라인' }
-  else if(custs.some(c=>c.dirty)||acts.some(a=>a.dirty)){ p.className='pill wait'; p.textContent='대기' }
+  else if(custs.some(c=>c.dirty) || acts.some(a=>a.dirty)){ p.className='pill wait'; p.textContent='대기' }
   else { p.className='pill on'; p.textContent='동기화됨' }
 }
 function queueSync(){
   pill();
-  if(!cfg.sync) return;
+  if(!me) return;
   clearTimeout(syncTimer);
-  syncTimer=setTimeout(()=>syncNow(true),1500);
+  syncTimer = setTimeout(()=>syncNow(true), 1500);
 }
+
+/* ───── 동기화 ─────
+   1) 이 기기에서 바뀐 것을 올리고
+   2) 마지막으로 받은 뒤 서버에서 바뀐 것을 받고
+   3) 나에게 더 이상 보이지 않는 것을 내립니다. */
 async function syncNow(quiet){
-  if(!cfg.sync || syncing) return {ok:false};
-  if(!navigator.onLine){ pill(); return {ok:false,msg:'인터넷 연결 없음'} }
-  syncing=true; pill();
+  if(!sb || !me || syncing) return { ok:false };
+  if(!navigator.onLine){ pill(); return { ok:false, msg:'인터넷 연결 없음' } }
+  syncing = true; pill();
   try{
-    const pc=custs.filter(c=>c.dirty).map(stripC);
-    const pa=acts.filter(a=>a.dirty).map(stripA);
-    const r=await fetch(cfg.sync,{method:'POST',
-      headers:{'content-type':'text/plain;charset=utf-8'},
-      body:JSON.stringify({me:cfg.owner||'',cust:pc,act:pa,since:cfg.lastPull||0})});
-    if(!r.ok) throw new Error('서버 응답 '+r.status);
-    const d=await r.json();
-    if(!d.ok) throw new Error(d.error||'서버 오류');
+    /* 1) 올리기 */
+    const pc = custs.filter(c=>c.dirty);
+    if(pc.length){
+      const { error } = await sb.from('customers').upsert(pc.map(toRowC));
+      if(error) throw error;
+    }
+    const pa = acts.filter(a=>a.dirty);
+    if(pa.length){
+      const { error } = await sb.from('activities').upsert(pa.map(toRowA));
+      if(error) throw error;
+    }
+    for(const c of pc){ c.dirty=false; await dbPut('cust',c) }
+    for(const a of pa){ a.dirty=false; await dbPut('act',a) }
 
-    for(const c of custs){ if(c.dirty){ c.dirty=false; await dbPut('cust',c) } }
-    for(const a of acts){ if(a.dirty){ a.dirty=false; await dbPut('act',a) } }
+    /* 2) 받기 — 서버 시각을 기준으로 삼아 시계 차이를 피합니다 */
+    const since = new Date(cfg.lastPull || 0).toISOString();
+    let newest = cfg.lastPull || 0;
 
-    let add=0; const touched=new Set();
-    for(const o of (d.cust||[])){
-      const inc={uid:o.uid,createdAt:o.createdAt||'',name:o.name||'',company:o.company||'',title:o.title||'',
-        phone:o.phone||'',email:o.email||'',addr:o.addr||'',
-        groups:String(o.groups||'').split('|').filter(Boolean),
-        shared:String(o.shared||'').split('|').map(x=>x.trim()).filter(Boolean),
-        owner:o.owner||'',lastAt:o.lastAt||'',
-        updated:Number(o.updated)||0,deleted:!!Number(o.deleted),dirty:false};
-      const cur=custs.find(x=>x.uid===o.uid);
+    const { data:rc, error:e1 } = await sb.from('customers')
+      .select('*').gt('updated_at', since).order('updated_at', { ascending:true });
+    if(e1) throw e1;
+
+    let added = 0;
+    const byUid = new Map(custs.map(c=>[c.uid,c]));
+    for(const r of (rc||[])){
+      const t = new Date(r.updated_at).getTime();
+      if(t > newest) newest = t;
+      const cur = byUid.get(r.id);
       if(cur){
-        if(!cur.dirty && inc.updated>(cur.updated||0)){ Object.assign(cur,inc); await dbPut('cust',cur) }
+        if(cur.dirty) continue;                    // 아직 못 올린 내 수정이 우선
+        Object.assign(cur, fromRowC(r, cur));
+        await dbPut('cust', cur);
       }else{
-        inc.photo=null; custs.push(inc); await dbPut('cust',inc); add++;
+        const c = fromRowC(r, null);
+        custs.push(c); byUid.set(c.uid, c); await dbPut('cust', c); added++;
       }
-      inc.groups.forEach(ensureGroup);
     }
-    for(const o of (d.act||[])){
-      const inc={uid:o.uid,cid:o.cid,kind:KIND[o.kind]?o.kind:'note',body:o.body||'',at:o.at||'',
-        due:o.due||'',done:!!Number(o.done),by:o.by||'',updated:Number(o.updated)||0,
-        deleted:!!Number(o.deleted),dirty:false};
-      const cur=acts.find(x=>x.uid===o.uid);
-      if(cur){ if(!cur.dirty && inc.updated>(cur.updated||0)){ Object.assign(cur,inc); await dbPut('act',cur) } }
-      else { acts.push(inc); await dbPut('act',inc) }
-      touched.add(inc.cid);
+
+    const { data:ra, error:e2 } = await sb.from('activities')
+      .select('*').gt('updated_at', since).order('updated_at', { ascending:true });
+    if(e2) throw e2;
+
+    const touched = new Set();
+    const aByUid = new Map(acts.map(a=>[a.uid,a]));
+    for(const r of (ra||[])){
+      const t = new Date(r.updated_at).getTime();
+      if(t > newest) newest = t;
+      const cur = aByUid.get(r.id);
+      if(cur){
+        if(cur.dirty) continue;
+        Object.assign(cur, fromRowA(r));
+        await dbPut('act', cur);
+      }else{
+        const a = fromRowA(r);
+        acts.push(a); aByUid.set(a.uid, a); await dbPut('act', a);
+      }
+      touched.add(r.customer_id);
     }
-    // 시트에서 들어온 기록도 목록 정렬(최근활동)에 반영합니다.
-    // 시트로 되돌려 보낼 필요는 없으므로 dirty 로 표시하지 않습니다.
+    // 남이 넣은 기록도 목록의 최근활동에 반영합니다
     for(const cid of touched){
-      const c=custs.find(x=>x.uid===cid); if(!c) continue;
-      const newest=custActs(cid)[0];
-      if(newest && String(newest.at)>String(c.lastAt||'')){
-        c.lastAt=newest.at; await dbPut('cust',c);
+      const c = byUid.get(cid); if(!c) continue;
+      const newestAct = custActs(cid)[0];
+      if(newestAct && String(newestAct.at) > String(c.lastAt||'')){
+        c.lastAt = newestAct.at; await dbPut('cust', c);
       }
     }
-    if(Array.isArray(d.members)){
-      cfg.members=d.members.map(m=>String((m&&m.name)||'').trim()).filter(Boolean);
-    }
-    // 나에게서 공유가 해제된 고객은 이 기기에서도 내립니다.
-    // 아직 서버에 못 보낸(dirty) 것은 건드리지 않습니다.
-    if(cfg.owner && Array.isArray(d.visible)){
-      const vis=new Set(d.visible);
-      const drop=custs.filter(c=>!c.dirty && !vis.has(c.uid));
+
+    /* 3) 공유가 끊긴 고객 내리기 */
+    const { data:vis, error:e3 } = await sb.from('customers').select('id').eq('deleted', false);
+    if(!e3 && Array.isArray(vis)){
+      const keep = new Set(vis.map(v=>v.id));
+      const drop = custs.filter(c=>!c.dirty && !c.deleted && !keep.has(c.uid));
       if(drop.length){
-        const gone=new Set(drop.map(c=>c.uid));
-        for(const c of drop) await dbDel('cust',c.uid);
-        for(const a of acts.filter(x=>gone.has(x.cid) && !x.dirty)) await dbDel('act',a.uid);
-        custs=custs.filter(c=>!gone.has(c.uid));
-        acts=acts.filter(a=>!gone.has(a.cid) || a.dirty);
+        const gone = new Set(drop.map(c=>c.uid));
+        for(const c of drop) await dbDel('cust', c.uid);
+        for(const a of acts.filter(x=>gone.has(x.cid) && !x.dirty)) await dbDel('act', a.uid);
+        custs = custs.filter(c=>!gone.has(c.uid));
+        acts  = acts.filter(a=>!gone.has(a.cid) || a.dirty);
         if(curUid && gone.has(curUid)) closeDetail();
       }
     }
-    cfg.lastPull=d.now||now(); cfgSave(); mirrorSave();
-    syncing=false; render(); if(curUid) paintDetail();
+
+    if(newest > (cfg.lastPull||0)) cfg.lastPull = newest;
+    cfgSave(); mirrorSave();
+    await loadMembers();
+    syncing = false;
+    render(); if(curUid) paintDetail();
     if(!$('p-set').hidden) renderMembers();
     pill();
-    if(!quiet) toast(add?('동기화 완료 · 고객 '+add+'명 추가'):'동기화 완료');
-    return {ok:true,add};
+    if(!quiet) toast(added ? ('동기화 완료 · 고객 ' + added + '명 추가') : '동기화 완료');
+    return { ok:true, add:added };
   }catch(e){
-    syncing=false; pill();
-    if(!quiet) toast('동기화 실패: '+String(e.message||e).slice(0,50));
-    return {ok:false,msg:String(e.message||e)};
+    syncing = false; pill();
+    const msg = String((e && e.message) || e);
+    if(/JWT|not authenticated|401/i.test(msg)){
+      if(!quiet) toast('로그인이 만료되었습니다');
+      me = null; showGate();
+      return { ok:false, msg:'로그인 만료' };
+    }
+    if(!quiet) toast('동기화 실패: ' + msg.slice(0,60));
+    return { ok:false, msg:msg };
   }
 }
-setInterval(()=>{ if(cfg.sync && navigator.onLine && !syncing) syncNow(true) },20000);
-window.addEventListener('online',()=>{ pill(); syncNow(true) });
-window.addEventListener('offline',pill);
+setInterval(()=>{ if(me && navigator.onLine && !syncing) syncNow(true) }, 20000);
+window.addEventListener('online',  ()=>{ pill(); syncNow(true) });
+window.addEventListener('offline', pill);
+
+/* ═════════ 로그인 화면 ═════════ */
+function showGate(){
+  $('gate').hidden = false;
+  document.body.style.overflow = 'hidden';
+  $('gateMsg').className = 'msg';
+  $('g-pw').value = '';
+}
+function hideGate(){
+  $('gate').hidden = true;
+  document.body.style.overflow = '';
+}
+function gateMsg(kind, text){
+  const m = $('gateMsg');
+  m.className = 'msg on ' + kind;
+  m.textContent = text;
+}
+$('gateForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const code = $('g-code').value.trim().toUpperCase();
+  const id   = $('g-id').value.trim().toLowerCase();
+  const pw   = $('g-pw').value;
+  if(!code || !id || !pw){ gateMsg('err','세 칸을 모두 채워 주세요.'); return }
+  $('g-go').disabled = true;
+  gateMsg('wait','확인하는 중…');
+  const r = await signIn(code, id, pw);
+  $('g-go').disabled = false;
+  if(!r.ok){ gateMsg('err', r.error || '들어가지 못했습니다.'); $('g-pw').value=''; return }
+  $('g-pw').value = '';
+  await afterLogin();
+});
+$('g-code').addEventListener('input', e=>{ e.target.value = e.target.value.toUpperCase() });
+
+async function afterLogin(){
+  hideGate();
+  paintOwner();
+  await loadMembers();
+  cfg.lastPull = 0; cfgSave();          // 들어올 때는 전부 받아옵니다
+  render(); go('list');
+  const r = await syncNow(true);
+  if(!r.ok && r.msg) toast('동기화 실패: ' + String(r.msg).slice(0,60));
+}
 
 /* ═════════ 설정 ═════════ */
 function paintOwner(){
-  $('ownerName').textContent=cfg.owner||'미설정';
-  $('s-owner').value=cfg.owner||'';
-}
-$('s-ownerEdit').addEventListener('click',()=>{
-  $('s-ownerNew').value=cfg.owner||'';
-  checkOwnerName();
-  openSheetEl('ownerSheet');
-  setTimeout(()=>$('s-ownerNew').focus(),260);
-});
-$('ownerCancel').addEventListener('click',()=>closeSheetEl('ownerSheet'));
-$('s-ownerNew').addEventListener('input',checkOwnerName);
-function checkOwnerName(){
-  const v=$('s-ownerNew').value.trim(), ms=cfg.members||[], h=$('ownerHint');
-  if(!v){ h.hidden=false; h.className='ai'; h.textContent='비워 두면 시트의 모든 고객을 받습니다'; return }
-  if(!ms.length){ h.hidden=true; return }
-  if(ms.includes(v)){ h.hidden=false; h.className='ai ok'; h.textContent='팀원 명단에 있는 이름입니다'; }
-  else { h.hidden=false; h.className='ai err'; h.textContent='명단에 없는 이름입니다 — 이대로는 공유를 못 받습니다'; }
-}
-$('ownerSave').addEventListener('click',async()=>{
-  const v=$('s-ownerNew').value.trim();
-  if(v===(cfg.owner||'')){ closeSheetEl('ownerSheet'); return }
-  cfg.owner=v;
-  // 이름이 바뀌면 받아올 기준 시각을 지웁니다.
-  // 이걸 안 하면 "그 시각 이후 바뀐 것"만 요청해서 시트에 있는 고객이 돌아오지 않습니다.
-  cfg.lastPull=0;
-  cfgSave(); paintOwner(); renderMembers(); render();
-  closeSheetEl('ownerSheet');
-  if(cfg.sync && navigator.onLine){
-    toast('이름을 바꿨습니다 — 시트에서 다시 받아오는 중…');
-    const r=await syncNow(true);
-    toast(r.ok?'받아왔습니다':'받아오지 못했습니다 — 설정에서 지금 동기화를 눌러주세요');
-  }else{
-    toast('담당자 이름을 바꿨습니다');
+  $('ownerName').textContent = me ? me.name : '미설정';
+  if($('me-name')){
+    $('me-name').textContent = me ? me.name : '—';
+    $('me-id').textContent   = me ? me.loginId : '—';
+    $('me-co').textContent   = me ? ((me.companyName||'') + ' (' + me.companyCode + ')') : '—';
+    $('me-role').textContent = me ? (me.role === 'admin' ? '관리자' : '사용자') : '—';
   }
+}
+
+/* ───── 로그아웃 ───── */
+$('s-logout').addEventListener('click', async ()=>{
+  const n = custs.filter(c=>c.dirty).length + acts.filter(a=>a.dirty).length;
+  if(n && !confirm('아직 서버로 못 보낸 기록이 ' + n + '건 있습니다.\n지금 나가면 그 기록은 사라집니다. 계속할까요?')) return;
+  if(!n && !confirm('로그아웃하면 이 기기에 받아 둔 고객 정보를 지웁니다.\n서버에는 그대로 남습니다.')) return;
+  await signOut();
 });
+
+/* ───── 비밀번호 변경 ───── */
+$('s-pw').addEventListener('click', ()=>{
+  ['pw-old','pw-new','pw-new2'].forEach(id=>$(id).value='');
+  $('pwStat').hidden = true;
+  openSheetEl('pwSheet');
+  setTimeout(()=>$('pw-old').focus(), 260);
+});
+$('pwCancel').addEventListener('click', ()=>closeSheetEl('pwSheet'));
+$('pwSave').addEventListener('click', async ()=>{
+  const oldPw = $('pw-old').value, a1 = $('pw-new').value, a2 = $('pw-new2').value;
+  const st = $('pwStat'); st.hidden = false;
+  if(a1 !== a2){ st.className='ai err'; st.textContent='새 비밀번호가 서로 다릅니다'; return }
+  if(a1.length < 10){ st.className='ai err'; st.textContent='새 비밀번호는 10자 이상이어야 합니다'; return }
+  if(a1 === oldPw){ st.className='ai err'; st.textContent='지금 쓰는 비밀번호와 같습니다'; return }
+  st.className='ai'; st.innerHTML='<span class="spin"></span>바꾸는 중…';
+
+  // 지금 비밀번호가 맞는지 먼저 확인합니다
+  const chk = await sb.auth.signInWithPassword({
+    email: emailFor(me.loginId, me.companyCode), password: oldPw });
+  if(chk.error){ st.className='ai err'; st.textContent='지금 쓰는 비밀번호가 맞지 않습니다'; return }
+
+  const { error } = await sb.auth.updateUser({ password: a1 });
+  if(error){ st.className='ai err'; st.textContent='실패: ' + String(error.message).slice(0,60); return }
+  st.className='ai ok'; st.textContent='바꿨습니다';
+  setTimeout(()=>{ closeSheetEl('pwSheet'); toast('비밀번호를 바꿨습니다') }, 700);
+});
+
+/* ───── 팀원 ───── */
 function renderMembers(){
-  const box=$('memList'), ms=cfg.members||[];
+  const box = $('memList'), ms = cfg.members || [];
+  const live = custs.filter(c=>!c.deleted);
   box.innerHTML = ms.length
     ? ms.map(m=>{
-        const live=custs.filter(c=>!c.deleted);
-        const own=live.filter(c=>String(c.owner||'').trim()===m).length;
-        const got=live.filter(c=>sharedOf(c).includes(m)).length;
-        return '<div class="grow">'+memDot(m,'big')+
-          '<span class="nm" style="margin-left:2px">'+esc(m)+(m===cfg.owner?' <span class="ct">(나)</span>':'')+'</span>'+
-          '<span class="ct">담당 '+own+' · 공유 '+got+'</span></div>';
+        const own = live.filter(c=>String(c.owner||'') === m.id).length;
+        const got = live.filter(c=>sharedOf(c).includes(m.id)).length;
+        return '<div class="grow">' + memDot(m.id,'big') +
+          '<span class="nm" style="margin-left:2px">' + esc(m.name) +
+            (me && m.id===me.id ? ' <span class="ct">(나)</span>' : '') +
+            (m.role==='admin' ? ' <span class="ct">관리자</span>' : '') + '</span>' +
+          '<span class="ct">담당 ' + own + ' · 공유 ' + got + '</span></div>';
       }).join('')
-    : '<div class="grow"><span class="nm" style="color:var(--dim);font-weight:500">아직 명단이 없습니다. 시트의 Members 탭에 이름을 적고 동기화하세요.</span></div>';
+    : '<div class="grow"><span class="nm" style="color:var(--dim);font-weight:500">아직 명단을 불러오지 못했습니다</span></div>';
 
-  const st=$('ownerStat');
-  const ms2=cfg.members||[];
-  if(!cfg.owner){ st.hidden=false; st.className='ai err'; st.textContent='담당자 이름을 정해야 내 고객과 공유받은 고객이 구분됩니다' }
-  else if(ms2.length && !ms2.includes(cfg.owner)){
-    st.hidden=false; st.className='ai err';
-    st.textContent='"'+cfg.owner+'" 이(가) 팀원 명단에 없습니다 — 이대로는 공유를 못 받습니다';
+  const st = $('memNote');
+  if(st){
+    st.innerHTML = (me && me.role === 'admin')
+      ? '관리자입니다. 직원 계정을 만들거나 비밀번호를 재발급할 수 있습니다.'
+      : '계정 추가와 비밀번호 재발급은 <b>회사 관리자</b>가 합니다.';
   }
-  else { st.hidden=true }
+  const btn = $('s-addUser');
+  if(btn) btn.hidden = !(me && me.role === 'admin');
 }
+
+/* ───── 고객 그룹 ─────
+   그룹은 고객에 붙은 이름표라 따로 저장하는 표가 없습니다.
+   이름을 바꾸거나 지우면 그 그룹을 쓰던 고객을 모두 고칩니다. */
 function renderGroupManage(){
-  const live=custs.filter(c=>!c.deleted);
-  const box=$('gManage');
-  if(!cfg.groups.length){ box.innerHTML='<div class="grow"><span class="nm" style="color:var(--dim);font-weight:500">그룹이 없습니다. 아래에서 추가해주세요.</span></div>'; return }
-  box.innerHTML=cfg.groups.map(g=>{
-    const [bg,fg]=gColor(g);
-    const n=live.filter(c=>(c.groups||[]).includes(g)).length;
+  const live = custs.filter(c=>!c.deleted);
+  const box = $('gManage');
+  if(!cfg.groups.length){
+    box.innerHTML = '<div class="grow"><span class="nm" style="color:var(--dim);font-weight:500">그룹이 없습니다. 아래에서 추가해주세요.</span></div>';
+    return;
+  }
+  box.innerHTML = cfg.groups.map(g=>{
+    const [bg,fg] = gColor(g);
+    const n = live.filter(c=>(c.groups||[]).includes(g)).length;
     return '<div class="grow"><span class="dot" style="background:'+fg+'"></span>'+
       '<button class="nm" style="text-align:left" data-ren="'+esc(g)+'">'+esc(g)+'</button>'+
       '<span class="ct">'+n+'명</span>'+
       '<button class="rm" data-rm="'+esc(g)+'" aria-label="삭제"><svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>';
   }).join('');
 }
-$('s-addGroup').addEventListener('click',async()=>{
-  const v=$('s-newGroup').value.trim();
+$('s-addGroup').addEventListener('click',()=>{
+  const v = $('s-newGroup').value.trim();
   if(!v) return;
   if(cfg.groups.includes(v)){ toast('이미 있는 그룹입니다'); return }
   cfg.groups.push(v); cfgSave(); $('s-newGroup').value='';
-  renderGroupManage(); renderChips(); renderFormGroups(); toast('그룹을 추가했습니다');
+  renderGroupManage(); renderChips(); renderFormGroups();
+  toast('그룹을 추가했습니다');
 });
 $('s-newGroup').addEventListener('keydown',e=>{ if(e.key==='Enter') $('s-addGroup').click() });
-$('gManage').addEventListener('click',async e=>{
-  const ren=e.target.closest('[data-ren]');
+$('gManage').addEventListener('click', async e=>{
+  const ren = e.target.closest('[data-ren]');
   if(ren){
-    const old=ren.dataset.ren;
-    const nv=(prompt('그룹 이름 변경',old)||'').trim();
-    if(!nv||nv===old) return;
+    const old = ren.dataset.ren;
+    const nv = (prompt('그룹 이름 변경', old) || '').trim();
+    if(!nv || nv === old) return;
     if(cfg.groups.includes(nv)){ toast('이미 있는 그룹입니다'); return }
-    cfg.groups=cfg.groups.map(g=>g===old?nv:g); cfgSave();
+    cfg.groups = cfg.groups.map(g=>g===old?nv:g); cfgSave();
     for(const c of custs){
       if((c.groups||[]).includes(old)){
-        c.groups=c.groups.map(g=>g===old?nv:g); c.updated=now(); c.dirty=true; await dbPut('cust',c);
+        c.groups = c.groups.map(g=>g===old?nv:g);
+        c.updated = now(); c.dirty = true; await dbPut('cust', c);
       }
     }
-    if(filterG===old) filterG=nv;
-    mirrorSave(); renderGroupManage(); render(); renderFormGroups(); queueSync(); toast('이름을 바꿨습니다');
+    if(filterG === old) filterG = nv;
+    mirrorSave(); renderGroupManage(); render(); renderFormGroups(); queueSync();
+    toast('이름을 바꿨습니다');
     return;
   }
-  const rm=e.target.closest('[data-rm]');
+  const rm = e.target.closest('[data-rm]');
   if(rm){
-    const g=rm.dataset.rm;
-    const n=custs.filter(c=>!c.deleted&&(c.groups||[]).includes(g)).length;
-    if(!confirm('"'+g+'" 그룹을 삭제합니다.'+(n?'\n고객 '+n+'명에서 이 그룹만 빠지고, 고객카드는 그대로 남습니다.':''))) return;
-    cfg.groups=cfg.groups.filter(x=>x!==g); cfgSave();
+    const g = rm.dataset.rm;
+    const n = custs.filter(c=>!c.deleted && (c.groups||[]).includes(g)).length;
+    if(!confirm('"'+g+'" 그룹을 삭제합니다.' + (n ? ('\n고객 '+n+'명에서 이 그룹만 빠지고, 고객카드는 그대로 남습니다.') : ''))) return;
+    cfg.groups = cfg.groups.filter(x=>x!==g); cfgSave();
     for(const c of custs){
       if((c.groups||[]).includes(g)){
-        c.groups=c.groups.filter(x=>x!==g); c.updated=now(); c.dirty=true; await dbPut('cust',c);
+        c.groups = c.groups.filter(x=>x!==g);
+        c.updated = now(); c.dirty = true; await dbPut('cust', c);
       }
     }
-    if(filterG===g) filterG='';
-    mirrorSave(); renderGroupManage(); render(); renderFormGroups(); queueSync(); toast('그룹을 삭제했습니다');
+    if(filterG === g) filterG = '';
+    mirrorSave(); renderGroupManage(); render(); renderFormGroups(); queueSync();
+    toast('그룹을 삭제했습니다');
   }
 });
 
-$('s-askContact').addEventListener('change',e=>{ cfg.askContact=e.target.checked; cfgSave() });
-$('s-key').addEventListener('input',e=>{ cfg.key=e.target.value.trim(); cfgSave() });
-$('s-keyShow').addEventListener('click',()=>{
-  const i=$('s-key'), on=i.type==='password';
-  i.type=on?'text':'password'; $('s-keyShow').textContent=on?'가리기':'보기';
-});
-$('s-keyTest').addEventListener('click',async()=>{
-  const st=$('keyStat'); st.hidden=false;
-  if(!cfg.key){ st.className='ai err'; st.textContent='키를 먼저 입력하세요'; return }
-  st.className='ai'; st.innerHTML='<span class="spin"></span>확인 중…';
-  try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'content-type':'application/json','x-api-key':cfg.key,
-        'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:cfg.model||'claude-sonnet-5',max_tokens:8,
-        messages:[{role:'user',content:'ok'}]})
-    });
-    if(!r.ok){ const t=await r.text(); throw new Error(r.status+' '+t.slice(0,90)) }
-    st.className='ai ok'; st.textContent='연결 성공 — 명함 자동 인식이 켜졌습니다';
-  }catch(e){ st.className='ai err'; st.textContent='실패: '+String(e.message||e).slice(0,100) }
-});
-
-$('s-syncTest').addEventListener('click',async()=>{
-  const st=$('syncStat'), u=$('s-sync').value.trim(); st.hidden=false;
-  if(!/^https:\/\/script\.google\.com\/.+\/exec$/.test(u)){
-    st.className='ai err'; st.textContent='주소가 script.google.com 으로 시작하고 /exec 로 끝나야 합니다'; return;
-  }
-  st.className='ai'; st.innerHTML='<span class="spin"></span>연결 확인 중…';
-  try{
-    const r=await fetch(u,{method:'POST',headers:{'content-type':'text/plain;charset=utf-8'},
-      body:JSON.stringify({cust:[],act:[],since:now()})});
-    const d=await r.json();
-    if(!d.ok) throw new Error(d.error||'서버 오류');
-    cfg.sync=u; cfg.lastPull=0; cfgSave(); pill();
-    st.className='ai ok'; st.textContent='연결 성공 — 시트에 고객 '+(d.totalCust||0)+'명, 기록 '+(d.totalAct||0)+'건이 있습니다';
-    syncNow(true);
-  }catch(e){
-    st.className='ai err';
-    st.textContent='실패: '+String(e.message||e).slice(0,90)+' (배포할 때 액세스 권한을 "모든 사용자"로 했는지 확인하세요)';
-  }
-});
-$('s-syncNow').addEventListener('click',async()=>{
-  if(!cfg.sync){ toast('먼저 주소를 연결하세요'); return }
-  const st=$('syncStat'); st.hidden=false; st.className='ai'; st.innerHTML='<span class="spin"></span>동기화 중…';
-  // 손으로 누른 동기화는 늘 전체를 다시 받습니다. 뭔가 어긋났을 때 되살리는 버튼이기도 합니다.
-  cfg.lastPull=0; cfgSave();
-  const r=await syncNow(false);
-  st.className=r.ok?'ai ok':'ai err';
-  st.textContent=r.ok?'동기화 완료':('실패: '+(r.msg||''));
-});
+$('s-askContact').addEventListener('change', e=>{ cfg.askContact = e.target.checked; cfgSave() });
 
 /* ───── CSV ───── */
 function csvCell(v){ return '"'+String(v==null?'':v).replace(/"/g,'""')+'"' }
@@ -2668,7 +2869,7 @@ async function seedSamples(){
       const kind=plan[k];
       const at=daysAgo(days[k], 9+Math.floor(Math.random()*9), pickOne([0,10,20,30,40,50]));
       const a={uid:cid+'_a'+k, cid:cid, kind:kind, body:fillText(pickOne(SAMPLE_TEXT[kind])),
-        at:at, due:'', done:false, by:cfg.owner||'', updated:now(), dirty:true, deleted:false};
+        at:at, due:'', done:false, by:(me?me.id:''), updated:now(), dirty:true, deleted:false};
       if(kind==='todo'){
         // 미완료 / 완료 / 마감지남을 고루 섞습니다
         const roll=Math.random();
@@ -2684,7 +2885,7 @@ async function seedSamples(){
     }
     const c={uid:cid, createdAt:daysAgo(days[0],10,0), name:s.name, company:s.company,
       title:s.title, phone:s.phone, email:s.email, addr:s.addr,
-      groups:[...s.groups], owner:cfg.owner||'', shared:[], photo:null,
+      groups:[...s.groups], owner:(me?me.id:''), shared:[], photo:null,
       lastAt:last||isoNow(), updated:now(), dirty:true, deleted:false};
     s.groups.forEach(ensureGroup);
     custs.unshift(c); await dbPut('cust',c);
@@ -2744,26 +2945,45 @@ $('detail').addEventListener('scroll',()=>{ $('dbar').classList.toggle('stuck',$
 (async function boot(){
   cfgLoad();
   await openDB();
-  custs=await dbAll('cust');
-  acts=await dbAll('act');
+  custs = await dbAll('cust');
+  acts  = await dbAll('act');
   if(!custs.length && !acts.length){
-    const m=mirrorLoad();
-    if(m && (m.cust||[]).length){ custs=m.cust||[]; acts=m.act||[] }
+    const m = mirrorLoad();
+    if(m && (m.cust||[]).length){ custs = m.cust||[]; acts = m.act||[] }
   }
-  custs.forEach(c=>{ c.groups=c.groups||[]; c.groups.forEach(ensureGroup) });
+  custs.forEach(c=>{ c.groups = c.groups||[]; c.groups.forEach(ensureGroup) });
 
-  $('s-key').value=cfg.key||'';
-  $('s-sync').value=cfg.sync||'';
-  $('s-askContact').checked=cfg.askContact!==false;
-  $('e-date').value=todayKey();
-  $('e-time').value=isoNow().slice(11,16);
-  paintOwner(); renderFormGroups(); render(); pill();
+  $('e-date').value = todayKey();
+  $('e-time').value = isoNow().slice(11,16);
+  $('s-askContact').checked = cfg.askContact !== false;
 
-  let ok=false;
-  try{ localStorage.setItem('ndna-t','1'); localStorage.removeItem('ndna-t'); ok=true }catch(e){}
-  if(memOnly || !ok) $('storeWarn').hidden=false;
+  let ok = false;
+  try{ localStorage.setItem('ndna-t','1'); localStorage.removeItem('ndna-t'); ok = true }catch(e){}
+  if(memOnly || !ok) $('storeWarn').hidden = false;
 
-  if(cfg.sync && navigator.onLine) syncNow(true);
+  if(!sbInit()){
+    showGate();
+    gateMsg('err','연결 준비에 실패했습니다. 인터넷을 확인하고 새로고침해 주세요.');
+    return;
+  }
+  // 로그인이 살아 있으면 바로 들어갑니다
+  const r = await loadMe();
+  if(r.ok){
+    paintOwner(); render(); go('list');
+    await loadMembers();
+    render();
+    syncNow(true);
+  }else{
+    // 남은 데이터가 있으면 지웁니다 (다른 계정 것일 수 있습니다)
+    if(custs.length || acts.length){
+      await dbClear('cust'); await dbClear('act');
+      custs = []; acts = [];
+      try{ localStorage.removeItem('ndna-mirror') }catch(e){}
+      cfg.lastPull = 0; cfgSave();
+    }
+    render();
+    showGate();
+  }
 })();
 </script>
 </body>
