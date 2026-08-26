@@ -155,9 +155,16 @@ begin
   perform pg_temp.act_as(t.u1);
   select count(*) into n from public.profiles;
   perform pg_temp.expect(n = 3, 'A사 사람 3명이 보여야 하는데 ' || n || '명입니다');
-  update public.profiles set role = 'admin' where id = t.u1;
-  get diagnostics n = row_count;
-  perform pg_temp.expect(n = 0, '일반 사용자가 스스로 관리자가 되었습니다');
+  -- 권한 상승 시도. 규칙에 걸려 예외가 나거나, 아무 행도 안 바뀌어야 합니다.
+  okay := false;
+  begin
+    update public.profiles set role = 'admin' where id = t.u1;
+    get diagnostics n = row_count;
+    okay := (n = 0);
+  exception when others then
+    okay := true;
+  end;
+  perform pg_temp.expect(okay, '일반 사용자가 스스로 관리자가 되었습니다');
 
   -- 11) 다른 회사 사람은 아예 안 보여야 합니다
   perform pg_temp.act_as(t.ub);
