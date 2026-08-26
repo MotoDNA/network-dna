@@ -160,6 +160,8 @@ textarea.inp{padding:14px;height:auto;min-height:104px;line-height:1.55}
 .shoot .ic svg{width:26px;height:26px;stroke:var(--blue);fill:none;stroke-width:1.7}
 .shoot b{display:block;font-size:1rem;font-weight:700;margin-bottom:3px}
 .shoot span{font-size:.83rem;color:var(--mut);font-weight:500}
+.shoottip{display:flex;align-items:center;gap:8px;margin:12px 0 10px;padding:0 2px;font-size:.82rem;font-weight:600;color:var(--sub);line-height:1.4}
+.shoottip .d{flex:0 0 auto;width:19px;height:19px;border-radius:50%;background:var(--amber-bg);color:var(--amber);font-size:.72rem;font-weight:800;display:flex;align-items:center;justify-content:center}
 .shot{position:relative;border-radius:var(--r2);overflow:hidden;background:#000;box-shadow:var(--sh)}
 .shot img{width:100%;display:block;max-height:230px;object-fit:contain;background:#111}
 .shot .x{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;font-size:1rem;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
@@ -215,7 +217,7 @@ nav.tabs button:active{opacity:.6}
 .profile .role{color:var(--sub);font-size:.9rem;font-weight:600;margin-top:4px}
 .profile .gs{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:12px}
 .acts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
-.acts a,.acts button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 0;border-radius:12px;color:var(--sub);font-size:.72rem;font-weight:700;text-decoration:none}
+.acts a,.acts button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 2px;border-radius:12px;color:var(--sub);font-size:.68rem;font-weight:700;text-decoration:none;white-space:nowrap}
 .acts a:active,.acts button:active{background:var(--fill2)}
 .acts svg{width:21px;height:21px;stroke:var(--blue);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .acts .off{color:var(--dim);pointer-events:none}
@@ -387,8 +389,10 @@ nav.tabs button:active{opacity:.6}
     <button class="shoot" id="shootBtn">
       <div class="ic"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.7l1.1-1.8A1 1 0 0 1 9.2 3.7h5.6a1 1 0 0 1 .9.5L16.8 6h1.7A2.5 2.5 0 0 1 21 8.5v9A2.5 2.5 0 0 1 18.5 20h-13A2.5 2.5 0 0 1 3 17.5z"/><circle cx="12" cy="12.7" r="3.6"/></svg></div>
       <b>명함 촬영하기</b>
-      <span>카메라가 열립니다 · 사진첩도 선택할 수 있어요</span>
+      <span>카메라가 열립니다</span>
     </button>
+    <div class="shoottip"><span class="d">!</span>흰색 명함은 어두운 배경에서 촬영해주세요</div>
+    <button class="btn line" id="pickBtn">사진첩에서 선택</button>
   </div>
   <div class="shot" id="shotWrap" hidden>
     <img id="shotImg" alt="명함">
@@ -1186,7 +1190,7 @@ async function usePhoto(file){
     const res=await autoCrop(draftOrig);
     if(res.cropped){
       draftCrop=res.url; draftPhoto=draftCrop; $('shotImg').src=draftCrop;
-      $('cropMsg').textContent='자동으로 잘라 폈습니다';
+      $('cropMsg').textContent='';
       setCropBtns(true);
     }else{
       draftPhoto=draftOrig;
@@ -1227,6 +1231,7 @@ $('rotBtn').addEventListener('click',async()=>{
 $('cam').addEventListener('change',e=>{usePhoto(e.target.files[0]); e.target.value=''});
 $('gal').addEventListener('change',e=>{usePhoto(e.target.files[0]); e.target.value=''});
 $('shootBtn').addEventListener('click',()=>$('cam').click());
+$('pickBtn').addEventListener('click',()=>$('gal').click());
 $('reShoot').addEventListener('click',()=>$('cam').click());
 $('rePick').addEventListener('click',()=>$('gal').click());
 $('shotDel').addEventListener('click',()=>{
@@ -1448,7 +1453,7 @@ function paintDetail(){
            :'<button class="off"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20.5l1.4-5A8 8 0 1 1 21 12z"/></svg>문자</button>')+
       (mail?'<a href="mailto:'+esc(mail)+'"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M4 7l8 6 8-6"/></svg>메일</a>'
             :'<button class="off"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M4 7l8 6 8-6"/></svg>메일</button>')+
-      '<button data-vcf="1"><svg viewBox="0 0 24 24"><path d="M15.5 20v-1.6a3.4 3.4 0 0 0-3.4-3.4H6.9a3.4 3.4 0 0 0-3.4 3.4V20"/><circle cx="9.5" cy="8" r="3.4"/><path d="M18.5 8.5v5M21 11h-5"/></svg>연락처</button>'+
+      '<button data-vcf="1"><svg viewBox="0 0 24 24"><path d="M15.5 20v-1.6a3.4 3.4 0 0 0-3.4-3.4H6.9a3.4 3.4 0 0 0-3.4 3.4V20"/><circle cx="9.5" cy="8" r="3.4"/><path d="M18.5 8.5v5M21 11h-5"/></svg>연락처 저장</button>'+
     '</div></div>';
 
   const row=(k,v,cp)=>'<button class="irow"'+(cp?' data-copy="'+esc(v)+'"':'')+'><span class="k">'+k+'</span><span class="v'+(v?'':' none')+'">'+(v?esc(v):'—')+'</span></button>';
@@ -1639,14 +1644,7 @@ async function smallPhoto(dataUrl,max){
   }catch(e){ return null }
 }
 async function makeVCard(c){
-  const recent=custActs(c.uid).slice(0,5)
-    .map(a=>'['+KIND[a.kind].ko+'] '+String(a.body).replace(/\s+/g,' ').slice(0,80));
-  const note=[
-    (c.groups&&c.groups.length)?('[그룹] '+c.groups.join(', ')):'',
-    recent.join('\n'),
-    c.owner?('담당 '+c.owner):''
-  ].filter(Boolean).join('\n');
-
+  const note=contactNote(c);
   const name=(c.name||c.company||'고객').trim();
   const L=['BEGIN:VCARD','VERSION:3.0'];
   L.push('N:'+vEsc(name)+';;;;');
@@ -1664,8 +1662,58 @@ async function makeVCard(c){
   L.push('END:VCARD');
   return L.map(vFold).join('\r\n');
 }
+/* 안드로이드는 연락처 앱의 "새 연락처" 화면을 바로 열 수 있습니다.
+   파일을 거치지 않으므로 저장까지 한 번만 더 누르면 됩니다.
+   (다만 이 방식으로는 명함 사진을 같이 넘길 수 없습니다) */
+var IS_ANDROID = /Android/i.test(navigator.userAgent || '');
+
+function contactIntentUrl(c){
+  const e=v=>encodeURIComponent(String(v==null?'':v));
+  const p=['intent:#Intent','action=android.intent.action.INSERT','type=vnd.android.cursor.dir/contact'];
+  const name=(c.name||c.company||'').trim();
+  if(name)      p.push('S.name='+e(name));
+  if(c.phone)   p.push('S.phone='+e(c.phone));
+  if(c.email)   p.push('S.email='+e(c.email));
+  if(c.company) p.push('S.company='+e(c.company));
+  if(c.title)   p.push('S.job_title='+e(c.title));
+  if(c.addr)    p.push('S.postal='+e(c.addr));
+  const note=contactNote(c);
+  if(note)      p.push('S.notes='+e(note));
+  p.push('end');
+  return p.join(';');
+}
+function contactNote(c){
+  const recent=custActs(c.uid).slice(0,5)
+    .map(a=>'['+KIND[a.kind].ko+'] '+String(a.body).replace(/\s+/g,' ').slice(0,80));
+  return [
+    (c.groups&&c.groups.length)?('[그룹] '+c.groups.join(', ')):'',
+    recent.join('\n'),
+    c.owner?('담당 '+c.owner):''
+  ].filter(Boolean).join('\n');
+}
+
 async function saveContact(c){
   if(!c || !(c.name||c.company||c.phone||c.email)){ toast('저장할 정보가 없습니다'); return }
+
+  if(IS_ANDROID){
+    // 연락처 앱이 열리면 이 화면이 가려집니다. 그걸로 성공 여부를 판단합니다.
+    let left=false;
+    const mark=()=>{ left=true };
+    document.addEventListener('visibilitychange',mark);
+    window.addEventListener('pagehide',mark);
+    try{ window.location.href=contactIntentUrl(c) }catch(e){ left=false }
+    setTimeout(()=>{
+      document.removeEventListener('visibilitychange',mark);
+      window.removeEventListener('pagehide',mark);
+      if(!left && !document.hidden) shareVcf(c);   // 안 열렸으면 파일 방식으로
+    },1400);
+    return;
+  }
+  shareVcf(c);
+}
+
+/* 아이폰·PC 등 — 연락처 파일(.vcf)로 넘깁니다. 명함 사진도 함께 들어갑니다. */
+async function shareVcf(c){
   toast('연락처를 준비하는 중…');
   const text=await makeVCard(c);
   const blob=new Blob([text],{type:'text/vcard;charset=utf-8'});
@@ -1674,7 +1722,7 @@ async function saveContact(c){
     const file=new File([blob],fname,{type:'text/vcard'});
     if(navigator.canShare && navigator.canShare({files:[file]})){
       await navigator.share({files:[file],title:fname});
-      return;   // 공유 시트에서 "연락처에 추가"를 고르면 끝납니다
+      return;
     }
   }catch(e){ if(e && e.name==='AbortError') return }
   const a=document.createElement('a');
