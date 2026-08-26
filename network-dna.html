@@ -144,6 +144,20 @@ textarea.inp{padding:14px;height:auto;min-height:104px;line-height:1.55}
 .badge{background:var(--red);color:#fff;font-size:.68rem;font-weight:800;height:19px;min-width:19px;padding:0 6px;border-radius:10px;display:flex;align-items:center;justify-content:center}
 .gtag{display:inline-flex;align-items:center;height:19px;padding:0 7px;border-radius:6px;font-size:.68rem;font-weight:700}
 
+.stack{display:flex;align-items:center}
+.mini{width:21px;height:21px;border-radius:50%;font-size:.6rem;font-weight:800;display:flex;
+  align-items:center;justify-content:center;border:2px solid #fff;margin-left:-7px;flex:0 0 auto}
+.stack .mini:first-child{margin-left:0}
+.mini.more{background:var(--fill);color:var(--mut)}
+.big{width:30px;height:30px;border-radius:10px;font-size:.72rem;font-weight:800;display:inline-flex;
+  align-items:center;justify-content:center;flex:0 0 auto}
+.memrow{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.memrow .none{font-size:.86rem;color:var(--dim);font-weight:500}
+.mempick{display:flex;align-items:center;gap:11px;padding:13px 17px;width:100%;text-align:left}
+.mempick + .mempick{border-top:1px solid var(--line)}
+.mempick .nm{flex:1;font-size:.93rem;font-weight:600}
+.mempick .me{font-size:.74rem;color:var(--mut);font-weight:700}
+.chips .sep{flex:0 0 auto;width:1px;height:20px;background:var(--line);margin:0 4px;align-self:center}
 .empty{text-align:center;padding:54px 20px;color:var(--mut)}
 .empty .ic{font-size:2.1rem;margin-bottom:10px;opacity:.5}
 .empty>b{display:block;color:var(--sub);font-size:.95rem;font-weight:700;margin-bottom:5px}
@@ -452,8 +466,13 @@ nav.tabs button:active{opacity:.6}
   <h2 class="sec">담당자 이름</h2>
   <div class="card">
     <div class="field"><input class="inp" id="s-owner" placeholder="예: 최환준"></div>
-    <div class="note">여러 명이 나눠 쓸 때 누가 만든 기록인지 구분합니다.</div>
+    <div class="note">여러 명이 나눠 쓸 때 누가 만든 기록인지 구분합니다. <b>팀원 명단과 똑같이 적어야</b> 공유가 연결됩니다.</div>
+    <div class="ai" id="ownerStat" hidden></div>
   </div>
+
+  <h2 class="sec">팀원</h2>
+  <div class="glist" id="memList"></div>
+  <div class="note">구글 시트의 <b>Members</b> 탭에서 관리합니다. 한 곳만 고치면 동기화할 때 모든 기기에 같은 명단이 내려옵니다.</div>
 
   <h2 class="sec">고객 그룹 관리</h2>
   <div class="glist" id="gManage"></div>
@@ -569,6 +588,17 @@ nav.tabs button:active{opacity:.6}
   </div>
 </div>
 
+<div class="sheet" id="shareSheet" hidden>
+  <div class="grab"></div>
+  <h3>누구와 공유할까요?</h3>
+  <div class="glist" id="shareList"></div>
+  <div class="note" id="shareNote">고른 팀원의 폰으로 이 고객카드와 모든 기록이 함께 넘어갑니다.</div>
+  <div class="btnrow" style="margin-top:14px">
+    <button class="btn ghost" id="shareCancel" style="flex:0 0 108px">취소</button>
+    <button class="btn" id="shareSave">공유 저장</button>
+  </div>
+</div>
+
 <div class="sheet" id="askSheet" hidden>
   <div class="grab"></div>
   <h3>연락처에도 저장할까요?</h3>
@@ -606,14 +636,24 @@ const GCOLORS=[
 /* 그룹 이름 → 색. 설정에 등록된 순서를 먼저 쓰고, 목록에 없는 이름만 해시로 정합니다. */
 function gColor(name){
   const i=cfg.groups.indexOf(name);
-  if(i>=0) return GCOLORS[i%GCOLORS.length];
+  return i>=0 ? GCOLORS[i%GCOLORS.length] : hColor(name);
+}
+function hColor(name){
   let h=0; for(const ch of String(name)) h=(h*31+ch.charCodeAt(0))>>>0;
   return GCOLORS[h%GCOLORS.length];
 }
+/* 팀원 이니셜 동그라미 */
+function memDot(n,cls){
+  const [bg,fg]=hColor(n);
+  const t=String(n||'?').trim().slice(0,/[가-힣]/.test(String(n)[0]||'')?1:2);
+  return '<span class="'+(cls||'mini')+'" style="background:'+bg+';color:'+fg+'" title="'+esc(n)+'">'+esc(t)+'</span>';
+}
+function sharedOf(c){ return (c&&c.shared)||[] }
+function isMine(c){ return !cfg.owner || String(c.owner||'').trim()===cfg.owner }
 
-let cfg={owner:'',key:'',model:'claude-sonnet-5',sync:'',lastPull:0,askContact:true,groups:['신규','진행 중','주요 고객']};
+let cfg={owner:'',key:'',model:'claude-sonnet-5',sync:'',lastPull:0,askContact:true,members:[],groups:['신규','진행 중','주요 고객']};
 let custs=[], acts=[];
-let filterG='', qs='';
+let filterG='', filterScope='', qs='';
 let curUid=null, editUid=null, draftPhoto=null, draftGroups=[];
 let draftOrig=null, draftCrop=null;   /* 촬영 직후 원본 / 자동 크롭본 */
 let sheetKind='meeting', sheetEditUid=null, askTarget=null;
@@ -1303,7 +1343,7 @@ $('saveCust').addEventListener('click',async()=>{
     const u=c.uid; clearForm(); go('list'); openDetail(u);
     toast('수정했습니다'); queueSync();
   }else{
-    const c={uid:uid(),createdAt:isoNow(),owner:cfg.owner||'',lastAt:isoNow(),...base};
+    const c={uid:uid(),createdAt:isoNow(),owner:cfg.owner||'',shared:[],lastAt:isoNow(),...base};
     custs.unshift(c); await dbPut('cust',c);
     const memo=$('f-memo').value.trim();
     if(memo) await addAct(c.uid,'meeting',memo,isoNow(),null,true);
@@ -1352,6 +1392,7 @@ function visible(){
   return custs
     .filter(c=>!c.deleted)
     .filter(c=>!filterG || (c.groups||[]).includes(filterG))
+    .filter(c=>!filterScope || (filterScope==='mine' ? isMine(c) : !isMine(c)))
     .filter(c=>matches(c,qs))
     .sort((a,b)=>String(b.lastAt||b.createdAt||'').localeCompare(String(a.lastAt||a.createdAt||'')));
 }
@@ -1362,7 +1403,13 @@ function weekStart(){
 function renderChips(){
   const live=custs.filter(c=>!c.deleted);
   const cnt=g=>live.filter(c=>(c.groups||[]).includes(g)).length;
-  let h='<button class="chip" data-g="" aria-pressed="'+(!filterG?'true':'false')+'">전체 <span class="n">'+live.length+'</span></button>';
+  const mine=live.filter(isMine).length, got=live.length-mine;
+  let h='<button class="chip" data-s="" aria-pressed="'+(!filterScope?'true':'false')+'">전체 <span class="n">'+live.length+'</span></button>';
+  if(cfg.owner && got){
+    h+='<button class="chip" data-s="mine" aria-pressed="'+(filterScope==='mine'?'true':'false')+'">내 담당 <span class="n">'+mine+'</span></button>';
+    h+='<button class="chip" data-s="shared" aria-pressed="'+(filterScope==='shared'?'true':'false')+'">공유받음 <span class="n">'+got+'</span></button>';
+  }
+  if(cfg.groups.length) h+='<span class="sep"></span>';
   h+=cfg.groups.map(g=>'<button class="chip" data-g="'+esc(g)+'" aria-pressed="'+(filterG===g?'true':'false')+'">'+esc(g)+' <span class="n">'+cnt(g)+'</span></button>').join('');
   h+='<button class="chip add" id="chipAdd">＋ 그룹</button>';
   $('groupChips').innerHTML=h;
@@ -1399,9 +1446,27 @@ function renderList(){
       '</div>'+
       '<div class="cside">'+
         '<span class="cdate">'+esc(shortDate(c.lastAt||c.createdAt))+'</span>'+
-        (td?'<span class="badge">'+td+'</span>':(c.groups&&c.groups.length?gTag(c.groups[0]):''))+
+        (td?'<span class="badge">'+td+'</span>':'')+
+        shareStack(c)+
+        ((!td && !people(c).length && c.groups && c.groups.length)?gTag(c.groups[0]):'')+
       '</div></button>';
   }).join('')+'</div>';
+}
+/* 이 고객에 연결된 사람들 — 담당자 먼저, 그다음 공유 대상 */
+function people(c){
+  const out=[], seen=new Set();
+  const own=String(c.owner||'').trim();
+  if(own){ out.push(own); seen.add(own) }
+  for(const m of sharedOf(c)){ const t=String(m).trim(); if(t && !seen.has(t)){ out.push(t); seen.add(t) } }
+  return out;
+}
+function shareStack(c){
+  const ps=people(c);
+  if(ps.length<2) return '';         // 나 혼자면 표시할 게 없습니다
+  const show=ps.slice(0,3);
+  let h='<span class="stack">'+show.map(n=>memDot(n)).join('');
+  if(ps.length>3) h+='<span class="mini more">+'+(ps.length-3)+'</span>';
+  return h+'</span>';
 }
 function kindTag(k){
   return '<span class="kind k-'+k+'" style="height:18px;padding:0 6px;font-size:.66rem">'+KIND[k].ko+'</span>';
@@ -1412,8 +1477,10 @@ $('q').addEventListener('input',e=>{ qs=e.target.value.trim(); $('qClr').hidden=
 $('qClr').addEventListener('click',()=>{ $('q').value=''; qs=''; $('qClr').hidden=true; renderList() });
 $('groupChips').addEventListener('click',e=>{
   if(e.target.closest('#chipAdd')){ go('set'); setTimeout(()=>$('s-newGroup').focus(),260); return }
+  const sc=e.target.closest('.chip[data-s]');
+  if(sc){ filterScope=sc.dataset.s; if(!filterScope) filterG=''; render(); return }
   const b=e.target.closest('.chip[data-g]'); if(!b) return;
-  filterG=b.dataset.g; render();
+  filterG=(filterG===b.dataset.g)?'':b.dataset.g; render();
 });
 $('listWrap').addEventListener('click',e=>{
   const b=e.target.closest('.crow[data-u]'); if(b) openDetail(b.dataset.u);
@@ -1461,8 +1528,18 @@ function paintDetail(){
     row('전화',c.phone,!!c.phone)+row('이메일',c.email,!!c.email)+
     row('회사',c.company,false)+row('주소',c.addr,!!c.addr)+
     row('등록일',(c.createdAt||'').slice(0,10),false)+
-    (c.owner?row('담당자',c.owner,false):'')+
     '</div>';
+  const sh=sharedOf(c);
+  h+='<h2 class="sec">담당과 공유</h2><div class="info">'+
+    '<div class="irow"><span class="k">담당자</span><span class="v'+(c.owner?'':' none')+'">'+
+      (c.owner?(memDot(c.owner,'big')+' <span style="vertical-align:middle;margin-left:6px">'+esc(c.owner)+(isMine(c)?' (나)':'')+'</span>'):'—')+
+    '</span></div>'+
+    '<button class="irow" data-share="1"><span class="k">공유 중</span><span class="v">'+
+      (sh.length
+        ? '<span class="memrow">'+sh.map(n=>memDot(n,'big')+'<span style="margin-left:-3px;margin-right:4px">'+esc(n)+'</span>').join('')+'</span>'
+        : '<span class="none">아직 공유하지 않았습니다 — 눌러서 선택</span>')+
+    '</span></button></div>';
+
   if(c.photo) h+='<h2 class="sec">명함</h2><img class="cardimg" src="'+c.photo+'" alt="명함">';
 
   if(open.length){
@@ -1516,6 +1593,7 @@ $('dBody').addEventListener('click',async e=>{
   if(cb){ await toggleTodo(cb.dataset.t); return }
   const ent=e.target.closest('.ent[data-e]');
   if(ent){ openSheet(ent.dataset.e); return }
+  if(e.target.closest('[data-share]')){ openShare(); return }
   if(e.target.closest('[data-vcf]')){
     const c=custs.find(x=>x.uid===curUid); if(c) saveContact(c);
     return;
@@ -1577,12 +1655,13 @@ function openSheet(auid){
 function closeSheet(){
   if($('sheet').hidden) return;
   $('sheet').classList.remove('on');
-  if($('askSheet').hidden) $('back').classList.remove('on');
-  setTimeout(()=>{ $('sheet').hidden=true; if($('askSheet').hidden) $('back').hidden=true },240);
+  if($('askSheet').hidden && $('shareSheet').hidden) $('back').classList.remove('on');
+  setTimeout(()=>{ $('sheet').hidden=true;
+    if($('askSheet').hidden && $('shareSheet').hidden) $('back').hidden=true },240);
 }
 $('addEntry').addEventListener('click',()=>openSheet(null));
 $('e-cancel').addEventListener('click',closeSheet);
-$('back').addEventListener('click',()=>{ closeSheet(); closeAsk() });
+$('back').addEventListener('click',()=>{ closeSheet(); closeAsk(); closeShare() });
 $('e-save').addEventListener('click',async()=>{
   const body=$('e-body').value.trim();
   if(!body){ toast('내용을 입력해주세요'); $('e-body').focus(); return }
@@ -1731,6 +1810,54 @@ async function shareVcf(c){
   toast('연락처 파일을 만들었습니다 — 파일을 열면 주소록에 추가됩니다');
 }
 
+/* ═════════ 공유 대상 고르기 ═════════ */
+let sharePick=[];
+function openShare(){
+  const c=custs.find(x=>x.uid===curUid); if(!c) return;
+  sharePick=[...sharedOf(c)];
+  renderShareList();
+  $('back').hidden=false; $('shareSheet').hidden=false;
+  requestAnimationFrame(()=>{ $('back').classList.add('on'); $('shareSheet').classList.add('on') });
+}
+function closeShare(){
+  if($('shareSheet').hidden) return;
+  $('shareSheet').classList.remove('on');
+  if($('sheet').hidden && $('askSheet').hidden) $('back').classList.remove('on');
+  setTimeout(()=>{ $('shareSheet').hidden=true;
+    if($('sheet').hidden && $('askSheet').hidden) $('back').hidden=true },240);
+}
+function renderShareList(){
+  const c=custs.find(x=>x.uid===curUid);
+  const others=(cfg.members||[]).filter(m=>m!==(c&&String(c.owner||'').trim()));
+  if(!others.length){
+    $('shareList').innerHTML='<div class="grow"><span class="nm" style="color:var(--dim);font-weight:500">팀원 명단이 비어 있습니다</span></div>';
+    $('shareNote').innerHTML='구글 시트의 <b>Members</b> 탭에 팀원 이름을 적으면 여기에 나타납니다.';
+    return;
+  }
+  $('shareNote').textContent='고른 팀원의 폰으로 이 고객카드와 모든 기록이 함께 넘어갑니다.';
+  $('shareList').innerHTML=others.map(m=>{
+    const on=sharePick.includes(m);
+    return '<button class="mempick" data-m="'+esc(m)+'">'+memDot(m,'big')+
+      '<span class="nm">'+esc(m)+'</span>'+
+      (m===cfg.owner?'<span class="me">나</span>':'')+
+      '<span class="cb'+(on?' on':'')+'"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></button>';
+  }).join('');
+}
+$('shareList').addEventListener('click',e=>{
+  const b=e.target.closest('[data-m]'); if(!b) return;
+  const m=b.dataset.m;
+  sharePick=sharePick.includes(m)?sharePick.filter(x=>x!==m):[...sharePick,m];
+  renderShareList();
+});
+$('shareCancel').addEventListener('click',closeShare);
+$('shareSave').addEventListener('click',async()=>{
+  const c=custs.find(x=>x.uid===curUid); if(!c){ closeShare(); return }
+  c.shared=[...sharePick]; c.updated=now(); c.dirty=true;
+  await dbPut('cust',c); mirrorSave();
+  closeShare(); paintDetail(); render(); queueSync();
+  toast(sharePick.length?('팀원 '+sharePick.length+'명과 공유합니다'):'공유를 해제했습니다');
+});
+
 /* 고객카드를 만든 직후 한 번 물어보는 확인 시트.
    설정에서 끌 수 있고, 꺼도 상세 화면의 연락처 버튼은 그대로 남습니다. */
 function openAsk(c){
@@ -1762,7 +1889,8 @@ let syncing=false, syncTimer=null;
 function stripC(c){
   return {uid:c.uid,createdAt:c.createdAt||'',name:c.name||'',company:c.company||'',title:c.title||'',
     phone:c.phone||'',email:c.email||'',addr:c.addr||'',groups:(c.groups||[]).join('|'),
-    owner:c.owner||'',lastAt:c.lastAt||'',updated:c.updated||0,deleted:c.deleted?1:0};
+    owner:c.owner||'',shared:(c.shared||[]).join('|'),
+    lastAt:c.lastAt||'',updated:c.updated||0,deleted:c.deleted?1:0};
 }
 function stripA(a){
   return {uid:a.uid,cid:a.cid,kind:a.kind,body:a.body||'',at:a.at||'',due:a.due||'',
@@ -1792,7 +1920,7 @@ async function syncNow(quiet){
     const pa=acts.filter(a=>a.dirty).map(stripA);
     const r=await fetch(cfg.sync,{method:'POST',
       headers:{'content-type':'text/plain;charset=utf-8'},
-      body:JSON.stringify({cust:pc,act:pa,since:cfg.lastPull||0})});
+      body:JSON.stringify({me:cfg.owner||'',cust:pc,act:pa,since:cfg.lastPull||0})});
     if(!r.ok) throw new Error('서버 응답 '+r.status);
     const d=await r.json();
     if(!d.ok) throw new Error(d.error||'서버 오류');
@@ -1804,7 +1932,9 @@ async function syncNow(quiet){
     for(const o of (d.cust||[])){
       const inc={uid:o.uid,createdAt:o.createdAt||'',name:o.name||'',company:o.company||'',title:o.title||'',
         phone:o.phone||'',email:o.email||'',addr:o.addr||'',
-        groups:String(o.groups||'').split('|').filter(Boolean),owner:o.owner||'',lastAt:o.lastAt||'',
+        groups:String(o.groups||'').split('|').filter(Boolean),
+        shared:String(o.shared||'').split('|').map(x=>x.trim()).filter(Boolean),
+        owner:o.owner||'',lastAt:o.lastAt||'',
         updated:Number(o.updated)||0,deleted:!!Number(o.deleted),dirty:false};
       const cur=custs.find(x=>x.uid===o.uid);
       if(cur){
@@ -1832,8 +1962,27 @@ async function syncNow(quiet){
         c.lastAt=newest.at; await dbPut('cust',c);
       }
     }
+    if(Array.isArray(d.members)){
+      cfg.members=d.members.map(m=>String((m&&m.name)||'').trim()).filter(Boolean);
+    }
+    // 나에게서 공유가 해제된 고객은 이 기기에서도 내립니다.
+    // 아직 서버에 못 보낸(dirty) 것은 건드리지 않습니다.
+    if(cfg.owner && Array.isArray(d.visible)){
+      const vis=new Set(d.visible);
+      const drop=custs.filter(c=>!c.dirty && !vis.has(c.uid));
+      if(drop.length){
+        const gone=new Set(drop.map(c=>c.uid));
+        for(const c of drop) await dbDel('cust',c.uid);
+        for(const a of acts.filter(x=>gone.has(x.cid) && !x.dirty)) await dbDel('act',a.uid);
+        custs=custs.filter(c=>!gone.has(c.uid));
+        acts=acts.filter(a=>!gone.has(a.cid) || a.dirty);
+        if(curUid && gone.has(curUid)) closeDetail();
+      }
+    }
     cfg.lastPull=d.now||now(); cfgSave(); mirrorSave();
-    syncing=false; render(); if(curUid) paintDetail(); pill();
+    syncing=false; render(); if(curUid) paintDetail();
+    if(!$('p-set').hidden) renderMembers();
+    pill();
     if(!quiet) toast(add?('동기화 완료 · 고객 '+add+'명 추가'):'동기화 완료');
     return {ok:true,add};
   }catch(e){
@@ -1849,8 +1998,30 @@ window.addEventListener('offline',pill);
 /* ═════════ 설정 ═════════ */
 function paintOwner(){ $('ownerName').textContent=cfg.owner||'미설정' }
 $('s-owner').addEventListener('input',e=>{
-  cfg.owner=e.target.value.trim(); cfgSave(); paintOwner();
+  cfg.owner=e.target.value.trim(); cfgSave(); paintOwner(); renderMembers(); renderChips();
 });
+function renderMembers(){
+  const box=$('memList'), ms=cfg.members||[];
+  box.innerHTML = ms.length
+    ? ms.map(m=>{
+        const live=custs.filter(c=>!c.deleted);
+        const own=live.filter(c=>String(c.owner||'').trim()===m).length;
+        const got=live.filter(c=>sharedOf(c).includes(m)).length;
+        return '<div class="grow">'+memDot(m,'big')+
+          '<span class="nm" style="margin-left:2px">'+esc(m)+(m===cfg.owner?' <span class="ct">(나)</span>':'')+'</span>'+
+          '<span class="ct">담당 '+own+' · 공유 '+got+'</span></div>';
+      }).join('')
+    : '<div class="grow"><span class="nm" style="color:var(--dim);font-weight:500">아직 명단이 없습니다. 시트의 Members 탭에 이름을 적고 동기화하세요.</span></div>';
+
+  const st=$('ownerStat');
+  const ms2=cfg.members||[];
+  if(!cfg.owner){ st.hidden=false; st.className='ai err'; st.textContent='담당자 이름을 정해야 내 고객과 공유받은 고객이 구분됩니다' }
+  else if(ms2.length && !ms2.includes(cfg.owner)){
+    st.hidden=false; st.className='ai err';
+    st.textContent='"'+cfg.owner+'" 이(가) 팀원 명단에 없습니다 — 이대로는 공유를 못 받습니다';
+  }
+  else { st.hidden=true }
+}
 function renderGroupManage(){
   const live=custs.filter(c=>!c.deleted);
   const box=$('gManage');
@@ -2007,7 +2178,7 @@ function go(p){
     $('p-'+k).hidden = k!==p;
     $('t-'+k).setAttribute('aria-selected',String(k===p));
   });
-  if(p==='set'){ renderGroupManage(); paintUsage() }
+  if(p==='set'){ renderGroupManage(); renderMembers(); paintUsage() }
   if(p==='new') renderFormGroups();
   window.scrollTo(0,0);
 }

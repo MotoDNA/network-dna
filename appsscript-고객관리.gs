@@ -8,10 +8,13 @@
    설치 방법은 구글시트-연동방법.md 참고.
    ═══════════════════════════════════════════════════════════ */
 
-var CUST_HEAD = ['uid','createdAt','name','company','title','phone','email','addr','groups','owner','lastAt','updated','deleted'];
+var CUST_HEAD = ['uid','createdAt','name','company','title','phone','email','addr','groups','owner','lastAt','updated','deleted','shared'];
 var ACT_HEAD  = ['uid','cid','kind','body','at','due','done','by','updated','deleted'];
 
-var CUST_KO = ['고유번호','등록일','성함','회사명','직함','전화번호','이메일','주소','그룹','담당자','최근활동','수정시각','삭제'];
+var CUST_KO = ['고유번호','등록일','성함','회사명','직함','전화번호','이메일','주소','그룹','담당자','최근활동','수정시각','삭제','공유'];
+
+var MEM_HEAD = ['name','note','updated','deleted'];
+var MEM_KO   = ['팀원 이름','메모','수정시각','삭제'];
 var ACT_KO  = ['고유번호','고객번호','유형','내용','일시','마감일','완료','작성자','수정시각','삭제'];
 
 /* 사람이 한글로 적어도 알아듣도록 */
@@ -37,14 +40,18 @@ function doPost(e) {
     var body  = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     var since = Number(body.since) || 0;
 
-    var custRes = upsert_('Customers', CUST_HEAD, CUST_KO, body.cust || [], since);
-    var actRes  = upsert_('Timeline',  ACT_HEAD,  ACT_KO,  body.act  || [], since);
+    var me = String(body.me || '').trim();
+
+    var custRes = upsert_('Customers', CUST_HEAD, CUST_KO, body.cust || [], since, me);
+    var actRes  = upsert_('Timeline',  ACT_HEAD,  ACT_KO,  body.act  || [], since, me, custRes.visibleSet);
     labelTimeline_();
 
     return json_({
       ok: true,
       cust: custRes.pull,
       act: actRes.pull,
+      members: readMembers_(),
+      visible: custRes.visible,
       totalCust: custRes.total,
       totalAct: actRes.total,
       now: Date.now()
@@ -60,7 +67,7 @@ function doGet() {
   return json_({ ok: true, hint: 'NETWORK DNA 고객관리 동기화 서버입니다. 앱 설정 화면에 이 주소를 넣어주세요.' });
 }
 
-function upsert_(name, head, koHead, push, since) {
+function upsert_(name, head, koHead, push, since, me, allowCids) {
   var sh   = sheet_(name, head, koHead);
   var rows = readAll_(sh, head);
 
@@ -102,13 +109,54 @@ function upsert_(name, head, koHead, push, since) {
     sh.getRange(sh.getLastRow() + 1, 1, appends.length, head.length).setValues(appends);
   }
 
-  var pull = [], live = 0;
+  var pull = [], live = 0, visible = [], visibleSet = {};
+  var isCust = (name === 'Customers');
+
   for (var j = 0; j < rows.length; j++) {
     var r = rows[j];
-    if (!Number(r.deleted)) live++;
+    var gone = Number(r.deleted) ? true : false;
+    if (!gone) live++;
+
+    var mine;
+    if (isCust) {
+      mine = canSee_(r, me);
+      if (mine && !gone) { visible.push(String(r.uid)); visibleSet[String(r.uid)] = true }
+    } else {
+      // 기록은 그 고객이 보이는 사람에게만 갑니다
+      mine = !allowCids || allowCids[String(r.cid)] === true;
+    }
+    if (!mine) continue;
+
     if (Number(r.updated || 0) > since && !pushed[String(r.uid)]) pull.push(r);
   }
-  return { pull: pull, total: live };
+  return { pull: pull, total: live, visible: visible, visibleSet: visibleSet };
+}
+
+/* 이 고객을 이 담당자가 볼 수 있는가.
+   담당자 이름을 아직 정하지 않았으면(빈 값) 전부 내려줍니다. */
+function canSee_(r, me) {
+  if (!me) return true;
+  if (String(r.owner || '').trim() === me) return true;
+  var sh = String(r.shared || '');
+  if (!sh.length) return false;
+  var list = sh.split('|');
+  for (var i = 0; i < list.length; i++) {
+    if (list[i].trim() === me) return true;
+  }
+  return false;
+}
+
+/* 팀원 명단 — Members 탭에서 읽어 모든 기기에 내려줍니다 */
+function readMembers_() {
+  var sh = sheet_('Members', MEM_HEAD, MEM_KO);
+  var rows = readAll_(sh, MEM_HEAD, 'name');
+  var out = [];
+  for (var i = 0; i < rows.length; i++) {
+    if (Number(rows[i].deleted)) continue;
+    var nm = String(rows[i].name || '').trim();
+    if (nm.length) out.push({ name: nm, note: String(rows[i].note || '') });
+  }
+  return out;
 }
 
 /* ───────────────── 시트에서 직접 입력·수정했을 때 ─────────────────
@@ -121,9 +169,9 @@ function onEdit(e) {
     if (!e || !e.range) return;
     var sh = e.range.getSheet();
     var name = sh.getName();
-    if (name !== 'Customers' && name !== 'Timeline') return;
+    if (name !== 'Customers' && name !== 'Timeline' && name !== 'Members') return;
 
-    var head = (name === 'Customers') ? CUST_HEAD : ACT_HEAD;
+    var head = (name === 'Customers') ? CUST_HEAD : (name === 'Timeline' ? ACT_HEAD : MEM_HEAD);
     var first = Math.max(3, e.range.getRow());
     var last  = e.range.getLastRow();
     if (last < 3) return;
@@ -147,13 +195,15 @@ function onEdit(e) {
       for (var k = 0; k < head.length; k++) row[head[k]] = v[k];
 
       normalize_(name, row, tz, custIndex);
-      row.uid = String(row.uid || '').length ? row.uid : newUid_();
+      if (name !== 'Members') {
+        row.uid = String(row.uid || '').length ? row.uid : newUid_();
+      }
       row.updated = stamp;
 
       rng.setValues([toRow_(head, row)]);
       rng.setNumberFormat('@');   // 날짜로 자동 변환되는 것을 막습니다
 
-      if (name === 'Timeline') {
+      if (name === 'Timeline' && custIndex) {
         // 고객번호를 못 찾았으면 빨갛게 표시해 둡니다
         var bad = !String(row.cid || '').length || !custIndex.byUid[String(row.cid)];
         sh.getRange(r, 2).setBackground(bad ? '#FDEEF0' : null);
@@ -174,6 +224,10 @@ function normalize_(name, row, tz, custIndex) {
 
   row.deleted = truthy_(row.deleted) ? 1 : 0;
 
+  if (name === 'Members') {
+    row.name = String(row.name || '').trim();
+    return;
+  }
   if (name === 'Customers') {
     if (!String(row.createdAt || '').length) row.createdAt = nowFull;
     if (!String(row.lastAt   || '').length) row.lastAt   = row.createdAt;
@@ -183,6 +237,11 @@ function normalize_(name, row, tz, custIndex) {
       .filter(function (s) { return s.length })
       .join('|');
     row.phone = String(row.phone || '').trim();
+    // 공유 대상도 | 로 구분합니다. 쉼표로 적어도 알아서 바꿔 줍니다.
+    row.shared = String(row.shared || '').split(/[|,\/]/)
+      .map(function (t) { return t.trim() })
+      .filter(function (t) { return t.length })
+      .join('|');
   } else {
     var kind = String(row.kind || '').trim();
     row.kind = KIND_SET[kind] ? kind : (KIND_KO[kind] || 'meeting');
@@ -245,19 +304,37 @@ function sheet_(name, head, koHead) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(name);
   if (!sh) sh = ss.insertSheet(name);
+
+  // 칸이 모자라면 늘립니다
+  if (sh.getMaxColumns() < head.length) {
+    sh.insertColumnsAfter(sh.getMaxColumns(), head.length - sh.getMaxColumns());
+  }
+
   if (sh.getLastRow() < 2) {
     sh.clear();
-    sh.getRange(1, 1, 1, head.length).setValues([koHead])
-      .setFontWeight('bold').setBackground('#E8F3FF');
-    sh.getRange(2, 1, 1, head.length).setValues([head])
-      .setFontColor('#8B95A1').setFontSize(9);
-    sh.setFrozenRows(2);
+    writeHead_(sh, head, koHead);
     sh.setColumnWidth(1, 130);
+    return sh;
   }
+  // 스크립트가 갱신되어 열이 늘어난 경우 머리글만 다시 씁니다 (데이터는 그대로)
+  var cur = sh.getRange(2, 1, 1, head.length).getValues()[0];
+  var same = true;
+  for (var i = 0; i < head.length; i++) {
+    if (String(cur[i]).trim() !== head[i]) { same = false; break }
+  }
+  if (!same) writeHead_(sh, head, koHead);
   return sh;
 }
 
-function readAll_(sh, head) {
+function writeHead_(sh, head, koHead) {
+  sh.getRange(1, 1, 1, head.length).setValues([koHead])
+    .setFontWeight('bold').setBackground('#E8F3FF');
+  sh.getRange(2, 1, 1, head.length).setValues([head])
+    .setFontColor('#8B95A1').setFontSize(9);
+  sh.setFrozenRows(2);
+}
+
+function readAll_(sh, head, keyField) {
   var last = sh.getLastRow();
   if (last < 3) return [];
   var vals = sh.getRange(3, 1, last - 2, head.length).getValues();
@@ -272,7 +349,7 @@ function readAll_(sh, head) {
       }
       o[key] = (v === null || v === undefined) ? '' : v;
     }
-    if (String(o.uid || '').length) out.push(o);
+    if (String(o[keyField || 'uid'] || '').length) out.push(o);
   }
   return out;
 }
