@@ -61,6 +61,9 @@ main{padding:0 20px calc(var(--nav) + 28px)}
 .owner b{color:var(--sub);font-weight:700}
 
 h1.ptitle{font-size:1.6rem;font-weight:800;letter-spacing:-.035em;margin:14px 0 4px}
+.titlerow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.titlerow .ptitle{flex:1;min-width:0}
+.titlerow .btn{flex:0 0 auto;height:38px;padding:0 14px;font-size:.82rem;border-radius:11px;margin-top:10px}
 p.psub{margin:0 0 18px;color:var(--mut);font-size:.86rem;font-weight:500}
 h2.sec{font-size:.8rem;font-weight:700;color:var(--mut);margin:26px 0 10px;letter-spacing:-.01em}
 h2.sec:first-child{margin-top:18px}
@@ -136,7 +139,11 @@ textarea.inp{padding:14px;height:auto;min-height:104px;line-height:1.55}
 .cmain{flex:1;min-width:0}
 .cname{font-size:.99rem;font-weight:700;letter-spacing:-.03em;display:flex;align-items:center;gap:6px}
 .cname .tt{font-size:.76rem;font-weight:600;color:var(--mut);flex:0 0 auto}
-.cco{font-size:.84rem;color:var(--sub);font-weight:500;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cco{font-size:.84rem;color:var(--sub);font-weight:500;margin-top:2px;display:flex;align-items:center;gap:5px;min-width:0;overflow:hidden}
+/* 회사명이 먼저입니다. 자리가 모자라면 그룹표가 잘려 나갑니다 */
+.cco .tx{flex:1 1 auto;min-width:3.6em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cco .gtag{flex:0 0 auto}
+.cside{max-width:44%}
 .clast{font-size:.79rem;color:var(--mut);margin-top:5px;display:flex;align-items:center;gap:5px;min-width:0}
 .clast .tx{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cside{flex:0 0 auto;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:5px}
@@ -154,10 +161,30 @@ textarea.inp{padding:14px;height:auto;min-height:104px;line-height:1.55}
 .memrow{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
 .memrow .none{font-size:.86rem;color:var(--dim);font-weight:500}
 .mempick{display:flex;align-items:center;gap:11px;padding:13px 17px;width:100%;text-align:left}
+.gsheet .dot{width:13px;height:13px;border-radius:5px}
 .mempick + .mempick{border-top:1px solid var(--line)}
 .mempick .nm{flex:1;font-size:.93rem;font-weight:600}
 .mempick .me{font-size:.74rem;color:var(--mut);font-weight:700}
 .chips .sep{flex:0 0 auto;width:1px;height:20px;background:var(--line);margin:0 4px;align-self:center}
+.crow{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.crow.picked{background:var(--blue-bg)}
+.crow.picked:active{background:#DCEBFF}
+.selbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:45;background:rgba(255,255,255,.97);
+  backdrop-filter:saturate(180%) blur(12px);-webkit-backdrop-filter:saturate(180%) blur(12px);
+  border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);
+  box-shadow:0 -4px 20px rgba(25,31,40,.07);
+}
+.selbar .in{max-width:var(--w);margin:0 auto;padding:10px 16px 12px}
+.selbar .top{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.selbar .x{width:34px;height:34px;border-radius:11px;color:var(--sub);font-size:1.05rem;display:flex;align-items:center;justify-content:center}
+.selbar .x:active{background:var(--fill)}
+.selbar b{flex:1;font-size:.98rem;font-weight:700;letter-spacing:-.03em}
+.selbar .lnk{font-size:.83rem;font-weight:700;color:var(--blue);padding:6px 8px;border-radius:8px}
+.selbar .row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.selbar .row button{height:46px;border-radius:12px;background:var(--fill);color:var(--sub);font-size:.85rem;font-weight:700}
+.selbar .row button:active{background:#E8EAED}
+.selbar .row button.danger{background:var(--red-bg);color:var(--red)}
 .empty{text-align:center;padding:54px 20px;color:var(--mut)}
 .empty .ic{font-size:2.1rem;margin-bottom:10px;opacity:.5}
 .empty>b{display:block;color:var(--sub);font-size:.95rem;font-weight:700;margin-bottom:5px}
@@ -396,7 +423,10 @@ nav.tabs button:active{opacity:.6}
   <input type="file" id="cam" accept="image/*" capture="environment" hidden>
   <input type="file" id="gal" accept="image/*" hidden>
 
-  <h1 class="ptitle" id="newTitle">새 고객</h1>
+  <div class="titlerow">
+    <h1 class="ptitle" id="newTitle">새 고객</h1>
+    <button class="btn line sm" id="newReset" hidden>새로 입력하기</button>
+  </div>
   <p class="psub" id="newSub">명함을 촬영하면 기본 정보가 자동으로 입력됩니다</p>
 
   <div id="shootWrap">
@@ -438,10 +468,10 @@ nav.tabs button:active{opacity:.6}
     <div class="field"><label for="f-addr">주소</label><input class="inp" id="f-addr" placeholder="예: 경기도 고양시 …"></div>
   </div>
 
-  <h2 class="sec">고객 그룹</h2>
+  <h2 class="sec">고객 그룹 <span style="font-weight:500;color:var(--dim)">(여러 개 선택 가능)</span></h2>
   <div class="card">
     <div class="gpick" id="fGroups"></div>
-    <div class="note">그룹은 설정 탭에서 추가하거나 이름을 바꿀 수 있습니다.</div>
+    <div class="note">여러 개를 골라도 됩니다. 그룹은 설정 탭에서 추가하거나 이름을 바꿀 수 있습니다.</div>
   </div>
 
   <div id="firstMemoWrap">
@@ -455,7 +485,7 @@ nav.tabs button:active{opacity:.6}
     <button class="btn ghost" id="newCancel" style="flex:0 0 96px" hidden>취소</button>
     <button class="btn" id="saveCust">고객카드 생성</button>
   </div>
-  <button class="btn line sm" id="newReset" style="width:100%;margin-top:10px" hidden>입력한 내용 지우기</button>
+
   <div class="note" id="newNote">사진과 기록은 이 기기에 저장되고, 구글 시트를 연결하면 자동으로 함께 보관됩니다.</div>
 </section>
 
@@ -563,6 +593,21 @@ nav.tabs button:active{opacity:.6}
     <div id="dBody"></div>
   </div>
 </div>
+<div class="selbar" id="selBar" hidden>
+  <div class="in">
+    <div class="top">
+      <button class="x" id="selCancel" aria-label="선택 해제">✕</button>
+      <b id="selCount">0명 선택</b>
+      <button class="lnk" id="selAll">전체 선택</button>
+    </div>
+    <div class="row">
+      <button id="selGroup">그룹 추가</button>
+      <button id="selOwner">담당자 추가</button>
+      <button id="selDel" class="danger">삭제</button>
+    </div>
+  </div>
+</div>
+
 <div class="fab" id="fabWrap" hidden><div class="in"><button class="btn" id="addEntry">＋ 기록 추가</button></div></div>
 
 <!-- ════════ 기록 추가 시트 ════════ -->
@@ -587,6 +632,36 @@ nav.tabs button:active{opacity:.6}
   <div class="btnrow" style="margin-top:6px">
     <button class="btn ghost" id="e-cancel" style="flex:0 0 96px">취소</button>
     <button class="btn" id="e-save">저장</button>
+  </div>
+</div>
+
+<div class="sheet" id="assignSheet" hidden>
+  <div class="grab"></div>
+  <h3 id="assignTitle">담당자 추가</h3>
+  <div class="seg" style="grid-template-columns:1fr 1fr" id="assignSeg">
+    <button data-m="share" aria-pressed="true">공유 추가</button>
+    <button data-m="owner" aria-pressed="false">담당자 변경</button>
+  </div>
+  <div class="glist" id="assignList"></div>
+  <div class="note" id="assignNote"></div>
+  <div class="btnrow" style="margin-top:12px">
+    <button class="btn ghost" id="assignCancel" style="flex:0 0 108px">취소</button>
+    <button class="btn" id="assignSave">적용</button>
+  </div>
+</div>
+
+<div class="sheet gsheet" id="groupSheet" hidden>
+  <div class="grab"></div>
+  <h3>어느 그룹에 넣을까요?</h3>
+  <div class="glist" id="groupPick"></div>
+  <div class="note">여러 개를 골라도 됩니다.</div>
+  <div class="btnrow" style="margin-top:12px">
+    <input class="inp" id="g-new" placeholder="새 그룹 이름" style="flex:1" autocomplete="off">
+    <button class="btn sm" id="g-add" style="flex:0 0 84px;height:52px">추가</button>
+  </div>
+  <div class="btnrow" style="margin-top:10px">
+    <button class="btn ghost" id="groupCancel" style="flex:0 0 108px">취소</button>
+    <button class="btn" id="groupSave">저장</button>
   </div>
 </div>
 
@@ -795,6 +870,15 @@ function fmtPhone(p){
 function ensureGroup(n){
   n=String(n||'').trim(); if(!n) return;
   if(!cfg.groups.includes(n)){ cfg.groups.push(n); cfgSave() }
+}
+/* 그룹표 몇 개까지만 보여 주고 나머지는 개수로 */
+function groupTags(c,max){
+  const gs=(c.groups||[]).filter(Boolean);
+  if(!gs.length) return '';
+  const show=gs.slice(0,max);
+  let h=show.map(gTag).join('');
+  if(gs.length>max) h+='<span class="gtag" style="background:var(--fill);color:var(--mut)">+'+(gs.length-max)+'</span>';
+  return h;
 }
 function gTag(n){
   const [bg,fg]=gColor(n);
@@ -1346,8 +1430,8 @@ function loadForm(c){
 }
 $('newCancel').addEventListener('click',()=>{ const u=editUid; clearForm(); if(u){ go('list'); openDetail(u) } });
 $('newReset').addEventListener('click',()=>{
-  if(!confirm('입력하던 내용을 지웁니다.')) return;
-  clearForm(); toast('지웠습니다');
+  if(!confirm('입력하던 내용을 지우고 처음부터 다시 시작합니다.')) return;
+  clearForm(); window.scrollTo(0,0); toast('새로 입력합니다');
 });
 /* 입력한 게 있을 때만 지우기 버튼을 보여 줍니다 */
 function paintDraftState(){
@@ -1441,11 +1525,13 @@ function renderChips(){
   const cnt=g=>live.filter(c=>(c.groups||[]).includes(g)).length;
   const mine=live.filter(isMine).length, got=live.length-mine;
   let h='<button class="chip" data-s="" aria-pressed="'+(!filterScope?'true':'false')+'">전체 <span class="n">'+live.length+'</span></button>';
-  if(cfg.owner && got){
+  const scopeShown = !!(cfg.owner && got);
+  if(scopeShown){
     h+='<button class="chip" data-s="mine" aria-pressed="'+(filterScope==='mine'?'true':'false')+'">내 담당 <span class="n">'+mine+'</span></button>';
     h+='<button class="chip" data-s="shared" aria-pressed="'+(filterScope==='shared'?'true':'false')+'">공유받음 <span class="n">'+got+'</span></button>';
   }
-  if(cfg.groups.length) h+='<span class="sep"></span>';
+  // 구분선은 앞뒤로 칩이 다 있을 때만
+  if(scopeShown && cfg.groups.length) h+='<span class="sep"></span>';
   h+=cfg.groups.map(g=>'<button class="chip" data-g="'+esc(g)+'" aria-pressed="'+(filterG===g?'true':'false')+'">'+esc(g)+' <span class="n">'+cnt(g)+'</span></button>').join('');
   h+='<button class="chip add" id="chipAdd">＋ 그룹</button>';
   $('groupChips').innerHTML=h;
@@ -1473,10 +1559,14 @@ function renderList(){
     const av=c.photo
       ? '<div class="av"><img src="'+c.photo+'" alt=""></div>'
       : '<div class="av" style="background:'+bg+';color:'+fg+'">'+esc(initial(c))+'</div>';
-    return '<button class="crow" data-u="'+c.uid+'">'+av+
+    const on=picked.has(c.uid);
+    return '<button class="crow'+(on?' picked':'')+'" data-u="'+c.uid+'">'+
+      (selMode?'<span class="cb'+(on?' on':'')+'" style="margin-right:-4px"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>':'')+av+
       '<div class="cmain">'+
         '<div class="cname">'+esc(c.name||c.company||'(이름 없음)')+(c.title?'<span class="tt">'+esc(c.title)+'</span>':'')+'</div>'+
-        (c.name&&c.company?'<div class="cco">'+esc(c.company)+'</div>':'')+
+        ((c.name&&c.company)||(c.groups&&c.groups.length)
+          ? '<div class="cco">'+(c.name&&c.company?'<span class="tx">'+esc(c.company)+'</span>':'')+groupTags(c,2)+'</div>'
+          : '')+
         (last?'<div class="clast">'+kindTag(last.kind)+'<span class="tx">'+esc(last.body.replace(/\s+/g,' '))+'</span></div>'
              :'<div class="clast" style="color:var(--dim)">아직 기록이 없습니다</div>')+
       '</div>'+
@@ -1484,7 +1574,6 @@ function renderList(){
         '<span class="cdate">'+esc(shortDate(c.lastAt||c.createdAt))+'</span>'+
         (td?'<span class="badge">'+td+'</span>':'')+
         shareStack(c)+
-        ((!td && !people(c).length && c.groups && c.groups.length)?gTag(c.groups[0]):'')+
       '</div></button>';
   }).join('')+'</div>';
 }
@@ -1518,9 +1607,88 @@ $('groupChips').addEventListener('click',e=>{
   const b=e.target.closest('.chip[data-g]'); if(!b) return;
   filterG=(filterG===b.dataset.g)?'':b.dataset.g; render();
 });
+/* ═════════ 길게 눌러 여러 명 고르기 ═════════ */
+let selMode=false, picked=new Set(), pressTimer=null, pressed=null, longAt=0;
+
+function enterSel(uid){
+  selMode=true; picked=new Set(uid?[uid]:[]);
+  paintSel(); renderList();
+  if(navigator.vibrate) try{ navigator.vibrate(12) }catch(e){}
+}
+function exitSel(){
+  if(!selMode) return;
+  selMode=false; picked.clear(); paintSel(); renderList();
+}
+function paintSel(){
+  $('selBar').hidden=!selMode;
+  if(!selMode) return;
+  $('selCount').textContent=picked.size?(picked.size+'명 선택'):'고객을 골라주세요';
+  const vis=visible();
+  const allOn=vis.length>0 && vis.every(c=>picked.has(c.uid));
+  $('selAll').textContent=allOn?'전체 해제':'전체 선택';
+  ['selGroup','selOwner','selDel'].forEach(id=>{
+    $(id).disabled=!picked.size;
+    $(id).style.opacity=picked.size?'1':'.4';
+  });
+}
+function pickedList(){ return custs.filter(c=>picked.has(c.uid) && !c.deleted) }
+
 $('listWrap').addEventListener('click',e=>{
-  const b=e.target.closest('.crow[data-u]'); if(b) openDetail(b.dataset.u);
+  const b=e.target.closest('.crow[data-u]'); if(!b) return;
+  // 길게 누른 직후에 따라 오는 클릭은 무시합니다.
+  // (안드로이드는 롱프레스 뒤 클릭이 안 오는 경우도 있어 시각으로 판단합니다)
+  if(Date.now()-longAt < 400) return;
+  if(selMode){
+    const u=b.dataset.u;
+    picked.has(u)?picked.delete(u):picked.add(u);
+    paintSel(); renderList();
+    return;
+  }
+  openDetail(b.dataset.u);
 });
+$('listWrap').addEventListener('pointerdown',e=>{
+  const b=e.target.closest('.crow[data-u]'); if(!b) return;
+  pressed={u:b.dataset.u,x:e.clientX,y:e.clientY};
+  clearTimeout(pressTimer);
+  pressTimer=setTimeout(()=>{
+    if(!pressed) return;
+    longAt=Date.now();
+    if(!selMode) enterSel(pressed.u);
+    else { picked.add(pressed.u); paintSel(); renderList() }
+  },500);
+});
+$('listWrap').addEventListener('pointermove',e=>{
+  if(!pressed) return;
+  if(Math.abs(e.clientX-pressed.x)>10 || Math.abs(e.clientY-pressed.y)>10){
+    clearTimeout(pressTimer); pressed=null;
+  }
+});
+['pointerup','pointercancel','pointerleave'].forEach(ev=>
+  $('listWrap').addEventListener(ev,()=>{ clearTimeout(pressTimer); pressed=null }));
+$('listWrap').addEventListener('contextmenu',e=>{ if(selMode || Date.now()-longAt<600) e.preventDefault() });
+
+$('selCancel').addEventListener('click',exitSel);
+$('selAll').addEventListener('click',()=>{
+  const vis=visible();
+  const allOn=vis.length>0 && vis.every(c=>picked.has(c.uid));
+  if(allOn) picked.clear(); else vis.forEach(c=>picked.add(c.uid));
+  paintSel(); renderList();
+});
+$('selDel').addEventListener('click',async()=>{
+  const list=pickedList(); if(!list.length) return;
+  const n=list.reduce((t,c)=>t+custActs(c.uid).length,0);
+  if(!confirm('고객 '+list.length+'명을 삭제합니다.\n타임라인 기록 '+n+'건도 함께 지워집니다. 되돌릴 수 없습니다.')) return;
+  for(const c of list){
+    c.deleted=true; c.updated=now(); c.dirty=true; await dbPut('cust',c);
+    for(const a of acts.filter(x=>x.cid===c.uid && !x.deleted)){
+      a.deleted=true; a.updated=now(); a.dirty=true; await dbPut('act',a);
+    }
+  }
+  mirrorSave(); exitSel(); render(); queueSync();
+  toast(list.length+'명을 삭제했습니다');
+});
+$('selGroup').addEventListener('click',()=>{ if(picked.size) openGroups(true) });
+$('selOwner').addEventListener('click',()=>{ if(picked.size) openAssign() });
 
 /* ═════════ 고객 상세 ═════════ */
 function openDetail(u){
@@ -1548,7 +1716,6 @@ function paintDetail(){
   let h='<div class="profile">'+av+
     '<h2>'+esc(c.name||c.company||'(이름 없음)')+'</h2>'+
     '<div class="role">'+esc([c.title,c.company].filter(Boolean).join(' · ')||'—')+'</div>'+
-    ((c.groups&&c.groups.length)?'<div class="gs">'+c.groups.map(gTag).join('')+'</div>':'')+
     '<div class="acts">'+
       (tel?'<a href="tel:'+tel+'"><svg viewBox="0 0 24 24"><path d="M5 4h3l2 5-2.5 1.5a12 12 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>전화</a>'
            :'<button class="off"><svg viewBox="0 0 24 24"><path d="M5 4h3l2 5-2.5 1.5a12 12 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>전화</button>')+
@@ -1566,7 +1733,12 @@ function paintDetail(){
     row('등록일',(c.createdAt||'').slice(0,10),false)+
     '</div>';
   const sh=sharedOf(c);
-  h+='<h2 class="sec">담당과 공유</h2><div class="info">'+
+  h+='<h2 class="sec">그룹과 담당</h2><div class="info">'+
+    '<button class="irow" data-groups="1"><span class="k">그룹</span><span class="v">'+
+      ((c.groups&&c.groups.length)
+        ? '<span class="memrow">'+c.groups.map(gTag).join('')+'</span>'
+        : '<span class="none">그룹 없음 — 눌러서 선택 (여러 개 가능)</span>')+
+    '</span></button>'+
     '<div class="irow"><span class="k">담당자</span><span class="v'+(c.owner?'':' none')+'">'+
       (c.owner?(memDot(c.owner,'big')+' <span style="vertical-align:middle;margin-left:6px">'+esc(c.owner)+(isMine(c)?' (나)':'')+'</span>'):'—')+
     '</span></div>'+
@@ -1629,6 +1801,7 @@ $('dBody').addEventListener('click',async e=>{
   if(cb){ await toggleTodo(cb.dataset.t); return }
   const ent=e.target.closest('.ent[data-e]');
   if(ent){ openSheet(ent.dataset.e); return }
+  if(e.target.closest('[data-groups]')){ openGroups(); return }
   if(e.target.closest('[data-share]')){ openShare(); return }
   if(e.target.closest('[data-vcf]')){
     const c=custs.find(x=>x.uid===curUid); if(c) saveContact(c);
@@ -1687,7 +1860,7 @@ function openSheet(auid){
   openSheetEl('sheet');
   setTimeout(()=>$('e-body').focus(),240);
 }
-const SHEET_IDS=['sheet','askSheet','shareSheet','ownerSheet'];
+const SHEET_IDS=['sheet','askSheet','shareSheet','ownerSheet','groupSheet','assignSheet'];
 function otherSheetOpen(except){
   return SHEET_IDS.some(id=>id!==except && $(id) && !$(id).hidden);
 }
@@ -1839,6 +2012,142 @@ async function saveContact(c){
   toast('연락처 파일을 내려받았습니다 — 알림을 눌러 열면 주소록에 추가됩니다');
 }
 
+/* ═════════ 그룹 고르기 (한 고객이 여러 그룹에 속할 수 있습니다) ═════════ */
+let groupPick=[], groupBulk=false;
+function openGroups(bulk){
+  groupBulk=!!bulk;
+  if(groupBulk){
+    groupPick=[];
+    $('groupSheet').querySelector('h3').textContent='어느 그룹에 넣을까요?';
+    $('groupSheet').querySelector('.note').textContent=
+      '고른 그룹을 선택한 '+picked.size+'명에게 더합니다. 이미 있던 그룹은 그대로 둡니다.';
+  }else{
+    const c=custs.find(x=>x.uid===curUid); if(!c) return;
+    groupPick=[...(c.groups||[])];
+    $('groupSheet').querySelector('h3').textContent='어느 그룹에 넣을까요?';
+    $('groupSheet').querySelector('.note').textContent='여러 개를 골라도 됩니다.';
+  }
+  $('g-new').value='';
+  renderGroupPick();
+  openSheetEl('groupSheet');
+}
+function renderGroupPick(){
+  const box=$('groupPick');
+  if(!cfg.groups.length){
+    box.innerHTML='<div class="grow"><span class="nm" style="color:var(--dim);font-weight:500">그룹이 없습니다. 아래에서 만들어 주세요.</span></div>';
+    return;
+  }
+  box.innerHTML=cfg.groups.map(g=>{
+    const on=groupPick.includes(g), [bg,fg]=gColor(g);
+    return '<button class="mempick" data-g="'+esc(g)+'">'+
+      '<span class="dot" style="background:'+fg+'"></span>'+
+      '<span class="nm">'+esc(g)+'</span>'+
+      '<span class="cb'+(on?' on':'')+'"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></button>';
+  }).join('');
+}
+$('groupPick').addEventListener('click',e=>{
+  const b=e.target.closest('[data-g]'); if(!b) return;
+  const g=b.dataset.g;
+  groupPick=groupPick.includes(g)?groupPick.filter(x=>x!==g):[...groupPick,g];
+  renderGroupPick();
+});
+$('g-add').addEventListener('click',()=>{
+  const v=$('g-new').value.trim();
+  if(!v) return;
+  if(!cfg.groups.includes(v)){ cfg.groups.push(v); cfgSave() }
+  if(!groupPick.includes(v)) groupPick.push(v);
+  $('g-new').value='';
+  renderGroupPick(); renderChips(); renderFormGroups();
+});
+$('g-new').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); $('g-add').click() } });
+$('groupCancel').addEventListener('click',()=>closeSheetEl('groupSheet'));
+$('groupSave').addEventListener('click',async()=>{
+  if(groupBulk){
+    if(!groupPick.length){ toast('그룹을 골라주세요'); return }
+    const list=pickedList();
+    for(const c of list){
+      const set=new Set([...(c.groups||[]),...groupPick]);
+      c.groups=[...set]; c.updated=now(); c.dirty=true;
+      await dbPut('cust',c);
+    }
+    groupPick.forEach(ensureGroup);
+    mirrorSave(); closeSheetEl('groupSheet'); exitSel(); render(); queueSync();
+    toast(list.length+'명을 그룹에 넣었습니다');
+    return;
+  }
+  const c=custs.find(x=>x.uid===curUid); if(!c){ closeSheetEl('groupSheet'); return }
+  c.groups=[...groupPick]; c.updated=now(); c.dirty=true;
+  await dbPut('cust',c); mirrorSave();
+  closeSheetEl('groupSheet'); paintDetail(); render(); queueSync();
+  toast(groupPick.length?('그룹 '+groupPick.length+'개로 저장했습니다'):'그룹에서 뺐습니다');
+});
+
+/* ═════════ 선택한 고객의 담당자·공유 일괄 지정 ═════════ */
+let assignMode='share', assignPick=[];
+function openAssign(){
+  assignMode='share'; assignPick=[];
+  [...$('assignSeg').children].forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.m==='share')));
+  renderAssign();
+  openSheetEl('assignSheet');
+}
+function renderAssign(){
+  const ms=cfg.members||[];
+  if(!ms.length){
+    $('assignList').innerHTML='<div class="grow"><span class="nm" style="color:var(--dim);font-weight:500">팀원 명단이 비어 있습니다</span></div>';
+    $('assignNote').innerHTML='구글 시트의 <b>Members</b> 탭에 팀원 이름을 적으면 여기에 나타납니다.';
+    return;
+  }
+  $('assignNote').innerHTML = assignMode==='share'
+    ? '고른 팀원에게 선택한 '+picked.size+'명을 공유합니다. 원래 담당자는 그대로입니다.'
+    : '선택한 '+picked.size+'명의 담당자를 바꿉니다. <b>나를 고르지 않으면 이 기기에서 사라질 수 있습니다.</b> (구글 시트에는 남습니다)';
+  $('assignList').innerHTML=ms.map(m=>{
+    const on=assignPick.includes(m);
+    return '<button class="mempick" data-m="'+esc(m)+'">'+memDot(m,'big')+
+      '<span class="nm">'+esc(m)+'</span>'+
+      (m===cfg.owner?'<span class="me">나</span>':'')+
+      '<span class="cb'+(on?' on':'')+'"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></button>';
+  }).join('');
+}
+$('assignSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-m]'); if(!b) return;
+  assignMode=b.dataset.m; assignPick=[];
+  [...$('assignSeg').children].forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.m===assignMode)));
+  renderAssign();
+});
+$('assignList').addEventListener('click',e=>{
+  const b=e.target.closest('[data-m]'); if(!b) return;
+  const m=b.dataset.m;
+  if(assignMode==='owner') assignPick=[m];          // 담당자는 한 명
+  else assignPick=assignPick.includes(m)?assignPick.filter(x=>x!==m):[...assignPick,m];
+  renderAssign();
+});
+$('assignCancel').addEventListener('click',()=>closeSheetEl('assignSheet'));
+$('assignSave').addEventListener('click',async()=>{
+  if(!assignPick.length){ toast('팀원을 골라주세요'); return }
+  const list=pickedList();
+  if(assignMode==='owner'){
+    const to=assignPick[0];
+    const away = to!==cfg.owner;
+    if(!confirm('고객 '+list.length+'명의 담당자를 "'+to+'"(으)로 바꿉니다.'+
+      (away?'\n\n나에게 공유되어 있지 않은 고객은 이 기기에서 사라집니다. 구글 시트에는 그대로 남습니다.':''))) return;
+    for(const c of list){
+      c.owner=to;
+      c.shared=(c.shared||[]).filter(m=>m!==to);   // 담당자는 공유 목록에 두지 않습니다
+      c.updated=now(); c.dirty=true; await dbPut('cust',c);
+    }
+  }else{
+    for(const c of list){
+      const set=new Set([...(c.shared||[]),...assignPick]);
+      set.delete(String(c.owner||'').trim());        // 담당자는 공유 목록에서 뺍니다
+      c.shared=[...set]; c.updated=now(); c.dirty=true;
+      await dbPut('cust',c);
+    }
+  }
+  mirrorSave(); closeSheetEl('assignSheet'); exitSel(); render(); queueSync();
+  toast(assignMode==='owner' ? (list.length+'명의 담당자를 바꿨습니다')
+                             : (list.length+'명을 공유했습니다'));
+});
+
 /* ═════════ 공유 대상 고르기 ═════════ */
 let sharePick=[];
 function openShare(){
@@ -1874,7 +2183,8 @@ $('shareList').addEventListener('click',e=>{
 $('shareCancel').addEventListener('click',closeShare);
 $('shareSave').addEventListener('click',async()=>{
   const c=custs.find(x=>x.uid===curUid); if(!c){ closeShare(); return }
-  c.shared=[...sharePick]; c.updated=now(); c.dirty=true;
+  c.shared=sharePick.filter(m=>m!==String(c.owner||'').trim());
+  c.updated=now(); c.dirty=true;
   await dbPut('cust',c); mirrorSave();
   closeShare(); paintDetail(); render(); queueSync();
   toast(sharePick.length?('팀원 '+sharePick.length+'명과 공유합니다'):'공유를 해제했습니다');
@@ -2229,6 +2539,7 @@ function paintUsage(){
 
 /* ═════════ 탭 이동 ═════════ */
 function go(p){
+  if(p!=='list') exitSel();
   ['list','new','set'].forEach(k=>{
     $('p-'+k).hidden = k!==p;
     $('t-'+k).setAttribute('aria-selected',String(k===p));
