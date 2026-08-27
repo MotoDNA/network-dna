@@ -150,6 +150,31 @@ textarea.inp{padding:14px;height:auto;min-height:104px;line-height:1.55}
 .stat span{display:block;font-size:.72rem;color:var(--mut);font-weight:600;margin-top:2px}
 .stat.due b{color:var(--red)}
 
+/* ───── 팀 현황판 ───── */
+.tfeed{background:#fff;border-radius:var(--r2);box-shadow:var(--sh);overflow:hidden}
+.trow{display:flex;gap:12px;padding:14px 16px;width:100%;text-align:left;align-items:flex-start}
+.trow + .trow{border-top:1px solid var(--line)}
+.trow:active{background:var(--fill2)}
+.trow .who{flex:none;margin-top:1px}
+.trow .bd{flex:1;min-width:0}
+.trow .hd{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px}
+.trow .cust{font-size:.88rem;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+.trow .when{font-size:.72rem;color:var(--dim);font-weight:600;margin-left:auto;flex:none}
+.trow .txt{font-size:.85rem;color:var(--sub);line-height:1.5;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.trow .txt.none{color:var(--dim)}
+.tempty{background:#fff;border-radius:var(--r2);box-shadow:var(--sh);
+  padding:26px 18px;text-align:center;color:var(--dim);font-size:.86rem;font-weight:600;line-height:1.6}
+/* 팀원별 막대 */
+.wrow{display:flex;align-items:center;gap:10px;padding:9px 0}
+.wrow + .wrow{border-top:1px solid var(--line)}
+.wrow .nm{font-size:.86rem;font-weight:700;letter-spacing:-.02em;flex:none;min-width:74px}
+.wrow .bar{flex:1;height:8px;border-radius:4px;background:var(--fill);overflow:hidden}
+.wrow .bar i{display:block;height:100%;border-radius:4px;background:var(--blue)}
+.wrow .n{font-size:.78rem;font-weight:700;color:var(--sub);flex:none;min-width:34px;text-align:right}
+.wrow.me .nm{color:var(--blue)}
+#teamSeg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+
 /* ───── 고객 리스트 ───── */
 .list{background:#fff;border-radius:var(--r2);box-shadow:var(--sh);overflow:hidden}
 .crow{display:flex;align-items:center;gap:13px;padding:15px 17px;width:100%;text-align:left;transition:background .12s}
@@ -253,7 +278,7 @@ nav.tabs{
   backdrop-filter:saturate(180%) blur(12px);-webkit-backdrop-filter:saturate(180%) blur(12px);
   border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);
 }
-nav.tabs .in{max-width:var(--w);margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr)}
+nav.tabs .in{max-width:var(--w);margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
 nav.tabs button{height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--dim);font-size:.68rem;font-weight:700}
 nav.tabs svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 nav.tabs button[aria-selected="true"]{color:var(--blue)}
@@ -587,6 +612,26 @@ nav.tabs button:active{opacity:.6}
 </section>
 
 <!-- ════════ 설정 ════════ -->
+<section class="page" id="p-team" hidden>
+  <h1 class="ptitle">팀</h1>
+  <p class="psub" id="teamSub">우리 팀이 무엇을 하고 있는지 한눈에 봅니다</p>
+
+  <div class="seg" style="grid-template-columns:1fr 1fr 1fr" id="teamSeg">
+    <button data-p="today" aria-pressed="true">오늘</button>
+    <button data-p="week"  aria-pressed="false">이번 주</button>
+    <button data-p="month" aria-pressed="false">이번 달</button>
+  </div>
+
+  <h2 class="sec">내 할 일 <span id="myTodoCount" class="ct"></span></h2>
+  <div id="myTodos"></div>
+
+  <h2 class="sec">팀이 한 일 <span id="feedCount" class="ct"></span></h2>
+  <div id="teamFeed"></div>
+
+  <h2 class="sec">팀원별</h2>
+  <div class="card" id="teamWho"></div>
+</section>
+
 <section class="page" id="p-set" hidden>
   <h1 class="ptitle">설정</h1>
   <p class="psub">팀원, 그룹, 명함 자동 인식, 내 계정</p>
@@ -654,6 +699,9 @@ nav.tabs button:active{opacity:.6}
     </button>
     <button role="tab" id="t-new" aria-selected="false">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8.5v7M8.5 12h7"/></svg>새 고객
+    </button>
+    <button role="tab" id="t-team" aria-selected="false">
+      <svg viewBox="0 0 24 24"><path d="M16 20v-1.6a3.4 3.4 0 0 0-3.4-3.4H6.4A3.4 3.4 0 0 0 3 18.4V20"/><circle cx="9.5" cy="8" r="3.4"/><path d="M21 20v-1.6a3.4 3.4 0 0 0-2.6-3.3M15.5 4.7a3.4 3.4 0 0 1 0 6.6"/></svg>팀
     </button>
     <button role="tab" id="t-set" aria-selected="false">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 8 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 3.6 15a1.7 1.7 0 0 0-1.55-1H2a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 3.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 8 4.6h.08A1.7 1.7 0 0 0 9 3.05V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9v.08a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/></svg>설정
@@ -2874,6 +2922,7 @@ async function syncNow(quiet){
     syncing = false;
     render(); if(curUid) paintDetail();
     if(!$('p-set').hidden) renderMembers();
+    if(!$('p-team').hidden) renderTeam();
     pill();
     if(!quiet) toast(added ? ('동기화 완료 · 고객 ' + added + '명 추가') : '동기화 완료');
 
@@ -3508,19 +3557,146 @@ $('s-unseed').addEventListener('click',async()=>{
   toast('샘플 '+n+'곳을 지웠습니다');
 });
 
+/* ═════════ 팀 현황판 ═════════
+   새로 저장하는 것은 없습니다. 이미 있는 기록을 고객 하나가 아니라
+   팀 단위로 다시 묶어 보여 줄 뿐입니다.
+
+   보이는 범위는 데이터베이스가 정합니다. 내가 볼 수 없는 고객의 기록은
+   애초에 이 기기에 내려와 있지 않으니, 여기서 따로 거를 것이 없습니다. */
+let teamPeriod = 'today';
+
+/* 고른 기간의 시작 날짜 (YYYY-MM-DD). 주는 월요일부터 셉니다. */
+function periodStart(p){
+  const d = new Date(); d.setHours(0,0,0,0);
+  if(p === 'week'){ d.setDate(d.getDate() - ((d.getDay() + 6) % 7)) }
+  else if(p === 'month'){ d.setDate(1) }
+  return isoNow(d).slice(0,10);
+}
+const PERIOD_KO = { today:'오늘', week:'이번 주', month:'이번 달' };
+
+/* 내 할 일 — 내가 담당인 고객의 것과 내가 적은 것을 합칩니다.
+   고객 하나를 열지 않아도 밀린 일이 보이게 하는 것이 이 화면의 요점입니다. */
+function myOpenTodos(){
+  if(!me) return [];
+  const live = new Map(custs.filter(c=>!c.deleted).map(c=>[c.uid,c]));
+  const far = '9999-99-99';
+  return acts
+    .filter(a=>!a.deleted && a.kind === 'todo' && !a.done && live.has(a.cid))
+    .filter(a=>{
+      const c = live.get(a.cid);
+      return String(c.owner||'') === me.id || String(a.by||'') === me.id;
+    })
+    .sort((x,y)=>{
+      const dx = x.due || far, dy = y.due || far;      // 마감 없는 것은 뒤로
+      return dx === dy ? String(y.at).localeCompare(String(x.at)) : dx.localeCompare(dy);
+    });
+}
+
+function renderTeam(){
+  const from = periodStart(teamPeriod);
+  const live = new Map(custs.filter(c=>!c.deleted).map(c=>[c.uid,c]));
+  $('teamSub').textContent = (me && me.companyName ? me.companyName + ' · ' : '') +
+    '팀이 무엇을 하고 있는지 한눈에 봅니다';
+
+  /* ── 내 할 일 ── */
+  const todos = myOpenTodos();
+  const late = todos.filter(a=>a.due && a.due < todayKey()).length;
+  $('myTodoCount').textContent = todos.length
+    ? (todos.length + '건' + (late ? ' · 지난 것 ' + late : ''))
+    : '';
+  $('myTodos').innerHTML = todos.length
+    ? '<div class="tfeed">' + todos.slice(0,40).map(a=>{
+        const c = live.get(a.cid);
+        const over = a.due && a.due < todayKey();
+        // 체크는 여기서 바로 끝낼 수 있게, 나머지는 그 고객으로 갑니다
+        return '<div class="trow" data-go="' + esc(a.cid) + '">' +
+          '<button class="cb" data-t="' + esc(a.uid) + '" aria-label="완료"' +
+            ' style="flex:none;margin-top:1px"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>' +
+          '<span class="bd">' +
+            '<span class="hd"><span class="cust">' + esc(c.name || c.company || '고객') + '</span>' +
+              (a.due ? '<span class="due' + (over ? ' over' : '') + '">마감 ' +
+                       esc(a.due.slice(5).replace('-','/')) + (over ? ' · 지남' : '') + '</span>' : '') +
+            '</span>' +
+            '<span class="txt">' + esc(a.body || '(내용 없음)') + '</span>' +
+          '</span></div>';
+      }).join('') + '</div>'
+    : '<div class="tempty">남은 할 일이 없습니다</div>';
+
+  /* ── 팀이 한 일 ── */
+  const feed = acts
+    .filter(a=>!a.deleted && live.has(a.cid) && String(a.at) >= from)
+    .sort((x,y)=>String(y.at).localeCompare(String(x.at)));
+  $('feedCount').textContent = feed.length ? (feed.length + '건') : '';
+  $('teamFeed').innerHTML = feed.length
+    ? '<div class="tfeed">' + feed.slice(0,60).map(a=>{
+        const c = live.get(a.cid);
+        const 언제 = teamPeriod === 'today'
+          ? String(a.at).slice(11,16)
+          : dayLabel(dayKey(a.at)) + ' ' + String(a.at).slice(11,16);
+        return '<button class="trow" data-go="' + esc(a.cid) + '">' +
+          '<span class="who">' + memDot(a.by) + '</span>' +
+          '<span class="bd">' +
+            '<span class="hd">' + kindTag(a.kind) +
+              '<span class="cust">' + esc(c.name || c.company || '고객') + '</span>' +
+              '<span class="when">' + esc(언제) + '</span></span>' +
+            '<span class="txt' + (a.body ? '' : ' none') + '">' +
+              esc(a.body || '(내용 없음)') + '</span>' +
+          '</span></button>';
+      }).join('') +
+      (feed.length > 60 ? '<div class="tempty" style="box-shadow:none;border-radius:0;padding:12px">최근 60건만 보여 줍니다</div>' : '') +
+      '</div>'
+    : '<div class="tempty">' + PERIOD_KO[teamPeriod] + ' 남긴 기록이 없습니다</div>';
+
+  /* ── 팀원별 ── */
+  const 센다 = new Map();
+  for(const a of feed) 센다.set(a.by || '', (센다.get(a.by || '') || 0) + 1);
+  const rows = activeMembers()
+    .map(m=>({ m, n: 센다.get(m.id) || 0 }))
+    .sort((x,y)=>y.n - x.n);
+  const most = Math.max(1, ...rows.map(r=>r.n));
+  $('teamWho').innerHTML = rows.length
+    ? rows.map(r=>
+        '<div class="wrow' + (me && r.m.id === me.id ? ' me' : '') + '">' +
+          '<span class="nm">' + esc(r.m.name) + (me && r.m.id === me.id ? ' (나)' : '') + '</span>' +
+          '<span class="bar"><i style="width:' + Math.round(r.n / most * 100) + '%' +
+            (r.n ? '' : ';background:transparent') + '"></i></span>' +
+          '<span class="n">' + r.n + '</span>' +
+        '</div>').join('')
+    : '<div class="note" style="margin:0">팀원 명단을 아직 불러오지 못했습니다</div>';
+}
+
+$('teamSeg').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-p]'); if(!b) return;
+  teamPeriod = b.dataset.p;
+  [...$('teamSeg').children].forEach(x=>
+    x.setAttribute('aria-pressed', String(x.dataset.p === teamPeriod)));
+  renderTeam();
+});
+/* 체크는 그 자리에서 끝내고, 그 밖을 누르면 고객 상세로 갑니다 */
+['myTodos','teamFeed'].forEach(id=>{
+  $(id).addEventListener('click', async e=>{
+    const t = e.target.closest('[data-t]');
+    if(t){ await toggleTodo(t.dataset.t); renderTeam(); return }
+    const b = e.target.closest('[data-go]'); if(!b) return;
+    openDetail(b.dataset.go);
+  });
+});
+
 /* ═════════ 탭 이동 ═════════ */
 function go(p){
   if(p!=='list') exitSel();
-  ['list','new','set'].forEach(k=>{
+  ['list','new','team','set'].forEach(k=>{
     $('p-'+k).hidden = k!==p;
     $('t-'+k).setAttribute('aria-selected',String(k===p));
   });
   if(p==='set'){ renderGroupManage(); renderMembers(); paintUsage() }
   if(p==='new'){ renderFormGroups(); paintDraftState() }
+  if(p==='team'){ renderTeam() }
   window.scrollTo(0,0);
 }
 $('t-list').addEventListener('click',()=>go('list'));
 $('t-new').addEventListener('click',()=>go('new'));
+$('t-team').addEventListener('click',()=>go('team'));
 $('t-set').addEventListener('click',()=>go('set'));
 
 window.addEventListener('scroll',()=>{ $('appbar').classList.toggle('stuck',window.scrollY>4) },{passive:true});
