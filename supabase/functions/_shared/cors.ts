@@ -1,8 +1,17 @@
 // 브라우저가 이 함수를 부를 수 있는지 정하는 곳입니다.
 //
 // ALLOWED_ORIGIN 에 허용할 주소를 적습니다. 쉼표로 여러 개 적을 수 있습니다.
-//   supabase secrets set ALLOWED_ORIGIN="https://recall.dnalabs.kr,http://localhost:8791" \
+//   supabase secrets set ALLOWED_ORIGIN="https://rebind.dnalabs.kr,https://recall.dnalabs.kr" \
 //     --project-ref izrtclsqhsgkuwsffifn
+//
+// ⚠ 이 값은 Re:Bind 와 Re:Call 이 함께 쓰는 하나뿐인 값입니다.
+//   두 앱이 같은 Supabase 프로젝트를 쓰기 때문입니다.
+//   한쪽 주소만 적어 돌리면 그 순간 다른 쪽 앱이 멈춥니다.
+//   고칠 때는 늘 두 주소를 함께 적으세요. 지우는 것도 함께 생각하세요.
+//
+//   그리고 이 값을 바꾸면 네 함수를 모두 다시 배포해야 반영됩니다 —
+//     share-view · read-order   (Re:Bind)
+//     read-card  · admin-user   (Re:Call)
 //
 // 비워 두면 어디서든 부를 수 있습니다. 설치 중에만 그렇게 두세요.
 //
