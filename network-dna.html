@@ -174,6 +174,9 @@ textarea.inp{padding:14px;height:auto;min-height:104px;line-height:1.55}
 .wrow .n{font-size:.78rem;font-weight:700;color:var(--sub);flex:none;min-width:34px;text-align:right}
 .wrow.me .nm{color:var(--blue)}
 #teamSeg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+.wrow{flex-wrap:wrap}
+.wrow .sub2{flex-basis:100%;font-size:.74rem;color:var(--mut);font-weight:600;
+  padding-left:84px;margin-top:3px}
 
 /* ───── 고객 리스트 ───── */
 .list{background:#fff;border-radius:var(--r2);box-shadow:var(--sh);overflow:hidden}
@@ -812,6 +815,17 @@ nav.tabs button:active{opacity:.6}
   <div class="btnrow" style="margin-top:12px">
     <button class="btn ghost" id="pwCancel" style="flex:0 0 108px">취소</button>
     <button class="btn" id="pwSave">바꾸기</button>
+  </div>
+</div>
+
+<div class="sheet" id="visSheet" hidden>
+  <div class="grab"></div>
+  <h3>이 고객을 누가 볼 수 있나요?</h3>
+  <div class="glist" id="visPick"></div>
+  <div class="note" id="visNote"></div>
+  <div class="btnrow" style="margin-top:12px">
+    <button class="btn ghost" id="visCancel" style="flex:0 0 108px">취소</button>
+    <button class="btn" id="visSave">적용</button>
   </div>
 </div>
 
@@ -1964,11 +1978,21 @@ function paintDetail(){
     '<div class="irow"><span class="k">담당자</span><span class="v'+(c.owner?'':' none')+'">'+
       (c.owner?(memDot(c.owner,'big')+' <span style="vertical-align:middle;margin-left:6px">'+esc(memName(c.owner)||'(알 수 없음)')+(isMine(c)?' (나)':'')+'</span>'):'—')+
     '</span></div>'+
-    '<button class="irow" data-share="1"><span class="k">공유 중</span><span class="v">'+
-      (sh.length
-        ? '<span class="memrow">'+sh.map(n=>memDot(n,'big')+'<span style="margin-left:-3px;margin-right:4px">'+esc(memName(n))+'</span>').join('')+'</span>'
-        : '<span class="none">아직 공유하지 않았습니다 — 눌러서 선택</span>')+
-    '</span></button></div>';
+    (hasVisibility
+      ? '<button class="irow" data-vis="1"><span class="k">공개 범위</span><span class="v">'+
+          VIS[visOf(c)].tag + '<span style="margin-left:7px;color:var(--mut);font-weight:600">'+
+          esc(VIS[visOf(c)].hint) + '</span></span></button>'
+      : '')+
+    (visOf(c)==='private'
+      ? ''
+      : '<button class="irow" data-share="1"><span class="k">공유 중</span><span class="v">'+
+          (sh.length
+            ? '<span class="memrow">'+sh.map(n=>memDot(n,'big')+'<span style="margin-left:-3px;margin-right:4px">'+esc(memName(n))+'</span>').join('')+'</span>'
+            : '<span class="none">'+(visOf(c)==='company'
+                ? '공개라 따로 공유하지 않아도 팀 전체가 봅니다'
+                : '아직 공유하지 않았습니다 — 눌러서 선택')+'</span>')+
+        '</span></button>')+
+    '</div>';
 
   if(c.photo){
     h+='<h2 class="sec withbtn">명함'+
@@ -2035,6 +2059,7 @@ $('dBody').addEventListener('click',async e=>{
     const c=custs.find(x=>x.uid===curUid); if(c) saveContact(c);
     return;
   }
+  if(e.target.closest('[data-vis]')){ openVis(); return }
   if(e.target.closest('[data-savephoto]')){
     const c=custs.find(x=>x.uid===curUid); if(c) savePhoto(c);
     return;
@@ -2092,7 +2117,7 @@ function openSheet(auid){
   openSheetEl('sheet');
   setTimeout(()=>$('e-body').focus(),240);
 }
-const SHEET_IDS=['sheet','askSheet','shareSheet','groupSheet','assignSheet','pwSheet','userSheet'];
+const SHEET_IDS=['sheet','askSheet','shareSheet','groupSheet','assignSheet','pwSheet','userSheet','visSheet'];
 function otherSheetOpen(except){
   return SHEET_IDS.some(id=>id!==except && $(id) && !$(id).hidden);
 }
@@ -2518,6 +2543,72 @@ $('assignSave').addEventListener('click',async()=>{
                              : (list.length+'명을 공유했습니다'));
 });
 
+/* ═════════ 공개 범위 ═════════
+   지금까지는 "공유 목록" 하나로만 범위를 정했습니다. 그래서 "팀이 봐도 되는 고객"과
+   "나만 보는 고객"을 구분할 수 없었습니다. 셋으로 나눠 의도를 남깁니다.
+
+   서버에 visibility 칸이 아직 없으면(마이그레이션 전) 이 기능은 조용히 숨습니다.
+   그때는 예전처럼 선택공개 하나로만 동작합니다 — 배포 순서를 신경 쓰지 않아도 됩니다. */
+let hasVisibility = false;
+
+const VIS = {
+  company:{ ko:'공개',     hint:'팀 전체가 봅니다',
+            desc:'회사 사람 모두가 이 고객과 기록을 봅니다.',
+            tag:'<span class="kind k-meeting" style="height:20px;padding:0 8px;font-size:.7rem">공개</span>' },
+  shared: { ko:'선택공개', hint:'담당자와 공유받은 사람',
+            desc:'담당자와 공유받은 사람, 그리고 관리자가 봅니다. 지금까지의 방식입니다.',
+            tag:'<span class="kind k-sample" style="height:20px;padding:0 8px;font-size:.7rem">선택공개</span>' },
+  private:{ ko:'비공개',   hint:'나만 봅니다',
+            desc:'담당자 본인만 봅니다. 관리자도 내용은 볼 수 없습니다. 다만 관리자에게는 '+
+                 '"비공개가 몇 건 있다"는 숫자가 보입니다. 이걸 켜면 공유 목록은 비워집니다.',
+            tag:'<span class="kind k-issue" style="height:20px;padding:0 8px;font-size:.7rem">비공개</span>' }
+};
+function visOf(c){
+  const v = c && c.vis;
+  return (v === 'company' || v === 'private') ? v : 'shared';
+}
+
+/* 서버에 visibility 칸이 있는지 한 번만 확인합니다 */
+async function probeVisibility(){
+  if(!sb || !me){ hasVisibility = false; return }
+  const { error } = await sb.from('customers').select('visibility').limit(1);
+  hasVisibility = !error;
+}
+
+let visPickVal = 'shared';
+function openVis(){
+  const c = custs.find(x=>x.uid===curUid); if(!c) return;
+  visPickVal = visOf(c);
+  renderVisPick();
+  openSheetEl('visSheet');
+}
+function renderVisPick(){
+  $('visPick').innerHTML = ['company','shared','private'].map(k=>{
+    const on = visPickVal === k;
+    return '<button class="mempick" data-v="'+k+'">'+VIS[k].tag+
+      '<span class="nm" style="margin-left:8px">'+esc(VIS[k].hint)+'</span>'+
+      '<span class="cb'+(on?' on':'')+'"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span></button>';
+  }).join('');
+  $('visNote').textContent = VIS[visPickVal].desc;
+}
+$('visPick').addEventListener('click', e=>{
+  const b = e.target.closest('[data-v]'); if(!b) return;
+  visPickVal = b.dataset.v; renderVisPick();
+});
+$('visCancel').addEventListener('click', ()=>closeSheetEl('visSheet'));
+$('visSave').addEventListener('click', async ()=>{
+  const c = custs.find(x=>x.uid===curUid); if(!c){ closeSheetEl('visSheet'); return }
+  if(visOf(c) === visPickVal){ closeSheetEl('visSheet'); return }
+  const 이전 = visOf(c);
+  c.vis = visPickVal;
+  // 비공개로 바꾸면 공유 목록을 비웁니다. 남겨 두면 의도와 데이터가 어긋납니다.
+  if(visPickVal === 'private') c.shared = [];
+  c.updated = now(); c.dirty = true;
+  await dbPut('cust', c); mirrorSave();
+  closeSheetEl('visSheet'); paintDetail(); render(); queueSync();
+  toast(VIS[이전].ko + ' → ' + VIS[visPickVal].ko + ' 으로 바꿨습니다');
+});
+
 /* ═════════ 공유 대상 고르기 ═════════ */
 let sharePick=[];
 function openShare(){
@@ -2759,7 +2850,9 @@ function toRowC(c){
     groups:(c.groups||[]).filter(Boolean),
     photo_path:c.photoPath || null,
     last_at:toIso(c.lastAt), created_at:toIso(c.createdAt),
-    deleted:!!c.deleted
+    deleted:!!c.deleted,
+    // 서버에 아직 칸이 없으면 아예 보내지 않습니다
+    ...(hasVisibility ? { visibility: visOf(c) } : {})
   };
 }
 function fromRowC(r, prev){
@@ -2770,6 +2863,7 @@ function fromRowC(r, prev){
     groups:r.groups||[], lastAt:fromIso(r.last_at), createdAt:fromIso(r.created_at),
     updated:new Date(r.updated_at).getTime(), deleted:!!r.deleted, dirty:false,
     // 사진 자체는 따로 주고받습니다. 여기서는 경로만 맞춥니다.
+    vis:r.visibility || 'shared',
     photo:(prev && prev.photo) || null,
     photoPath:r.photo_path || null,
     photoDirty:!!(prev && prev.photoDirty),
@@ -2982,6 +3076,7 @@ $('g-code').addEventListener('input', e=>{ e.target.value = e.target.value.toUpp
 async function afterLogin(){
   hideGate();
   paintOwner();
+  await probeVisibility();
   await loadMembers();
   cfg.lastPull = 0; cfgSave();          // 들어올 때는 전부 받아옵니다
   render(); go('list');
@@ -3574,6 +3669,25 @@ function periodStart(p){
 }
 const PERIOD_KO = { today:'오늘', week:'이번 주', month:'이번 달' };
 
+/* 서버가 세어 준 진짜 숫자.
+   내가 못 보는 고객(남의 비공개 등)의 기록까지 포함한 수입니다.
+   내용은 한 줄도 오지 않고 숫자만 옵니다. */
+let teamStats = null;      // { [memberId]: {acts, cust, priv} } · 아직 못 받았으면 null
+
+async function loadTeamStats(){
+  if(!sb || !me) return;
+  try{
+    const from = new Date(periodStart(teamPeriod) + 'T00:00:00').toISOString();
+    const { data, error } = await sb.rpc('team_stats', { p_from: from });
+    if(error || !Array.isArray(data)){ teamStats = null; return }
+    const m = {};
+    for(const r of data){
+      m[r.member_id] = { acts:Number(r.acts_n)||0, cust:Number(r.cust_n)||0, priv:Number(r.private_n)||0 };
+    }
+    teamStats = m;
+  }catch(e){ teamStats = null }
+}
+
 /* 내 할 일 — 내가 담당인 고객의 것과 내가 적은 것을 합칩니다.
    고객 하나를 열지 않아도 밀린 일이 보이게 하는 것이 이 화면의 요점입니다. */
 function myOpenTodos(){
@@ -3626,7 +3740,12 @@ function renderTeam(){
   const feed = acts
     .filter(a=>!a.deleted && live.has(a.cid) && String(a.at) >= from)
     .sort((x,y)=>String(y.at).localeCompare(String(x.at)));
-  $('feedCount').textContent = feed.length ? (feed.length + '건') : '';
+  const 전체건수 = teamStats
+    ? Object.values(teamStats).reduce((t,x)=>t + x.acts, 0)
+    : null;
+  $('feedCount').textContent = 전체건수 !== null && 전체건수 > feed.length
+    ? (전체건수 + '건 중 ' + feed.length + '건 보임')
+    : (feed.length ? feed.length + '건' : '');
   $('teamFeed').innerHTML = feed.length
     ? '<div class="tfeed">' + feed.slice(0,60).map(a=>{
         const c = live.get(a.cid);
@@ -3647,21 +3766,35 @@ function renderTeam(){
       '</div>'
     : '<div class="tempty">' + PERIOD_KO[teamPeriod] + ' 남긴 기록이 없습니다</div>';
 
-  /* ── 팀원별 ── */
-  const 센다 = new Map();
-  for(const a of feed) 센다.set(a.by || '', (센다.get(a.by || '') || 0) + 1);
-  const rows = activeMembers()
-    .map(m=>({ m, n: 센다.get(m.id) || 0 }))
-    .sort((x,y)=>y.n - x.n);
+  /* ── 팀원별 ──
+     서버가 세어 준 숫자가 있으면 그것을 씁니다. 내가 못 보는 고객의 기록까지
+     들어 있어서 "누가 얼마나 움직였는지"가 왜곡되지 않습니다.
+     못 받았으면(마이그레이션 전이거나 오프라인) 보이는 것만으로 셉니다. */
+  const 눈에보이는수 = new Map();
+  for(const a of feed) 눈에보이는수.set(a.by || '', (눈에보이는수.get(a.by || '') || 0) + 1);
+
+  const rows = activeMembers().map(m=>{
+    const st = teamStats && teamStats[m.id];
+    return { m,
+      n:    st ? st.acts : (눈에보이는수.get(m.id) || 0),
+      cust: st ? st.cust : null,
+      priv: st ? st.priv : 0 };
+  }).sort((x,y)=>y.n - x.n);
+
   const most = Math.max(1, ...rows.map(r=>r.n));
   $('teamWho').innerHTML = rows.length
-    ? rows.map(r=>
-        '<div class="wrow' + (me && r.m.id === me.id ? ' me' : '') + '">' +
+    ? rows.map(r=>{
+        const 아래 = r.cust === null ? ''
+          : '담당 고객 ' + r.cust + (r.priv ? ' · 비공개 ' + r.priv : '');
+        return '<div class="wrow' + (me && r.m.id === me.id ? ' me' : '') + '">' +
           '<span class="nm">' + esc(r.m.name) + (me && r.m.id === me.id ? ' (나)' : '') + '</span>' +
           '<span class="bar"><i style="width:' + Math.round(r.n / most * 100) + '%' +
             (r.n ? '' : ';background:transparent') + '"></i></span>' +
           '<span class="n">' + r.n + '</span>' +
-        '</div>').join('')
+          (아래 ? '<span class="sub2">' + 아래 + '</span>' : '') +
+        '</div>';
+      }).join('') +
+      (teamStats ? '' : '<div class="note" style="margin:8px 0 0">지금은 내게 보이는 것만 센 숫자입니다</div>')
     : '<div class="note" style="margin:0">팀원 명단을 아직 불러오지 못했습니다</div>';
 }
 
@@ -3670,7 +3803,9 @@ $('teamSeg').addEventListener('click', e=>{
   teamPeriod = b.dataset.p;
   [...$('teamSeg').children].forEach(x=>
     x.setAttribute('aria-pressed', String(x.dataset.p === teamPeriod)));
+  teamStats = null;                       // 기간이 바뀌면 숫자도 다시 받습니다
   renderTeam();
+  loadTeamStats().then(renderTeam);
 });
 /* 체크는 그 자리에서 끝내고, 그 밖을 누르면 고객 상세로 갑니다 */
 ['myTodos','teamFeed'].forEach(id=>{
@@ -3691,7 +3826,7 @@ function go(p){
   });
   if(p==='set'){ renderGroupManage(); renderMembers(); paintUsage() }
   if(p==='new'){ renderFormGroups(); paintDraftState() }
-  if(p==='team'){ renderTeam() }
+  if(p==='team'){ renderTeam(); loadTeamStats().then(renderTeam) }
   window.scrollTo(0,0);
 }
 $('t-list').addEventListener('click',()=>go('list'));
