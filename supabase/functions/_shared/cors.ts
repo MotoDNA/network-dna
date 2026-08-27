@@ -1,7 +1,7 @@
 // 브라우저가 이 함수를 부를 수 있는지 정하는 곳입니다.
 //
 // ALLOWED_ORIGIN 에 허용할 주소를 적습니다. 쉼표로 여러 개 적을 수 있습니다.
-//   supabase secrets set ALLOWED_ORIGIN="https://motodna.github.io,http://localhost:8791" \
+//   supabase secrets set ALLOWED_ORIGIN="https://recall.dnalabs.kr,http://localhost:8791" \
 //     --project-ref izrtclsqhsgkuwsffifn
 //
 // 비워 두면 어디서든 부를 수 있습니다. 설치 중에만 그렇게 두세요.
