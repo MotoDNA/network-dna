@@ -386,6 +386,20 @@ nav.tabs button:active{opacity:.6}
 .sheet.on{transform:none}
 .grab{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 14px}
 .pwhint{font-size:.78rem;font-weight:600;color:var(--mut);margin:7px 0 0;padding-left:2px;line-height:1.5}
+/* 처리방침 본문 */
+.priv h3{font-size:.95rem;font-weight:800;letter-spacing:-.02em;margin:26px 0 8px;color:var(--ink)}
+.priv h3:first-child{margin-top:4px}
+.priv p{font-size:.88rem;line-height:1.72;color:var(--sub);margin:0 0 9px}
+.priv ul{margin:0 0 10px;padding-left:17px}
+.priv li{font-size:.88rem;line-height:1.72;color:var(--sub);margin-bottom:4px}
+.priv b{color:var(--ink);font-weight:700}
+.priv .upd{font-size:.78rem;color:var(--mut);margin-bottom:18px}
+/* 작은 사실 표 — 방침과 동의 시트에서 함께 씁니다 */
+.tblx{border:1px solid var(--line);border-radius:var(--rs);overflow:hidden;margin:10px 0 14px}
+.tblx div{display:grid;grid-template-columns:88px 1fr;gap:12px;padding:10px 13px;font-size:.82rem;line-height:1.6}
+.tblx div + div{border-top:1px solid var(--line)}
+.tblx b{color:var(--mut);font-weight:700}
+.tblx span{color:var(--sub)}
 .pwhint.ok{color:var(--green)}
 .pwhint.bad{color:var(--red)}
 .sheet h3{font-size:1.18rem;font-weight:800;letter-spacing:-.035em;margin:0 0 16px}
@@ -671,6 +685,12 @@ nav.tabs button:active{opacity:.6}
       <input type="checkbox" id="s-askContact" class="sw">
     </label>
     <div class="note">고객카드를 만들면 폰 주소록에도 저장할지 한 번 묻습니다. 꺼두어도 고객 상세 화면의 <b>연락처</b> 버튼으로 언제든 저장할 수 있습니다.</div>
+    <label class="swrow" for="s-ocr" style="margin-top:6px">
+      <span>명함 자동 인식</span>
+      <input type="checkbox" id="s-ocr" class="sw">
+    </label>
+    <div class="note">켜면 명함 사진이 미국의 인식 서버로 한 번 전송됩니다.
+      끄면 사진은 그대로 저장되고 <b>내용만 직접 입력</b>하시면 됩니다.</div>
   </div>
 
   <h2 class="sec">데이터</h2>
@@ -689,7 +709,16 @@ nav.tabs button:active{opacity:.6}
     </div>
     <div class="ai" id="usageStat" hidden></div>
   </div>
-  <div class="note" style="margin-bottom:8px">Re:Call · 고객관리 — DNA Labs</div>
+  <h2 class="sec">약관과 방침</h2>
+  <div class="glist">
+    <button class="grow" id="s-privacy" style="text-align:left">
+      <span class="nm">개인정보 처리방침</span>
+      <span class="ct">보기 ›</span>
+    </button>
+  </div>
+  <div class="note">이 앱이 어떤 정보를 어디에 보관하는지 적어 두었습니다.</div>
+
+  <div class="note" style="margin-bottom:8px;margin-top:20px">Re:Call · 고객관리 — DNA Labs</div>
 </section>
 
 </main>
@@ -818,6 +847,17 @@ nav.tabs button:active{opacity:.6}
   </div>
 </div>
 
+<div class="sheetpage" id="privacyPage" hidden>
+  <div class="inner">
+    <div class="dbar stuck">
+      <button class="iconbtn" id="privBack" aria-label="뒤로"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div class="t">개인정보 처리방침</div>
+      <div style="width:40px"></div>
+    </div>
+    <div id="privBody"></div>
+  </div>
+</div>
+
 <div class="sheet" id="visSheet" hidden>
   <div class="grab"></div>
   <h3>이 고객을 누가 볼 수 있나요?</h3>
@@ -826,6 +866,24 @@ nav.tabs button:active{opacity:.6}
   <div class="btnrow" style="margin-top:12px">
     <button class="btn ghost" id="visCancel" style="flex:0 0 108px">취소</button>
     <button class="btn" id="visSave">적용</button>
+  </div>
+</div>
+
+<div class="sheet" id="ocrSheet" hidden>
+  <div class="grab"></div>
+  <h3>명함 자동 인식을 쓰기 전에</h3>
+  <div class="note" style="margin-top:0">
+    명함에 적힌 글자를 읽으려면 <b>사진을 인식 서버로 한 번 보냅니다.</b>
+    이 서버는 미국에 있습니다. 자동 입력에만 쓰이고 그쪽에 저장되지 않습니다.
+  </div>
+  <div class="tblx" id="ocrFacts"></div>
+  <div class="note">
+    동의하지 않으셔도 됩니다. 그때는 명함 사진은 그대로 저장되고
+    <b>이름·회사·연락처만 직접 입력</b>하시면 됩니다.
+  </div>
+  <div class="btnrow" style="margin-top:14px">
+    <button class="btn ghost" id="ocrNo" style="flex:1">직접 입력할게요</button>
+    <button class="btn" id="ocrYes" style="flex:1">동의하고 사용</button>
   </div>
 </div>
 
@@ -1507,6 +1565,15 @@ let aiFilled = {};
 
 async function readCard(dataUrl){
   const st = $('aiStat'); st.hidden = false;
+  // 동의하지 않으셨으면 사진을 밖으로 내보내지 않습니다
+  if(!ocrAllowed()){
+    st.className='ai';
+    st.innerHTML = '자동 인식을 끄셨습니다 — 직접 입력해 주세요 ' +
+      '<button class="lnk" id="ocrOn" style="text-decoration:underline;font-weight:700">켜기</button>';
+    const b = $('ocrOn');
+    if(b) b.addEventListener('click', ()=>askOcr(()=>{ if(draftPhoto) readCard(draftPhoto) }));
+    return;
+  }
   if(!me){ st.className='ai err'; st.textContent='로그인이 필요합니다'; return }
   st.className='ai'; st.innerHTML='<span class="spin"></span>명함을 읽는 중…';
   try{
@@ -1605,10 +1672,16 @@ $('rotBtn').addEventListener('click',async()=>{
 });
 $('cam').addEventListener('change',e=>{usePhoto(e.target.files[0]); e.target.value=''});
 $('gal').addEventListener('change',e=>{usePhoto(e.target.files[0]); e.target.value=''});
-$('shootBtn').addEventListener('click',()=>$('cam').click());
-$('pickBtn').addEventListener('click',()=>$('gal').click());
-$('reShoot').addEventListener('click',()=>$('cam').click());
-$('rePick').addEventListener('click',()=>$('gal').click());
+/* 처음 한 번은 사진이 국외로 나간다는 것을 알리고 물어봅니다.
+   답을 이미 하셨으면 바로 카메라가 열립니다. */
+function shoot(which){
+  const open = ()=>$(which).click();
+  if(cfg.ocrConsent === undefined) askOcr(open); else open();
+}
+$('shootBtn').addEventListener('click',()=>shoot('cam'));
+$('pickBtn').addEventListener('click',()=>shoot('gal'));
+$('reShoot').addEventListener('click',()=>shoot('cam'));
+$('rePick').addEventListener('click',()=>shoot('gal'));
 $('shotDel').addEventListener('click',()=>{
   draftPhoto=null; draftOrig=null; draftCrop=null;
   $('shotWrap').hidden=true; $('shootWrap').hidden=false;
@@ -1934,7 +2007,10 @@ function closeDetail(){
   lockScroll();
 }
 $('dBack').addEventListener('click',()=>{ try{history.back()}catch(e){ closeDetail() } });
-window.addEventListener('popstate',()=>{ if(curUid) closeDetail() });
+window.addEventListener('popstate',()=>{
+  if(!$('privacyPage').hidden){ closePrivacy(); return }
+  if(curUid) closeDetail();
+});
 
 function paintDetail(){
   const c=custs.find(x=>x.uid===curUid); if(!c){ closeDetail(); return }
@@ -2117,7 +2193,7 @@ function openSheet(auid){
   openSheetEl('sheet');
   setTimeout(()=>$('e-body').focus(),240);
 }
-const SHEET_IDS=['sheet','askSheet','shareSheet','groupSheet','assignSheet','pwSheet','userSheet','visSheet'];
+const SHEET_IDS=['sheet','askSheet','shareSheet','groupSheet','assignSheet','pwSheet','userSheet','visSheet','ocrSheet'];
 function otherSheetOpen(except){
   return SHEET_IDS.some(id=>id!==except && $(id) && !$(id).hidden);
 }
@@ -2126,6 +2202,7 @@ function otherSheetOpen(except){
    (시트만 닫혔는데 상세까지 풀려 버리는 일을 막습니다) */
 function lockScroll(){
   const open = !$('gate').hidden || !$('detail').hidden ||
+               !$('privacyPage').hidden ||
                SHEET_IDS.some(id=>{ const el=$(id); return el && !el.hidden });
   document.body.style.overflow = open ? 'hidden' : '';
 }
@@ -3185,6 +3262,145 @@ function renderMembers(){
   if(btn) btn.hidden = !canManage;
 }
 
+/* ═════════ 개인정보 처리방침 ═════════
+   문서로만 갖고 있으면 요건을 채우지 못합니다. 쓰는 사람이 앱 안에서
+   바로 볼 수 있어야 합니다. 내용을 고칠 때는 아래 PRIVACY_REV 도 함께 올립니다. */
+const PRIVACY_REV = '2026-08-28';
+
+function privacyHTML(){
+  const co = me ? (me.companyName || me.companyCode || '고객사') : '고객사';
+  return '<div class="priv">' +
+  '<p class="upd">시행일 ' + PRIVACY_REV + ' · Re:Call (DNA Labs)</p>' +
+
+  '<h3>이 방침이 다루는 것</h3>' +
+  '<p>Re:Call 에는 성격이 다른 두 가지 정보가 들어옵니다. 누가 책임지는지가 다르므로 나누어 적습니다.</p>' +
+  '<ul>' +
+    '<li><b>내 계정 정보</b> — 이 앱을 쓰는 분의 아이디와 이름입니다. <b>DNA Labs</b> 가 처리합니다.</li>' +
+    '<li><b>고객카드에 넣은 정보</b> — 거래처 담당자의 이름·연락처 등입니다. ' +
+      '<b>' + esc(co) + '</b> 가 처리자이고, DNA Labs 는 맡아서 보관·처리할 뿐입니다.</li>' +
+  '</ul>' +
+
+  '<h3>1. 무엇을 모으나</h3>' +
+  '<p><b>계정</b> — 아이디, 이름, 소속 회사, 권한, 만든 날짜</p>' +
+  '<p><b>고객카드</b> — 이름, 회사명, 직함, 전화번호, 이메일, 주소, 그룹, 명함 사진</p>' +
+  '<p><b>활동 기록</b> — 미팅·요청·할 일 등 직접 적은 내용과 적은 사람, 적은 시각</p>' +
+  '<p><b>이용 기록</b> — 계정 생성, 비밀번호 재발급, 명함 인식 호출 사실 (감사 목적)</p>' +
+  '<p>주민등록번호, 계좌번호, 카드번호, 건강 정보는 <b>모으지 않습니다.</b> 그런 정보를 고객카드에 적지 마세요.</p>' +
+
+  '<h3>2. 어디에 보관하나</h3>' +
+  '<div class="tblx">' +
+    '<div><b>보관 위치</b><span>대한민국 (AWS 서울 리전)</span></div>' +
+    '<div><b>운영 위탁</b><span>Supabase — 데이터베이스와 파일 보관</span></div>' +
+    '<div><b>전송 구간</b><span>전 구간 HTTPS 암호화</span></div>' +
+    '<div><b>비밀번호</b><span>되돌릴 수 없는 형태로만 저장</span></div>' +
+  '</div>' +
+
+  '<h3>3. 명함 자동 인식과 국외 전송</h3>' +
+  '<p>명함 자동 인식을 쓰면 <b>그 사진 한 장이 미국에 있는 인식 서버로 전송됩니다.</b> ' +
+  '글자를 읽어 자동 입력하는 데에만 쓰이고, 그쪽에 저장되지 않습니다.</p>' +
+  '<div class="tblx">' +
+    '<div><b>받는 곳</b><span>Anthropic, PBC (미국)</span></div>' +
+    '<div><b>보내는 것</b><span>명함 사진 1장</span></div>' +
+    '<div><b>쓰는 목적</b><span>인쇄된 글자를 읽어 입력칸을 채우는 것</span></div>' +
+    '<div><b>보관</b><span>인식 후 보관하지 않음</span></div>' +
+    '<div><b>거부</b><span>동의하지 않아도 앱을 씁니다. 직접 입력하시면 됩니다</span></div>' +
+  '</div>' +
+  '<p>동의는 명함 인식을 처음 쓸 때 따로 받습니다. <b>설정에서 언제든 철회</b>할 수 있고, ' +
+  '철회해도 이미 저장된 고객카드는 그대로 남습니다.</p>' +
+
+  '<h3>4. 얼마나 갖고 있나</h3>' +
+  '<p><b>계정</b> — 계정을 중지하거나 회사가 서비스를 그만둘 때까지</p>' +
+  '<p><b>고객카드와 활동 기록</b> — ' + esc(co) + ' 가 지울 때까지. 서비스가 끝나면 넘겨드린 뒤 30일 안에 지웁니다</p>' +
+  '<p><b>이용 기록</b> — 1년</p>' +
+  '<p>지울 때는 되살릴 수 없는 방법으로 지웁니다.</p>' +
+
+  '<h3>5. 누구에게 보이나</h3>' +
+  '<p>고객카드는 <b>담당자와 공유받은 사람, 그리고 공개 범위 설정에 따른 사람</b>에게만 보입니다. ' +
+  '데이터베이스가 행 단위로 막기 때문에 다른 회사 사람에게는 어떤 경우에도 보이지 않습니다.</p>' +
+  '<p>법에서 정한 경우가 아니면 <b>제3자에게 팔거나 넘기지 않습니다.</b> ' +
+  '통계를 내거나 인공지능 학습에 쓰지도 않습니다.</p>' +
+
+  '<h3>6. 안전을 위해 하는 일</h3>' +
+  '<ul>' +
+    '<li>계정마다 볼 수 있는 범위를 나누고, 서버에서 검사합니다</li>' +
+    '<li>비밀번호는 되돌릴 수 없는 형태로 저장합니다</li>' +
+    '<li>전 구간을 암호화해 주고받습니다</li>' +
+    '<li>계정 생성·비밀번호 재발급 등 중요한 일은 기록을 남깁니다</li>' +
+    '<li>비밀 키는 소스코드에 두지 않고 서버 환경변수로만 관리합니다</li>' +
+  '</ul>' +
+
+  '<h3>7. 정보주체의 권리</h3>' +
+  '<p>자신의 정보를 <b>보고, 고치고, 지우고, 처리를 멈춰 달라</b>고 요구할 수 있습니다. ' +
+  '고객카드에 담긴 정보에 대해서는 <b>' + esc(co) + '</b> 에, ' +
+  '계정 정보에 대해서는 DNA Labs 에 요청하시면 됩니다.</p>' +
+  '<p>만 14세 미만 아동의 정보는 법정대리인의 동의 없이 처리하지 않습니다.</p>' +
+
+  '<h3>8. 문의처</h3>' +
+  '<div class="tblx">' +
+    '<div><b>개인정보 보호책임자</b><span>DNA Labs [담당자명]</span></div>' +
+    '<div><b>이메일</b><span>[email@example.com]</span></div>' +
+    '<div><b>전화</b><span>[010-0000-0000]</span></div>' +
+  '</div>' +
+  '<p>침해를 당했다고 생각되면 아래에도 도움을 요청할 수 있습니다.</p>' +
+  '<ul>' +
+    '<li>개인정보 침해신고센터 — privacy.kisa.or.kr / 국번없이 118</li>' +
+    '<li>개인정보 분쟁조정위원회 — kopico.go.kr / 1833-6972</li>' +
+    '<li>대검찰청 사이버수사과 1301 · 경찰청 사이버수사국 182</li>' +
+  '</ul>' +
+
+  '<h3>9. 방침이 바뀌면</h3>' +
+  '<p>바뀌는 내용이 있으면 시행 <b>7일 전</b>부터 이 화면에 알립니다. ' +
+  '이용자에게 불리하게 바뀌는 경우에는 <b>30일 전</b>에 알립니다.</p>' +
+  '</div>';
+}
+
+function openPrivacy(){
+  $('privBody').innerHTML = privacyHTML();
+  $('privacyPage').hidden = false;
+  lockScroll();
+  $('privacyPage').scrollTop = 0;
+  try{ history.pushState({p:1},'') }catch(e){}
+}
+function closePrivacy(){
+  $('privacyPage').hidden = true;
+  lockScroll();
+}
+$('s-privacy').addEventListener('click', openPrivacy);
+$('privBack').addEventListener('click', ()=>{ try{ history.back() }catch(e){ closePrivacy() } });
+
+/* ═════════ 명함 인식 — 국외 전송 동의 ═════════
+   사진이 국외로 나가는 것은 별도로 알리고 동의를 받아야 합니다.
+   동의는 이 기기에 남겨 두고, 설정에서 철회할 수 있습니다. */
+const OCR_FACTS = [
+  ['받는 곳', 'Anthropic, PBC (미국)'],
+  ['보내는 것', '명함 사진 1장'],
+  ['목적', '인쇄된 글자를 읽어 입력칸 채우기'],
+  ['보관', '인식 후 보관하지 않음'],
+];
+let ocrAfter = null;          // 동의한 뒤에 이어서 할 일
+
+function ocrAllowed(){ return cfg.ocrConsent === true }
+
+function askOcr(next){
+  ocrAfter = next || null;
+  $('ocrFacts').innerHTML = OCR_FACTS
+    .map(r=>'<div><b>' + esc(r[0]) + '</b><span>' + esc(r[1]) + '</span></div>').join('');
+  openSheetEl('ocrSheet');
+}
+$('ocrNo').addEventListener('click', ()=>{
+  cfg.ocrConsent = false; cfgSave();
+  const f = ocrAfter; ocrAfter = null;
+  closeSheetEl('ocrSheet');
+  toast('직접 입력으로 진행합니다 — 설정에서 언제든 켤 수 있습니다');
+  if(f) f();
+});
+$('ocrYes').addEventListener('click', ()=>{
+  cfg.ocrConsent = true; cfg.ocrConsentAt = isoNow(); cfgSave();
+  const f = ocrAfter; ocrAfter = null;
+  closeSheetEl('ocrSheet');
+  if(f) f();
+});
+
 /* ═════════ 직원 계정 관리 (관리자만) ═════════
    계정을 만들고 지우는 일은 브라우저가 하지 않습니다.
    admin-user 서버 함수가 대신하고, 그 함수만 service_role 키를 갖고 있습니다. */
@@ -3432,6 +3648,15 @@ $('gManage').addEventListener('click', async e=>{
 });
 
 $('s-askContact').addEventListener('change', e=>{ cfg.askContact = e.target.checked; cfgSave() });
+$('s-ocr').addEventListener('change', e=>{
+  if(e.target.checked){
+    e.target.checked = false;            // 동의를 받은 뒤에 켭니다
+    askOcr(()=>{ $('s-ocr').checked = ocrAllowed() });
+  }else{
+    cfg.ocrConsent = false; cfgSave();
+    toast('명함 자동 인식을 껐습니다 — 사진은 밖으로 나가지 않습니다');
+  }
+});
 
 /* ───── CSV ───── */
 function csvCell(v){ return '"'+String(v==null?'':v).replace(/"/g,'""')+'"' }
@@ -3857,6 +4082,7 @@ $('detail').addEventListener('scroll',()=>{ $('dbar').classList.toggle('stuck',$
   $('e-date').value = todayKey();
   $('e-time').value = isoNow().slice(11,16);
   $('s-askContact').checked = cfg.askContact !== false;
+  if($('s-ocr')) $('s-ocr').checked = ocrAllowed();
 
   let ok = false;
   try{ localStorage.setItem('ndna-t','1'); localStorage.removeItem('ndna-t'); ok = true }catch(e){}
