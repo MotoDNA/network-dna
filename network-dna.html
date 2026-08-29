@@ -448,13 +448,51 @@ nav.tabs button:active{opacity:.6}
 /* ───── 로그인 화면 ───── */
 #gate{
   position:fixed;inset:0;z-index:100;background:var(--ink);color:#fff;
-  display:flex;align-items:center;justify-content:center;padding:24px;overflow-y:auto;
+  display:flex;justify-content:center;padding:24px;overflow-y:auto;
 }
-#gate .box{width:100%;max-width:400px}
-#gate .mark{display:flex;align-items:center;gap:11px;margin-bottom:28px;
-  font-size:1.3rem;font-weight:800;letter-spacing:-.025em;color:#fff}
-#gate .mark .logo{width:40px;height:40px;box-shadow:0 0 0 1px rgba(255,255,255,.10)}
-#gate .mark em{font-style:normal;color:var(--blue)}
+/* 가운데로 모으는 일을 align-items:center 가 아니라 margin:auto 로 합니다.
+   align-items:center 로 두면 칸이 화면보다 길 때 위로 삐져나간 부분을
+   스크롤로도 되돌릴 수 없습니다. margin:auto 는 그 자리를 남겨 둡니다. */
+#gate .box{width:100%;max-width:400px;margin:auto}
+/* 회사 마크는 가운데 위에 크게. 제품 이름은 아래 토글이 말해 줍니다 —
+   위에도 Re:Call 을 적어 두면 고르기 전부터 한쪽으로 정해 놓은 꼴이 됩니다. */
+#gate .mark{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:22px}
+#gate .mark .logo{width:76px;height:76px;box-shadow:0 0 0 1px rgba(255,255,255,.10)}
+#gate .mark .co{font-size:.82rem;font-weight:700;letter-spacing:.14em;color:#6B7684;text-transform:uppercase}
+
+/* ───── 어느 서비스로 들어갈지 ─────
+   좌우 두 칸이 그대로 누르는 자리입니다. 뒤에서 미끄러지는 판(thumb)이
+   고른 쪽을 덮고, 글자는 고른 쪽만 밝아집니다. Re:Bind 와 같은 모양입니다. */
+#gate .pick{
+  position:relative;display:grid;grid-template-columns:1fr 1fr;gap:0;
+  background:#1B222C;border:1px solid #2A3441;border-radius:16px;padding:6px;margin-bottom:24px;
+}
+#gate .pick .thumb{
+  position:absolute;top:6px;left:6px;width:calc(50% - 6px);height:calc(100% - 12px);
+  border-radius:12px;background:#2B3644;box-shadow:0 1px 3px rgba(0,0,0,.28);
+  transition:transform .22s cubic-bezier(.4,0,.2,1);
+}
+#gate .pick.right .thumb{transform:translateX(100%)}
+#gate .pick .opt{
+  position:relative;z-index:1;background:none;border:0;margin:0;padding:15px 9px 16px;
+  font:inherit;color:#5C6675;cursor:pointer;text-align:center;border-radius:12px;
+  transition:color .18s;
+}
+#gate .pick .opt svg{width:23px;height:23px;stroke:currentColor;fill:none;
+  stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;display:block;margin:0 auto}
+#gate .pick .opt b{display:block;font-size:1.06rem;font-weight:800;letter-spacing:-.03em;margin:8px 0 5px;color:#8B95A1;transition:color .18s}
+#gate .pick .opt b em{font-style:normal;color:#5C6675;transition:color .18s}
+#gate .pick .opt i{display:block;font-style:normal;font-size:.735rem;font-weight:600;line-height:1.55}
+#gate .pick .opt.on{color:#B0B8C1}
+#gate .pick .opt.on b{color:#fff}
+#gate .pick .opt.on i{color:#8B95A1}
+/* 고른 쪽의 가운뎃점만 그 서비스 색으로 켭니다. id 를 하나만 쓰면 위의
+   `#gate .pick .opt b em` 이 이깁니다 — 클래스가 더 많은 쪽이 셉니다. */
+#gate .pick #pick-rebind.on b em{color:var(--blue)}
+#gate .pick #pick-recall.on b em{color:#2ED3A7}
+
+#gate .othernote{font-size:.88rem;color:#8B95A1;line-height:1.65;margin:0 0 16px;text-align:center}
+#gate .othernote b{color:#fff}
 #gate h1{font-size:1.75rem;font-weight:800;letter-spacing:-.04em;margin:0 0 8px;line-height:1.3}
 #gate p.sub{color:#8B95A1;font-size:.9rem;margin:0 0 26px;line-height:1.5}
 #gate label{display:block;font-size:.8rem;font-weight:700;color:#B0B8C1;margin:0 0 7px;padding-left:2px}
@@ -475,6 +513,54 @@ nav.tabs button:active{opacity:.6}
 #gate .msg.wait{background:#232B36;color:#B0B8C1}
 #gate .foot{margin-top:22px;font-size:.8rem;color:#6B7684;line-height:1.6}
 #gate .foot b{color:#8B95A1}
+
+/* ───── PC — 두 칸으로 펼칩니다 ─────
+   1440px 화면에 400px 한 줄만 세워 두면 양옆이 520px씩 빕니다.
+   왼쪽에 마크와 고르는 자리를, 오른쪽에 로그인 칸을 둡니다.
+   토글은 좌우로 갈라 놓지 않습니다 — 갈라 놓으면 "둘 중 하나" 가 안 보입니다.
+   가로만 보면 창을 반으로 줄여 세로로 긴 창을 만들었을 때도 두 칸이 되어
+   오히려 답답해서, 세로도 함께 봅니다. */
+@media (min-width:900px) and (min-height:600px){
+  #gate{padding:40px}
+  #gate .box{
+    max-width:940px;display:grid;grid-template-columns:1fr 384px;
+    gap:60px;align-items:center;
+  }
+  #gate .gleft{min-width:0}
+  #gate .gright{
+    min-width:0;background:#1B222C;border:1px solid #2A3441;
+    border-radius:20px;padding:30px 30px 26px;
+  }
+  #gate .mark{align-items:flex-start;margin-bottom:26px;gap:12px}
+  #gate .mark .logo{width:88px;height:88px}
+  #gate .mark .co{font-size:.86rem}
+  #gate .pick{margin-bottom:0}
+  #gate .pick .opt{padding:20px 14px 21px}
+  #gate .pick .opt svg{width:26px;height:26px}
+  #gate .pick .opt b{font-size:1.16rem;margin:10px 0 6px}
+  #gate .pick .opt i{font-size:.79rem}
+  #gate h1{font-size:1.5rem}
+  #gate p.sub{margin-bottom:18px}
+  #gate .foot{margin-top:18px}
+  #gate .othernote{margin-bottom:18px}
+}
+
+/* 세로가 짧은 노트북 — 마크를 키우고 토글을 넣으면서 칸이 길어졌습니다.
+   1366×768 노트북의 실제 높이는 700 안팎이라 한 칸으로 세우면 넘칩니다.
+   두 칸으로 펼칠 때는 줄일 이유가 없으므로 한 칸일 때만 줄입니다. */
+@media (max-height:790px) and (max-width:899px){
+  #gate .mark{gap:7px;margin-bottom:16px}
+  #gate .mark .logo{width:58px;height:58px}
+  #gate .mark .co{font-size:.76rem}
+  #gate .pick{margin-bottom:17px}
+  #gate .pick .opt{padding:11px 9px 12px}
+  #gate .pick .opt b{margin:6px 0 4px}
+  #gate h1{font-size:1.5rem}
+  #gate p.sub{margin-bottom:18px}
+  #gate .field{margin-bottom:11px}
+  #gate input{height:48px}
+  #gate .foot{margin-top:16px}
+}
 #toast{
   position:fixed;left:50%;bottom:calc(var(--nav) + 18px);transform:translate(-50%,10px);z-index:90;
   background:rgba(25,31,40,.94);color:#fff;font-size:.87rem;font-weight:600;padding:13px 20px;border-radius:14px;
@@ -487,12 +573,33 @@ nav.tabs button:active{opacity:.6}
 
 <div id="gate" hidden>
   <div class="box">
+   <div class="gleft">
     <div class="mark">
       <i class="logo" role="img" aria-label="DNA Labs"></i>
-      <span>Re<em>:</em>Call</span>
+      <span class="co">DNA Labs</span>
     </div>
-    <h1>고객관리</h1>
-    <p class="sub">회사에서 받은 코드와 아이디로 들어옵니다</p>
+
+    <!-- 어느 서비스로 들어갈지. 누르면 고르기만 하고 넘어가지는 않습니다 —
+         비밀번호를 엉뚱한 앱에 치는 일이 없어야 합니다.
+         Re:Bind 쪽에도 같은 것이 있습니다. 좌우 차례는 두 앱이 같아야
+         합니다 — 자리가 바뀌면 같은 자리를 눌렀는데 다른 것이 골라집니다. -->
+    <div class="pick" id="appPick" role="tablist" aria-label="어느 서비스로 들어갈지">
+      <span class="thumb" aria-hidden="true"></span>
+      <button type="button" class="opt" id="pick-rebind" data-app="rebind" role="tab" aria-selected="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2z"/><path d="M5 17h13"/><path d="M9 8h5M9 11h5"/></svg>
+        <b>Re<em>:</em>Bind</b>
+        <i>제조 공정과 명세서<br>접수부터 납품 · 청구까지</i>
+      </button>
+      <button type="button" class="opt" id="pick-recall" data-app="recall" role="tab" aria-selected="true">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.6-1.4 1.7-2 3-2s2.4.6 3 2"/><path d="M15 10h4M15 13.5h3"/></svg>
+        <b>Re<em>:</em>Call</b>
+        <i>고객관리<br>명함부터 다음 할 일까지</i>
+      </button>
+    </div>
+   </div>
+   <div class="gright">
+    <h1 id="gateTitle">고객관리</h1>
+    <p class="sub" id="gateSub">회사에서 받은 코드와 아이디로 들어옵니다</p>
     <form id="gateForm" autocomplete="on">
       <div class="field">
         <label for="g-code">회사 코드</label>
@@ -511,11 +618,17 @@ nav.tabs button:active{opacity:.6}
       </div>
       <button class="btn" id="g-go" type="submit">들어가기</button>
     </form>
+    <div id="gateOther" hidden>
+      <p class="othernote">Re:Bind 는 <b>다른 주소</b>에서 엽니다.<br>
+        회사 코드와 아이디는 여기와 같습니다.</p>
+      <button class="btn" id="g-other" type="button">Re:Bind 열기</button>
+    </div>
     <div class="msg" id="gateMsg"></div>
-    <div class="foot">
+    <div class="foot" id="gateFoot">
       계정은 <b>회사 관리자</b>가 만들어 줍니다.<br>
       비밀번호를 잊으셨다면 관리자에게 재발급을 요청하세요.
     </div>
+   </div>
   </div>
 </div>
 
@@ -665,6 +778,23 @@ nav.tabs button:active{opacity:.6}
     <button class="btn ghost sm" id="s-logout" style="flex:1">로그아웃</button>
   </div>
   <div class="note">로그아웃하면 이 기기에 받아 둔 고객 정보를 지웁니다. 남의 기기에서 쓰셨다면 꼭 눌러 주세요.</div>
+
+  <!-- 요금제 — 서버에 구독 표가 없으면(0003 미적용) 통째로 숨깁니다 -->
+  <div id="subWrap" hidden>
+    <h2 class="sec">요금제</h2>
+    <div class="info">
+      <div class="irow"><span class="k">요금제</span><span class="v" id="sub-plan">—</span></div>
+      <div class="irow"><span class="k">상태</span><span class="v" id="sub-status">—</span></div>
+      <div class="irow"><span class="k">직원 자리</span><span class="v" id="sub-seats">—</span></div>
+      <div class="irow"><span class="k" id="sub-nextK">다음 결제</span><span class="v" id="sub-next">—</span></div>
+    </div>
+    <div class="note" id="subNote"></div>
+    <div class="note" id="subPending" hidden style="background:var(--amber-bg);color:#8A5300"></div>
+    <button class="btn ghost sm" id="s-changePlan" style="width:100%;margin-top:8px" hidden>요금제 변경</button>
+    <button class="btn ghost sm" id="s-undoChange" style="width:100%;margin-top:8px" hidden>예약된 변경 취소</button>
+    <button class="btn ghost sm" id="s-cancelSub" style="width:100%;margin-top:8px" hidden>구독 해지</button>
+    <button class="btn ghost sm" id="s-resumeSub" style="width:100%;margin-top:8px" hidden>해지 취소</button>
+  </div>
 
   <h2 class="sec">팀원</h2>
   <div class="glist" id="memList"></div>
@@ -855,6 +985,18 @@ nav.tabs button:active{opacity:.6}
       <div style="width:40px"></div>
     </div>
     <div id="privBody"></div>
+  </div>
+</div>
+
+<div class="sheet" id="planSheet" hidden>
+  <div class="grab"></div>
+  <h3>요금제 변경</h3>
+  <div class="note" style="margin-top:0" id="planIntro">불러오는 중…</div>
+  <div class="glist" id="planPick"></div>
+  <div class="note" id="planNote" hidden></div>
+  <div class="btnrow" style="margin-top:12px">
+    <button class="btn ghost" id="planCancel" style="flex:0 0 108px">닫기</button>
+    <button class="btn" id="planApply" disabled>변경</button>
   </div>
 </div>
 
@@ -2652,6 +2794,174 @@ async function probeVisibility(){
   hasVisibility = !error;
 }
 
+/* ═════════ 구독 ═════════
+   서버에 구독 표가 없으면(0003 미적용) 요금제 구획을 통째로 숨깁니다.
+   visibility 와 같은 방식입니다 — 없는 것을 없는 대로 두고,
+   앱이 멈추지 않게 합니다. */
+let subInfo = null;        // subscriptions 한 줄
+let seatInfo = null;   // { seat_limit, used, remaining }
+
+const SUB_STATUS = {
+  trialing: '무료 이용 중',
+  active:   '이용 중',
+  past_due: '결제가 밀렸습니다',
+  canceled: '해지 신청됨'
+};
+
+const ymd = v => { const d = new Date(v); return isNaN(d) ? '—'
+  : d.getFullYear() + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + String(d.getDate()).padStart(2,'0') };
+const won = n => Number(n||0).toLocaleString('ko-KR');
+const daysLeft = v => Math.ceil((new Date(v) - new Date()) / 864e5);
+
+async function loadSub(){
+  subInfo = null; seatInfo = null;
+  if(!sb || !me){ renderSub(); return }
+  const { data, error } = await sb.from('subscriptions')
+    .select('plan_key,plan_name,price,status,seat_limit,trial_ends_at,period_start,period_end,canceled_at,pending_plan_key,pending_plan_name,pending_price,pending_from')
+    .maybeSingle();
+  if(error || !data){ renderSub(); return }   // 표가 없거나 예전 회사
+  subInfo = data;
+  const { data: s2 } = await sb.rpc('seats_left');
+  if(Array.isArray(s2) && s2[0]) seatInfo = s2[0];
+  renderSub();
+}
+
+/* 자리가 남았는지. 구독 정보가 없으면 막지 않습니다 —
+   0003 적용 전이나 예전 회사까지 잠기면 안 됩니다. */
+function seatsAvailable(){
+  if(!seatInfo || seatInfo.seat_limit == null) return true;
+  return Number(seatInfo.remaining) > 0;
+}
+
+function renderSub(){
+  const w = $('subWrap'); if(!w) return;
+  if(!subInfo){ w.hidden = true; return }
+  w.hidden = false;
+
+  const isAdmin = me && me.role === 'admin';
+  $('sub-plan').textContent = subInfo.plan_name || subInfo.plan_key;
+  $('sub-status').textContent = SUB_STATUS[subInfo.status] || subInfo.status;
+
+  $('sub-seats').textContent = (seatInfo && seatInfo.seat_limit != null)
+    ? seatInfo.used + ' / ' + seatInfo.seat_limit + '명'
+    : (seatInfo ? seatInfo.used + '명 (제한 없음)' : '—');
+
+  /* 다음에 일어날 일을 그대로 적습니다.
+     "다음 결제"라고 써 놓고 실제로는 해지 예정이면 안 됩니다. */
+  const k = $('sub-nextK'), v = $('sub-next');
+  if(subInfo.status === 'canceled'){
+    k.textContent = '이용 종료';
+    v.textContent = ymd(subInfo.period_end);
+  } else if(subInfo.status === 'trialing'){
+    k.textContent = '무료 종료';
+    v.textContent = ymd(subInfo.trial_ends_at) + ' (' + Math.max(0, daysLeft(subInfo.trial_ends_at)) + '일 남음)';
+  } else {
+    k.textContent = '다음 결제';
+    v.textContent = ymd(subInfo.period_end) + ' · ' + won(subInfo.price) + '원';
+  }
+
+  const note = $('subNote');
+  if(subInfo.status === 'canceled'){
+    note.innerHTML = '<b>' + ymd(subInfo.period_end) + '</b> 까지 그대로 쓰실 수 있고, 그 뒤로는 청구되지 않습니다. ' +
+      '그 전에 마음이 바뀌시면 아래에서 되돌릴 수 있습니다.';
+  } else if(subInfo.status === 'past_due'){
+    note.innerHTML = '등록하신 카드로 결제가 되지 않았습니다. 결제 수단을 확인해 주세요.';
+  } else if(subInfo.status === 'trialing'){
+    note.innerHTML = '무료 기간이 끝나면 매월 <b>' + won(subInfo.price) + '원</b>(부가세 별도)이 청구됩니다. ' +
+      '그 전에 해지하시면 요금이 발생하지 않습니다.';
+  } else {
+    note.innerHTML = '매월 <b>' + won(subInfo.price) + '원</b>(부가세 별도)이 청구됩니다. ' +
+      '해지하시면 이미 결제된 기간이 끝날 때까지 쓰시고 그 뒤로 청구되지 않습니다.';
+  }
+  if(!isAdmin) note.innerHTML += ' 요금제 변경과 해지는 <b>회사 관리자</b>가 합니다.';
+
+  /* 다음 결제일에 요금제가 바뀌기로 예약돼 있으면 그것부터 알립니다.
+     지금 요금제만 보여 주면 다음 달 청구서를 보고 놀라게 됩니다. */
+  const pend = $('subPending');
+  if(subInfo.pending_plan_key){
+    pend.hidden = false;
+    pend.innerHTML = '<b>' + ymd(subInfo.pending_from) + '</b> 부터 <b>' +
+      esc(subInfo.pending_plan_name || subInfo.pending_plan_key) + '</b> (월 ' +
+      won(subInfo.pending_price) + '원)으로 바뀝니다. 그때까지는 지금 요금제 그대로입니다.';
+  } else {
+    pend.hidden = true;
+  }
+
+  const changeable = isAdmin && subInfo.status !== 'canceled';
+  $('s-changePlan').hidden = !changeable;
+  $('s-undoChange').hidden = !isAdmin || !subInfo.pending_plan_key;
+  $('s-cancelSub').hidden = !isAdmin || subInfo.status === 'canceled';
+  $('s-resumeSub').hidden = !isAdmin || subInfo.status !== 'canceled';
+}
+
+/* ═════════ 요금제 변경 ═════════
+   고를 수 있는 요금제와 각각 얼마가 나가는지는 전부 서버가 계산해 줍니다.
+   여기서 다시 계산하지 않는 것이 중요합니다 — 화면에서 셈한 금액은
+   사용자가 바꿔 보낼 수 있고, 그러면 그대로 결제 사고입니다. */
+let planOpts = null;
+let planPickKey = null;
+
+async function openPlanSheet(){
+  planOpts = null; planPickKey = null;
+  $('planPick').innerHTML = '';
+  $('planNote').hidden = true;
+  $('planApply').disabled = true;
+  $('planIntro').textContent = '불러오는 중…';
+  openSheetEl('planSheet');
+
+  const r = await subAction('plans');
+  if(!r || !r.ok){
+    $('planIntro').textContent = (r && r.error) || '요금제를 불러오지 못했습니다.';
+    return;
+  }
+  planOpts = r;
+  $('planIntro').innerHTML = '지금은 <b>' + esc(r.currentName || r.current) + '</b> · 직원 ' +
+    r.used + '명. 부가세는 별도입니다.';
+  renderPlanPick();
+}
+
+function renderPlanPick(){
+  $('planPick').innerHTML = planOpts.plans.map(p=>{
+    const on = planPickKey === p.key;
+    const dis = !p.allowed;
+    const arrow = p.isCurrent ? '지금' : p.direction === 'up' ? '올림' : p.direction === 'down' ? '내림' : '';
+    return '<button class="grow" data-p="' + esc(p.key) + '"' +
+      (dis ? ' disabled style="opacity:.45"' : (on ? ' style="border-color:var(--blue)"' : '')) + '>' +
+      '<span class="nm">' + esc(p.name) +
+        (arrow ? ' <span class="ct" style="margin-left:6px">' + arrow + '</span>' : '') + '</span>' +
+      '<span class="ct">' + (p.price === null ? '별도 협의' : won(p.price) + '원 / 월') +
+        ' · ' + esc(p.label) + (p.reason ? ' — ' + esc(p.reason) : '') + '</span>' +
+      '</button>';
+  }).join('');
+}
+
+function planPickNote(p){
+  if(p.endsTrial){
+    return '무료 체험이 끝나고 <b>오늘부터</b> 새 결제 기간이 시작됩니다. ' +
+           '지금 <b>' + won(p.amountNow) + '원</b>이 결제됩니다.';
+  }
+  if(p.direction === 'up'){
+    return p.amountNow > 0
+      ? '지금 바로 바뀝니다. 남은 기간만큼의 차액 <b>' + won(p.amountNow) + '원</b>이 결제됩니다.'
+      : '지금 바로 바뀝니다. 이번 기간에 더 낼 금액은 없습니다.';
+  }
+  return '<b>' + ymd(planOpts.periodEnd) + '</b> 부터 바뀝니다. ' +
+         '지금 내신 요금은 그대로 쓰시고, 그날부터 월 <b>' + won(p.price) + '원</b>이 청구됩니다. ' +
+         '이미 결제된 당월분은 환불되지 않습니다.';
+}
+
+async function subAction(action, extra){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session) { toast('로그인이 필요합니다'); return null }
+  const r = await fetch(FN_BASE + '/subscription', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', apikey: SB_KEY,
+              Authorization: 'Bearer ' + session.access_token },
+    body: JSON.stringify({ action, ...(extra || {}) })
+  });
+  return await r.json().catch(()=>({ ok:false, error:'응답을 읽지 못했습니다.' }));
+}
+
 let visPickVal = 'shared';
 function openVis(){
   const c = custs.find(x=>x.uid===curUid); if(!c) return;
@@ -2867,15 +3177,30 @@ async function loadMe(){
        사람과 회사를 함께 물고 있어서 그것도 후보가 되기 때문입니다. 후보가 둘이면
        서버는 300 을 돌려주고 아무것도 주지 않습니다 — 로그인 직후 곧바로 튕깁니다.
        그래서 어느 연결인지 이름으로 못 박습니다. 돌아오는 키 이름은 그대로 companies 입니다. */
-    .select('id, company_id, login_id, name, role, companies!profiles_company_id_fkey(code,name)')
+    .select('id, company_id, login_id, name, role, companies!profiles_company_id_fkey(code,name,apps)')
     .eq('id', u.user.id).single();
   if(error || !p){
     await sb.auth.signOut();
     return { ok:false, error:'계정 정보를 불러오지 못했습니다. 관리자에게 문의하세요.' };
   }
+  /* 이 회사가 Re:Call 을 산 회사인가.
+     두 앱이 한 데이터베이스, 한 계정 목록을 씁니다. 그래서 Re:Bind 만 쓰는
+     회사 직원도 여기에 같은 아이디로 들어올 수 있었습니다.
+     데이터베이스도 막고 있습니다(company_for_app, Rebind 저장소 sql/0019).
+     여기서 한 번 더 보는 것은 막힌 채로 들어가 빈 화면을 보게 두지 않으려는
+     것입니다 — 그러면 자료가 사라진 줄 압니다. */
+  const co   = p.companies || null;
+  const apps = (co && Array.isArray(co.apps)) ? co.apps : [];
+  if(!apps.includes(APP_KEY)){
+    await sb.auth.signOut();
+    me = null;
+    return { ok:false, wrongApp:true,
+      error:(co&&co.name ? co.name+' 은(는) ' : '이 회사는 ')+'Re:Call 을 쓰는 회사가 아닙니다.'+
+        (apps.includes('rebind') ? ' Re:Bind 로 들어가 주세요.' : ' 담당자에게 문의해 주세요.') };
+  }
   me = { id:p.id, companyId:p.company_id, loginId:p.login_id, name:p.name || p.login_id,
-         role:p.role, companyCode:(p.companies&&p.companies.code)||'',
-         companyName:(p.companies&&p.companies.name)||'' };
+         role:p.role, companyCode:(co&&co.code)||'',
+         companyName:(co&&co.name)||'', apps };
   return { ok:true };
 }
 async function signOut(){
@@ -3124,11 +3449,54 @@ window.addEventListener('online',  ()=>{ pill(); syncNow(true) });
 window.addEventListener('offline', pill);
 
 /* ═════════ 로그인 화면 ═════════ */
+/* ───────── 어느 서비스로 들어갈지 ─────────
+   두 앱은 주소가 다릅니다(recall.dnalabs.kr · rebind.dnalabs.kr).
+   주소가 다르면 로그인한 흔적을 넘겨줄 수 없어서, 반대쪽을 고르면
+   그 주소로 보내고 로그인은 그쪽에서 합니다.
+
+   고르자마자 넘어가지는 않습니다. 고르면 화면만 바뀌고 열기 단추를 따로
+   눌러야 합니다 — 잘못 눌렀을 때 하던 것이 날아가지 않아야 하고,
+   무엇보다 Re:Bind 를 골라 둔 줄 모르고 여기에 비밀번호를 치는 일이
+   없어야 합니다.
+
+   고른 것은 이 기기에 남깁니다. 열쇠말은 Re:Bind 와 같은 이름을 쓰지만
+   주소가 달라 서로 다른 칸에 담깁니다 — 넘겨줄 방법은 없습니다. */
+const APP_KEY  = 'recall';
+const OTHER    = { key:'rebind', ko:'Re:Bind', url:'https://rebind.dnalabs.kr/' };
+const PICK_KEY = 'dnalabs-app';
+let pickApp = APP_KEY;
+
+function loadPick(){
+  try{ const v = localStorage.getItem(PICK_KEY); if(v==='rebind' || v==='recall') return v }catch(e){}
+  return APP_KEY;
+}
+function setPick(app, remember){
+  pickApp = (app==='rebind') ? 'rebind' : 'recall';
+  if(remember !== false){ try{ localStorage.setItem(PICK_KEY, pickApp) }catch(e){} }
+  const mine = pickApp === APP_KEY;
+  $('appPick').classList.toggle('right', pickApp==='recall');
+  for(const [id,key] of [['pick-rebind','rebind'],['pick-recall','recall']]){
+    const b = $(id); if(!b) continue;
+    b.classList.toggle('on', pickApp===key);
+    b.setAttribute('aria-selected', String(pickApp===key));
+  }
+  $('gateTitle').textContent = mine ? '고객관리' : '제조 공정과 명세서';
+  $('gateSub').hidden   = !mine;
+  $('gateForm').hidden  = !mine;
+  $('gateOther').hidden = mine;
+  $('gateFoot').hidden  = !mine;
+  $('gateMsg').className = 'msg';        // 서비스를 바꾸면 옛 오류 문구는 지웁니다
+}
+$('appPick').querySelectorAll('.opt').forEach(b =>
+  b.addEventListener('click', ()=>setPick(b.dataset.app)));
+$('g-other').addEventListener('click', ()=>{ location.href = OTHER.url });
+
 function showGate(){
   $('gate').hidden = false;
   lockScroll();
   $('gateMsg').className = 'msg';
   $('g-pw').value = '';
+  setPick(loadPick(), false);
 }
 function hideGate(){
   $('gate').hidden = true;
@@ -3159,6 +3527,7 @@ async function afterLogin(){
   hideGate();
   paintOwner();
   await probeVisibility();
+  await loadSub();
   await loadMembers();
   cfg.lastPull = 0; cfgSave();          // 들어올 때는 전부 받아옵니다
   render(); go('list');
@@ -3259,7 +3628,13 @@ function renderMembers(){
       : '계정 추가와 비밀번호 재발급은 <b>회사 관리자</b>가 합니다.';
   }
   const btn = $('s-addUser');
-  if(btn) btn.hidden = !canManage;
+  if(btn){
+    btn.hidden = !canManage;
+    // 자리가 다 찼으면 눌러 봐야 소용없다는 것을 단추에 적어 둡니다
+    const full = canManage && !seatsAvailable();
+    btn.textContent = full ? '자리를 다 썼습니다 — 요금제를 올려 주세요' : '직원 계정 추가';
+    btn.style.opacity = full ? '.55' : '';
+  }
 }
 
 /* ═════════ 개인정보 처리방침 ═════════
@@ -3337,9 +3712,9 @@ function privacyHTML(){
 
   '<h3>8. 문의처</h3>' +
   '<div class="tblx">' +
-    '<div><b>개인정보 보호책임자</b><span>DNA Labs [담당자명]</span></div>' +
-    '<div><b>이메일</b><span>[email@example.com]</span></div>' +
-    '<div><b>전화</b><span>[010-0000-0000]</span></div>' +
+    '<div><b>개인정보 보호책임자</b><span>DNA Labs 최환준</span></div>' +
+    '<div><b>이메일</b><span>chhanj40@gmail.com</span></div>' +
+    '<div><b>전화</b><span>010-6451-5807</span></div>' +
   '</div>' +
   '<p>침해를 당했다고 생각되면 아래에도 도움을 요청할 수 있습니다.</p>' +
   '<ul>' +
@@ -3499,7 +3874,87 @@ function openUserManage(m){
 
 $('s-addUser').addEventListener('click', ()=>{
   if(!me || me.role !== 'admin'){ toast('관리자만 할 수 있습니다'); return }
+  // 자리가 없으면 여기서 막습니다. 데이터베이스도 막지만, 다 입력하게 해 놓고
+  // 마지막에 거절하는 것보다 먼저 알려 드리는 편이 낫습니다.
+  if(!seatsAvailable()){
+    toast(subInfo && subInfo.plan_name
+      ? subInfo.plan_name + ' 의 자리를 다 쓰셨습니다 (' + seatInfo.seat_limit + '명)'
+      : '직원 자리를 다 쓰셨습니다');
+    return;
+  }
   openUserNew();
+});
+
+/* ── 요금제 변경 ── */
+$('s-changePlan').addEventListener('click', ()=>{
+  if(!me || me.role !== 'admin'){ toast('관리자만 할 수 있습니다'); return }
+  openPlanSheet();
+});
+$('planCancel').addEventListener('click', ()=>closeSheetEl('planSheet'));
+
+$('planPick').addEventListener('click', e=>{
+  const b = e.target.closest('[data-p]'); if(!b || b.disabled || !planOpts) return;
+  planPickKey = b.dataset.p;
+  const p = planOpts.plans.find(x=>x.key === planPickKey);
+  renderPlanPick();
+  $('planNote').hidden = false;
+  $('planNote').innerHTML = planPickNote(p);
+  $('planApply').disabled = false;
+});
+
+$('planApply').addEventListener('click', async ()=>{
+  if(!planPickKey) return;
+  const p = planOpts.plans.find(x=>x.key === planPickKey);
+  const ask = p.effective === 'now'
+    ? (p.amountNow > 0
+        ? esc(p.name) + ' 로 바꿉니다.\n\n지금 ' + won(p.amountNow) + '원이 결제됩니다.'
+        : esc(p.name) + ' 로 바꿉니다.\n\n지금 결제되는 금액은 없습니다.')
+    : esc(p.name) + ' 로 바꾸도록 예약합니다.\n\n' + ymd(planOpts.periodEnd) +
+      ' 부터 적용되고, 그때까지는 지금 요금제 그대로입니다.';
+  if(!confirm(ask + '\n\n진행할까요?')) return;
+
+  const btn = $('planApply'); btn.disabled = true; btn.textContent = '처리 중…';
+  const r = await subAction('change', { planKey: planPickKey });
+  btn.disabled = false; btn.textContent = '변경';
+  if(!r || !r.ok){ toast((r && r.error) || '변경하지 못했습니다'); return }
+
+  toast(r.mode === 'now'
+    ? (r.charged > 0 ? r.name + ' 로 변경 · ' + won(r.charged) + '원 결제' : r.name + ' 로 변경했습니다')
+    : ymd(r.from) + ' 부터 ' + r.name + ' 로 바뀝니다');
+  closeSheetEl('planSheet');
+  await loadSub();
+});
+
+$('s-undoChange').addEventListener('click', async ()=>{
+  if(!confirm('예약된 요금제 변경을 취소할까요?\n\n지금 요금제가 그대로 이어집니다.')) return;
+  const btn = $('s-undoChange'); btn.disabled = true;
+  const r = await subAction('cancel_change');
+  btn.disabled = false;
+  if(!r || !r.ok){ toast((r && r.error) || '취소하지 못했습니다'); return }
+  toast('예약된 변경을 취소했습니다');
+  await loadSub();
+});
+
+/* ── 구독 해지 / 해지 취소 ── */
+$('s-cancelSub').addEventListener('click', async ()=>{
+  if(!subInfo) return;
+  const until = ymd(subInfo.period_end);
+  if(!confirm('구독을 해지할까요?\n\n' + until + ' 까지는 그대로 쓰실 수 있고,\n그 뒤로는 청구되지 않습니다.\n\n넣으신 자료는 종료 후 30일간 보관됩니다.')) return;
+  const btn = $('s-cancelSub'); btn.disabled = true;
+  const r = await subAction('cancel');
+  btn.disabled = false;
+  if(!r || !r.ok){ toast((r && r.error) || '해지하지 못했습니다'); return }
+  toast('해지 신청됐습니다 · ' + until + ' 까지 이용');
+  await loadSub();
+});
+
+$('s-resumeSub').addEventListener('click', async ()=>{
+  const btn = $('s-resumeSub'); btn.disabled = true;
+  const r = await subAction('resume');
+  btn.disabled = false;
+  if(!r || !r.ok){ toast((r && r.error) || '되돌리지 못했습니다'); return }
+  toast('해지를 취소했습니다');
+  await loadSub();
 });
 $('memList').addEventListener('click', e=>{
   const b = e.target.closest('[data-u]'); if(!b) return;
@@ -4110,6 +4565,9 @@ $('detail').addEventListener('scroll',()=>{ $('dbar').classList.toggle('stuck',$
     }
     render();
     showGate();
+    /* 쓰던 계정인데 회사가 Re:Call 을 안 쓰게 된 경우입니다.
+       아무 말 없이 로그인 화면만 뜨면 비밀번호가 틀린 줄 알고 몇 번씩 칩니다. */
+    if(r.wrongApp && r.error) gateMsg('err', r.error);
   }
 })();
 </script>
