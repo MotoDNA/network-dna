@@ -57,6 +57,7 @@ build-og.sh              공유 이미지(1200×630) 두 장을 만듭니다 (�
 build-shots.sh           ★ 홈페이지에 넣을 **실제 사용 화면** 여섯 장 (크롬 필요)
 shoot.mjs                  그 안에서 크롬을 직접 몰아 찍는 부분
 shots/*.js                 앱마다 넣을 예시 자료 (bind- · call- · store-)
+build-appshots.py        ★ 앱 일곱의 화면 한 컷씩 — 각 프로젝트의 스토어용 원본을 줄입니다
 build-privacy.sh         개인정보 처리방침 PDF
 
 supabase/migrations/
@@ -75,11 +76,13 @@ supabase/functions/
 
 web/                     ★ 회사 홈페이지 (dnalabs.kr, Vercel)
   index.html               회사 소개
+  services.html            ★ 서비스 둘러보기 — 네 가지 취급 분야
   recall.html              Re:Call 소개·요금·업종
   signup.html              회원가입 (업종→요금제→정보→약관→결제→발급)
   terms.html refund.html privacy.html    이용약관·환불정책·처리방침
   404.html catalog.js pg.js style.css
   shot-*.png             ★ 세 앱의 모바일 사용 화면 (build-shots.sh 가 만듭니다)
+  app-*.png              ★ 앱 일곱의 화면 (build-appshots.py 가 만듭니다)
   favicon.svg logo.png og-*.png robots.txt sitemap.xml
   vercel.json            ★ /bind · /call · /store rewrite
   bind.webmanifest store.webmanifest
@@ -369,6 +372,7 @@ io.open('/tmp/app.js','w',encoding='utf-8').write(re.findall(r'<script>(.*?)</sc
 | **홈페이지 · rewrite** | `npx vercel --prod --scope chhanj40-5991s-projects` |
 | 공유 이미지 | `./build-og.sh` (크롬 필요) |
 | **사용 화면** | `./build-shots.sh` → `web/shot-*.png` 여섯 장. 앱을 고쳤으면 다시 돌립니다 |
+| **앱 화면** | `python3 build-appshots.py` → `web/app-*.png` 일곱 장. 원본은 각 앱 프로젝트에 있습니다 |
 | 로고 | `python3 ~/Desktop/Rebind/make-logo.py` → 세 앱과 홈페이지 파비콘까지 |
 
 `--scope` 를 빼면 `Not authorized` — `.vercel/project.json` 의 `orgId` 와
