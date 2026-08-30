@@ -777,6 +777,8 @@ nav.tabs button:active{opacity:.6}
     <button class="btn ghost sm" id="s-pw" style="flex:1">비밀번호 변경</button>
     <button class="btn ghost sm" id="s-logout" style="flex:1">로그아웃</button>
   </div>
+  <button class="btn line" id="s-other" hidden style="width:100%;margin-top:10px">Re:Bind 로 이동</button>
+  <p class="note" id="s-otherNote" hidden style="margin:8px 0 0">다시 로그인하지 않아도 됩니다.</p>
   <div class="note">로그아웃하면 이 기기에 받아 둔 고객 정보를 지웁니다. 남의 기기에서 쓰셨다면 꼭 눌러 주세요.</div>
 
   <!-- 요금제 — 서버에 구독 표가 없으면(0003 미적용) 통째로 숨깁니다 -->
@@ -794,6 +796,16 @@ nav.tabs button:active{opacity:.6}
     <button class="btn ghost sm" id="s-undoChange" style="width:100%;margin-top:8px" hidden>예약된 변경 취소</button>
     <button class="btn ghost sm" id="s-cancelSub" style="width:100%;margin-top:8px" hidden>구독 해지</button>
     <button class="btn ghost sm" id="s-resumeSub" style="width:100%;margin-top:8px" hidden>해지 취소</button>
+  </div>
+
+  <!-- 명함 인식 사용량 — 한도에 걸린 뒤에 알면 늦습니다 -->
+  <div id="cardUseWrap" hidden>
+    <h2 class="sec">명함 인식</h2>
+    <div class="info">
+      <div class="irow"><span class="k">오늘 (나)</span><span class="v" id="cu-today">—</span></div>
+      <div class="irow" id="cu-monthRow"><span class="k">이번 달 (회사 전체)</span><span class="v" id="cu-month">—</span></div>
+    </div>
+    <div class="note" id="cuNote"></div>
   </div>
 
   <h2 class="sec">팀원</h2>
@@ -1752,6 +1764,9 @@ async function readCard(dataUrl){
     st.className = got ? 'ai ok' : 'ai';
     st.textContent = got ? '자동 입력했습니다 — 틀린 곳은 직접 고쳐주세요'
                          : '글자를 찾지 못했습니다 — 직접 입력해주세요';
+    /* 글자를 못 찾아도 서버는 한 번 쓴 것으로 셉니다. 숫자를 새로 받아 둡니다.
+       기다리지 않습니다 — 명함 입력을 막을 이유가 없습니다. */
+    loadCardUse();
   }catch(e){
     st.className='ai err';
     st.textContent = '인식 실패: ' + String(e.message||e).slice(0,60) + ' — 직접 입력해주세요';
@@ -2826,6 +2841,70 @@ async function loadSub(){
   renderSub();
 }
 
+/* ═════════ 명함 인식 사용량 ═════════
+   한도 숫자는 catalog.json 한 군데에만 있고, 앱은 그 파일을 볼 수 없는
+   다른 주소에서 돕니다. 그래서 서버가 쓰는 값을 그대로 받아 옵니다.
+   여기에 숫자를 적어 두면 언젠가 catalog.json 과 어긋납니다. */
+let cardUse = null;
+
+async function loadCardUse(){
+  cardUse = null;
+  if(!sb || !me){ renderCardUse(); return }
+  try{
+    const { data:sess } = await sb.auth.getSession();
+    const token = sess && sess.session ? sess.session.access_token : '';
+    if(!token) throw new Error('no token');
+    const r = await fetch(FN_BASE + '/read-card', {
+      method:'POST',
+      headers:{ 'content-type':'application/json', 'authorization':'Bearer ' + token },
+      body: JSON.stringify({ action:'usage' })
+    });
+    const d = await r.json();
+    if(d && d.ok && d.usage) cardUse = d.usage;
+  }catch(e){ /* 못 받아오면 구획을 숨깁니다. 앱은 그대로 돕니다 */ }
+  renderCardUse();
+}
+
+function renderCardUse(){
+  const w = $('cardUseWrap'); if(!w) return;
+  if(!cardUse){ w.hidden = true; return }
+  w.hidden = false;
+
+  const u = cardUse;
+  $('cu-today').textContent = u.usedToday + ' / ' + u.dailyLimit + '장';
+
+  /* 월 한도가 없는 요금제(Enterprise)와 요금제를 모르는 회사는
+     달 줄을 통째로 감춥니다. "— / —" 를 보여 주는 것보다 낫습니다. */
+  const hasMonth = u.monthlyLimit !== null && u.monthlyLimit !== undefined;
+  $('cu-monthRow').hidden = !hasMonth;
+  if(hasMonth) $('cu-month').textContent = u.usedMonth + ' / ' + u.monthlyLimit + '장';
+
+  /* 다 쓰기 전에 미리 알려 줍니다. 전시회에서 갑자기 막히면 곤란합니다. */
+  const note = $('cuNote');
+  const dLeft = u.dailyLimit - u.usedToday;
+  const mLeft = hasMonth ? u.monthlyLimit - u.usedMonth : Infinity;
+  const left = Math.min(dLeft, mLeft);
+  const AMBER = 'background:var(--amber-bg);color:#8A5300;border-radius:14px;' +
+                'padding:14px 16px;font-weight:600';
+  if(left <= 0){
+    note.className = 'warn';           // 빨강 — 지금 실제로 막혀 있습니다
+    note.removeAttribute('style');
+    note.textContent = (dLeft <= 0)
+      ? '오늘 한도를 다 쓰셨습니다. 내일 한국시간 자정에 다시 채워집니다.'
+      : '이번 달 회사 전체 한도를 다 썼습니다. 다음 달 1일에 다시 채워집니다.';
+  } else if(left <= 10){
+    note.className = 'note';           // 호박색 — 아직 되지만 곧 막힙니다
+    note.style.cssText = AMBER;
+    note.textContent = (dLeft <= mLeft)
+      ? '오늘 ' + dLeft + '장 남았습니다.'
+      : '이번 달 회사 전체로 ' + mLeft + '장 남았습니다.';
+  } else {
+    note.className = 'note';
+    note.removeAttribute('style');
+    note.textContent = '하루 한도는 한국시간 자정에, 달 한도는 매월 1일에 다시 채워집니다.';
+  }
+}
+
 /* 자리가 남았는지. 구독 정보가 없으면 막지 않습니다 —
    0003 적용 전이나 예전 회사까지 잠기면 안 됩니다. */
 function seatsAvailable(){
@@ -3192,6 +3271,11 @@ async function loadMe(){
   const co   = p.companies || null;
   const apps = (co && Array.isArray(co.apps)) ? co.apps : [];
   if(!apps.includes(APP_KEY)){
+    /* 한 지붕 아래면 산 앱이 바로 옆에 있습니다. 내쫓지 않고 그리로 보냅니다. */
+    if(underOneRoof && apps.includes(OTHER.key)){
+      location.replace(ONE_ROOF[OTHER.key]);
+      return { ok:false, moved:true };
+    }
     await sb.auth.signOut();
     me = null;
     return { ok:false, wrongApp:true,
@@ -3462,9 +3546,26 @@ window.addEventListener('offline', pill);
    고른 것은 이 기기에 남깁니다. 열쇠말은 Re:Bind 와 같은 이름을 쓰지만
    주소가 달라 서로 다른 칸에 담깁니다 — 넘겨줄 방법은 없습니다. */
 const APP_KEY  = 'recall';
-const OTHER    = { key:'rebind', ko:'Re:Bind', url:'https://rebind.dnalabs.kr/' };
+const OTHER    = { key:'rebind', ko:'Re:Bind' };
 const PICK_KEY = 'dnalabs-app';
 let pickApp = APP_KEY;
+
+/* ───── 두 앱이 어디에 놓여 있는가 ─────
+   브라우저는 로그인한 흔적을 **주소마다 따로** 보관합니다. 그래서
+   recall.dnalabs.kr 에서 로그인해도 rebind.dnalabs.kr 은 모릅니다.
+
+   dnalabs.kr/bind · dnalabs.kr/call 로 함께 올려 두면 주소가 하나라
+   그 흔적을 나눠 씁니다 — 한 번 로그인하면 둘 다 열립니다.
+
+   옛 주소로 들어온 사람에게는 지금까지처럼 굴어야 합니다. 그쪽은 주소가
+   달라 흔적을 못 넘기고, 그래서 반대쪽을 고르면 로그인 칸을 감추고
+   이동 단추만 보여 줍니다 — 엉뚱한 앱에 비밀번호를 치지 않도록.
+
+   경로는 못 박아 둡니다. 짐작으로 맞히려 들면 있지도 않은 주소로 사람을 보냅니다. */
+const ONE_ROOF = { rebind:'/bind', recall:'/call' };
+const AWAY     = { rebind:'https://rebind.dnalabs.kr/', recall:'https://recall.dnalabs.kr/' };
+const underOneRoof = ONE_ROOF[APP_KEY] === location.pathname.replace(/\/+$/,'');
+const otherUrl = () => underOneRoof ? ONE_ROOF[OTHER.key] : AWAY[OTHER.key];
 
 function loadPick(){
   try{ const v = localStorage.getItem(PICK_KEY); if(v==='rebind' || v==='recall') return v }catch(e){}
@@ -3481,15 +3582,19 @@ function setPick(app, remember){
     b.setAttribute('aria-selected', String(pickApp===key));
   }
   $('gateTitle').textContent = mine ? '고객관리' : '제조 공정과 명세서';
-  $('gateSub').hidden   = !mine;
-  $('gateForm').hidden  = !mine;
-  $('gateOther').hidden = mine;
-  $('gateFoot').hidden  = !mine;
+  /* 한 지붕 아래면 여기서 로그인해도 저쪽이 열립니다 — 칸을 그대로 둡니다.
+     주소가 다르면 넘겨줄 수 없으니 칸을 감추고 이동 단추만 보여 줍니다. */
+  const 여기서로그인 = mine || underOneRoof;
+  $('gateSub').hidden   = !여기서로그인;
+  $('gateForm').hidden  = !여기서로그인;
+  $('gateOther').hidden = 여기서로그인;
+  $('gateFoot').hidden  = !여기서로그인;
+  $('g-go').textContent = mine ? '들어가기' : (OTHER.ko + ' 로 들어가기');
   $('gateMsg').className = 'msg';        // 서비스를 바꾸면 옛 오류 문구는 지웁니다
 }
 $('appPick').querySelectorAll('.opt').forEach(b =>
   b.addEventListener('click', ()=>setPick(b.dataset.app)));
-$('g-other').addEventListener('click', ()=>{ location.href = OTHER.url });
+$('g-other').addEventListener('click', ()=>{ location.href = otherUrl() });
 
 function showGate(){
   $('gate').hidden = false;
@@ -3519,6 +3624,16 @@ $('gateForm').addEventListener('submit', async (e)=>{
   $('g-go').disabled = false;
   if(!r.ok){ gateMsg('err', r.error || '들어가지 못했습니다.'); $('g-pw').value=''; return }
   $('g-pw').value = '';
+  /* 한 지붕 아래에서 저쪽을 골라 두었으면 그대로 넘겨 줍니다.
+     흔적을 나눠 쓰므로 그쪽에서 다시 묻지 않습니다. */
+  if(pickApp !== APP_KEY){
+    if((me.apps||[]).includes(pickApp)){ location.href = otherUrl(); return }
+    /* 저쪽은 안 산 회사입니다. 여기는 쓸 수 있으니 로그아웃까지 하지 않고
+       토글만 되돌려 둡니다 — 한 번 더 누르면 들어갑니다. */
+    setPick(APP_KEY);
+    gateMsg('err', (me.companyName||'이 회사')+' 은(는) '+OTHER.ko+' 를 쓰는 회사가 아닙니다. Re:Call 로 들어가시면 됩니다.');
+    return;
+  }
   await afterLogin();
 });
 $('g-code').addEventListener('input', e=>{ e.target.value = e.target.value.toUpperCase() });
@@ -3528,6 +3643,7 @@ async function afterLogin(){
   paintOwner();
   await probeVisibility();
   await loadSub();
+  await loadCardUse();
   await loadMembers();
   cfg.lastPull = 0; cfgSave();          // 들어올 때는 전부 받아옵니다
   render(); go('list');
@@ -3536,6 +3652,22 @@ async function afterLogin(){
 }
 
 /* ═════════ 설정 ═════════ */
+/* 옆 앱으로 건너가는 길 —
+   그 회사가 산 앱일 때만 내놓습니다. 안 산 앱으로 보내면 그쪽에서 막히고
+   여기로 돌아오지도 못합니다. 한 지붕 아래가 아니면 주소가 달라 그쪽에서
+   다시 로그인해야 합니다. 그 말을 적어 둡니다 — 안 적으면 고장 난 줄 압니다. */
+function paintOtherApp(){
+  const b = $('s-other'), n = $('s-otherNote'); if(!b) return;
+  const 살았나 = !!(me && Array.isArray(me.apps) && me.apps.includes(OTHER.key));
+  b.hidden = !살았나; n.hidden = !살았나;
+  if(!살았나) return;
+  b.textContent = OTHER.ko + ' 로 이동';
+  n.textContent = underOneRoof
+    ? '다시 로그인하지 않아도 됩니다.'
+    : '주소가 달라 그쪽에서 한 번 더 로그인해야 합니다.';
+}
+if($('s-other')) $('s-other').addEventListener('click', ()=>{ location.href = otherUrl() });
+
 function paintOwner(){
   $('ownerName').textContent = me ? me.name : '미설정';
   if($('me-name')){
@@ -3713,7 +3845,7 @@ function privacyHTML(){
   '<h3>8. 문의처</h3>' +
   '<div class="tblx">' +
     '<div><b>개인정보 보호책임자</b><span>DNA Labs 최환준</span></div>' +
-    '<div><b>이메일</b><span>chhanj40@gmail.com</span></div>' +
+    '<div><b>이메일</b><span>hello@dnalabs.kr</span></div>' +
     '<div><b>전화</b><span>010-6451-5807</span></div>' +
   '</div>' +
   '<p>침해를 당했다고 생각되면 아래에도 도움을 요청할 수 있습니다.</p>' +
@@ -3923,6 +4055,7 @@ $('planApply').addEventListener('click', async ()=>{
     : ymd(r.from) + ' 부터 ' + r.name + ' 로 바뀝니다');
   closeSheetEl('planSheet');
   await loadSub();
+  await loadCardUse();     // 요금제가 바뀌면 한도도 바뀝니다
 });
 
 $('s-undoChange').addEventListener('click', async ()=>{
@@ -4509,7 +4642,7 @@ function go(p){
     $('p-'+k).hidden = k!==p;
     $('t-'+k).setAttribute('aria-selected',String(k===p));
   });
-  if(p==='set'){ renderGroupManage(); renderMembers(); paintUsage() }
+  if(p==='set'){ renderGroupManage(); renderMembers(); paintUsage(); paintOtherApp() }
   if(p==='new'){ renderFormGroups(); paintDraftState() }
   if(p==='team'){ renderTeam(); loadTeamStats().then(renderTeam) }
   window.scrollTo(0,0);
@@ -4563,6 +4696,7 @@ $('detail').addEventListener('scroll',()=>{ $('dbar').classList.toggle('stuck',$
       try{ localStorage.removeItem('ndna-mirror') }catch(e){}
       cfg.lastPull = 0; cfgSave();
     }
+    if(r.moved) return;        // 옆 앱으로 넘어가는 중입니다. 화면을 그리지 않습니다
     render();
     showGate();
     /* 쓰던 계정인데 회사가 Re:Call 을 안 쓰게 된 경우입니다.
