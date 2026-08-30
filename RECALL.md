@@ -369,7 +369,7 @@ io.open('/tmp/app.js','w',encoding='utf-8').write(re.findall(r'<script>(.*?)</sc
 | 앱 | `git push` → GitHub Pages 1~2분 |
 | 서버 함수 | `supabase functions deploy …` (6장) |
 | SQL | `supabase db query --linked -f supabase/migrations/….sql` |
-| **홈페이지 · rewrite** | `npx vercel --prod --scope chhanj40-5991s-projects` |
+| **홈페이지 · rewrite** | `git push` 로도 되고 `npx vercel --prod --scope chhanj40-5991s-projects` 로도 됩니다 |
 | 공유 이미지 | `./build-og.sh` (크롬 필요) |
 | **사용 화면** | `./build-shots.sh` → `web/shot-*.png` 여섯 장. 앱을 고쳤으면 다시 돌립니다 |
 | **앱 화면** | `python3 build-appshots.py` → `web/app-*.png` 일곱 장. 원본은 각 앱 프로젝트에 있습니다 |
@@ -395,6 +395,8 @@ io.open('/tmp/app.js','w',encoding='utf-8').write(re.findall(r'<script>(.*?)</sc
 | 새 회사 | `apps` 를 꼭 함께 넣으세요 |
 | SPF | 도메인당 한 줄. 새 줄을 만들면 둘 다 깨집니다 |
 | 네임서버 | Vercel 로 바꾸면 `recall`·`rebind`·`restore` 가 죽습니다. **A 레코드만** 넣습니다 |
+| `web/` 를 git 에서 빼기 | Vercel 이 이 저장소의 `web` 을 뿌리로 잡고 있습니다. 없으면 **push 마다 빌드가 실패**하고 메일이 갑니다 |
+| `word-break:keep-all` | 혼자 두면 긴 주소 하나에 가로 스크롤이 생깁니다. `overflow-wrap:break-word` 를 **꼭 같이** |
 | 크롬 `--screenshot` | 맥에서 창이 **500px 밑으로 안 내려갑니다.** 390 을 시키면 화면은 500 으로 짜 놓고 그림만 390 으로 잘라 냅니다 — 오른쪽이 잘립니다. `--force-device-scale-factor` 를 함께 주면 창 크기 지시가 아예 무시됩니다. 그래서 `shoot.mjs` 가 크롬 안쪽에 직접 시킵니다 |
 
 ---
