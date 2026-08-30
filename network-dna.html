@@ -3630,6 +3630,20 @@ const APP_KEY  = 'recall';
    세 앱이 같은 차례를 써야 같은 자리를 눌렀을 때 같은 것이 골라집니다. */
 const APPS  = ['rebind','recall','restore'];
 const TITLE = {rebind:'프로젝트별 공정 관리', recall:'고객관리', restore:'가맹점 발주와 정산'};
+/* 로그인 화면에서 서비스마다 다른 것들.
+   토글이 제목만 바꾸고 예시 글자·꼬리말은 그 앱 것으로 남아 있었습니다.
+   그래서 /bind 에서 Re:Store 를 고르면 제목은 "가맹점 발주와 정산" 인데
+   회사 코드 예시는 "예: ABCDEF", 꼬리말은 "고객사 담당자는 공유 링크로" 였습니다.
+   한 화면에 두 서비스의 말이 섞여 있으면 어느 쪽으로 들어가는지 헷갈립니다. */
+const GATE = {
+  rebind : {code:'예: ABCDEF', id:'예: gdhong', sub:'',
+            foot:'계정은 <b>회사 관리자</b>가 만들어 줍니다.<br>고객사 담당자는 계정 없이 <b>공유 링크</b>로 보십니다.'},
+  recall : {code:'예: ABCDEF', id:'예: gdhong', sub:'회사에서 받은 코드와 아이디로 들어옵니다',
+            foot:'계정은 <b>회사 관리자</b>가 만들어 줍니다.<br>비밀번호를 잊으셨다면 관리자에게 재발급을 요청하세요.'},
+  restore: {code:'예: GUDORO', id:'예: admin', sub:'',
+            foot:'계정은 <b>본사 관리자</b>가 만들어 줍니다.<br>가맹점 점주는 계정 없이 <b>발주 링크</b>로 들어옵니다.'},
+};
+
 const PICK_KEY = 'dnalabs-app';
 let pickApp = APP_KEY;
 
@@ -3689,10 +3703,16 @@ function setPick(app, remember){
   /* 지붕을 나눠 쓰는 앱만 여기서 비밀번호를 받습니다.
      아니면 넘겨줄 수 없으니 이동 단추만 보여 줍니다. */
   const 여기서로그인 = mine || (underOneRoof && !!ONE_ROOF[pickApp]);
-  $('gateSub').hidden   = !여기서로그인;
   $('gateForm').hidden  = !여기서로그인;
   $('gateOther').hidden = 여기서로그인;
   $('gateFoot').hidden  = !여기서로그인;
+  /* 예시 글자와 꼬리말까지 고른 서비스 것으로 바꿉니다 */
+  const g = GATE[pickApp];
+  $('g-code').placeholder = g.code;
+  $('g-id').placeholder   = g.id;
+  $('gateFoot').innerHTML = g.foot;
+  $('gateSub').innerHTML  = g.sub;
+  $('gateSub').hidden     = !(g.sub && 여기서로그인);
   $('g-go').textContent = mine ? '들어가기' : (APP_KO[pickApp] + ' 로 들어가기');
   $('g-other').textContent = APP_KO[pickApp] + ' 열기';
   const note = $('gateOther').querySelector('.othernote');
@@ -3708,7 +3728,11 @@ function showGate(){
   lockScroll();
   $('gateMsg').className = 'msg';
   $('g-pw').value = '';
-  setPick(loadPick(), false);
+  /* 한 지붕 아래에서는 **주소가 곧 선택**입니다.
+     /call 을 쳐서 들어왔는데 지난번에 고른 /store 가 떠 있으면,
+     주소를 치고 들어온 뜻이 무시됩니다. 실제로 그렇게 헷갈렸습니다.
+     기억은 옛 주소에서만 씁니다 — 거기는 주소가 어느 서비스인지 안 알려 줍니다. */
+  setPick(underOneRoof ? APP_KEY : loadPick(), false);
 }
 function hideGate(){
   $('gate').hidden = true;
