@@ -588,7 +588,7 @@ nav.tabs button:active{opacity:.6}
       <button type="button" class="opt" id="pick-rebind" data-app="rebind" role="tab" aria-selected="false">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2z"/><path d="M5 17h13"/><path d="M9 8h5M9 11h5"/></svg>
         <b>Re<em>:</em>Bind</b>
-        <i>제조 공정과 명세서<br>접수부터 납품 · 청구까지</i>
+        <i>프로젝트별 공정 관리<br>접수부터 납품, 청구서까지</i>
       </button>
       <button type="button" class="opt" id="pick-recall" data-app="recall" role="tab" aria-selected="true">
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.6-1.4 1.7-2 3-2s2.4.6 3 2"/><path d="M15 10h4M15 13.5h3"/></svg>
@@ -3581,7 +3581,7 @@ function setPick(app, remember){
     b.classList.toggle('on', pickApp===key);
     b.setAttribute('aria-selected', String(pickApp===key));
   }
-  $('gateTitle').textContent = mine ? '고객관리' : '제조 공정과 명세서';
+  $('gateTitle').textContent = mine ? '고객관리' : '프로젝트별 공정 관리';
   /* 한 지붕 아래면 여기서 로그인해도 저쪽이 열립니다 — 칸을 그대로 둡니다.
      주소가 다르면 넘겨줄 수 없으니 칸을 감추고 이동 단추만 보여 줍니다. */
   const 여기서로그인 = mine || underOneRoof;
