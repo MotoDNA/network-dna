@@ -383,6 +383,47 @@ footer .legal{
   font-size:.92rem;color:var(--mut);line-height:1.7;
 }
 
+/* ═════════ Re:Service 안내 (reservice-guide.html) ═════════ */
+
+/* "이런 분께 맞습니다" — 손님이 실제로 하는 말을 그대로 늘어놓습니다.
+   기능을 나열하는 것보다 자기 이야기를 찾는 편이 빠릅니다. */
+.says{list-style:none;margin:14px 0 0;padding:0}
+.says li{
+  position:relative;padding-left:20px;margin-bottom:10px;
+  font-size:.9rem;color:var(--sub);line-height:1.6;
+}
+.says li::before{
+  content:"";position:absolute;left:2px;top:.6em;
+  width:6px;height:6px;border-radius:50%;background:var(--dim);
+}
+
+/* 시작하는 방법 — 번호가 붙은 세로 목록 */
+.steps{display:grid;gap:14px;max-width:760px;margin:0 auto}
+.step{
+  display:flex;gap:18px;align-items:flex-start;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:22px 24px;
+}
+.step .no{
+  flex:0 0 auto;width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--blue);color:#fff;font-weight:800;font-size:.94rem;
+  font-variant-numeric:tabular-nums;
+}
+.step h3{margin:3px 0 6px}
+.step p{font-size:.92rem;color:var(--sub);line-height:1.68;margin:0}
+@media(max-width:520px){
+  .step{gap:14px;padding:18px 18px}
+}
+
+/* 자주 묻는 것 */
+.qa h3{
+  margin:0 0 8px;padding-top:22px;border-top:1px solid var(--line);
+  font-size:1rem;
+}
+.qa h3:first-child{padding-top:0;border-top:0}
+.qa p{font-size:.94rem;color:var(--sub);line-height:1.75;margin:0 0 22px}
+.qa a{color:var(--blue);font-weight:700;text-decoration:underline}
+
 /* 아직 채우지 않은 값을 눈에 띄게 표시합니다.
    사업자등록번호처럼 대괄호로 남겨 둔 것이 그대로 배포되면
    법정 표시의무 위반이라, 못 보고 지나칠 수 없게 합니다. */
