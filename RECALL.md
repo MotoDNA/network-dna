@@ -77,6 +77,7 @@ supabase/functions/
 web/                     ★ 회사 홈페이지 (dnalabs.kr, Vercel)
   index.html               회사 소개
   services.html            ★ 서비스 둘러보기 — 네 가지 취급 분야
+  reservice-guide.html     ★ Re:Service 안내 — 대상 · 시작 방법 · 요금 · 자주 묻는 것
   recall.html              Re:Call 소개·요금·업종
   signup.html              회원가입 (업종→요금제→정보→약관→결제→발급)
   terms.html refund.html privacy.html    이용약관·환불정책·처리방침
@@ -395,6 +396,8 @@ io.open('/tmp/app.js','w',encoding='utf-8').write(re.findall(r'<script>(.*?)</sc
 | 새 회사 | `apps` 를 꼭 함께 넣으세요 |
 | SPF | 도메인당 한 줄. 새 줄을 만들면 둘 다 깨집니다 |
 | 네임서버 | Vercel 로 바꾸면 `recall`·`rebind`·`restore` 가 죽습니다. **A 레코드만** 넣습니다 |
+| `reservice.html` 이라는 이름 | **쓰면 안 됩니다.** `cleanUrls` 로 `/reservice` 가 되는데 거기는 앱으로 넘기는 rewrite 자리입니다. 쪽이 통째로 가려집니다 — 그래서 `reservice-guide.html` |
+| 요금 숫자를 쪽에 적기 | `catalog.json` 하나만 봅니다. 화면과 서버 값이 어긋나면 그대로 결제 사고입니다 |
 | `web/` 를 git 에서 빼기 | Vercel 이 이 저장소의 `web` 을 뿌리로 잡고 있습니다. 없으면 **push 마다 빌드가 실패**하고 메일이 갑니다 |
 | `word-break:keep-all` | 혼자 두면 긴 주소 하나에 가로 스크롤이 생깁니다. `overflow-wrap:break-word` 를 **꼭 같이** |
 | 크롬 `--screenshot` | 맥에서 창이 **500px 밑으로 안 내려갑니다.** 390 을 시키면 화면은 500 으로 짜 놓고 그림만 390 으로 잘라 냅니다 — 오른쪽이 잘립니다. `--force-device-scale-factor` 를 함께 주면 창 크기 지시가 아예 무시됩니다. 그래서 `shoot.mjs` 가 크롬 안쪽에 직접 시킵니다 |
