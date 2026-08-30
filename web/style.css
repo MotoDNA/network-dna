@@ -26,6 +26,14 @@ body{
   font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;
   font-size:1rem; line-height:1.6; letter-spacing:-.02em;
   -webkit-font-smoothing:antialiased;
+  /* 브라우저 기본값은 한글을 **아무 글자에서나** 자릅니다.
+     "계약합니 / 다." 처럼 낱말이 두 줄로 쪼개져 읽기가 걸립니다.
+     keep-all 은 띄어쓰기에서만 넘깁니다.
+
+     대신 띄어쓰기 없는 긴 것(주소·영문 한 덩어리)이 칸보다 길면 삐져나가므로
+     overflow-wrap 으로 그때만 자르게 남겨 둡니다. */
+  word-break:keep-all;
+  overflow-wrap:break-word;
 }
 a{color:inherit;text-decoration:none}
 img{max-width:100%}
