@@ -54,6 +54,9 @@ catalog.json             ★ 요금제와 업종 판정의 단일 출처
 sync-catalog.sh          catalog.json → web/ 과 서버용 catalog.ts 로 복사
 setup-admin.sh           회사와 관리자 계정을 함께 만듭니다 (bootstrap)
 build-og.sh              공유 이미지(1200×630) 두 장을 만듭니다 (크롬 필요)
+build-shots.sh           ★ 홈페이지에 넣을 **실제 사용 화면** 여섯 장 (크롬 필요)
+shoot.mjs                  그 안에서 크롬을 직접 몰아 찍는 부분
+shots/*.js                 앱마다 넣을 예시 자료 (bind- · call- · store-)
 build-privacy.sh         개인정보 처리방침 PDF
 
 supabase/migrations/
@@ -76,6 +79,7 @@ web/                     ★ 회사 홈페이지 (dnalabs.kr, Vercel)
   signup.html              회원가입 (업종→요금제→정보→약관→결제→발급)
   terms.html refund.html privacy.html    이용약관·환불정책·처리방침
   404.html catalog.js pg.js style.css
+  shot-*.png             ★ 세 앱의 모바일 사용 화면 (build-shots.sh 가 만듭니다)
   favicon.svg logo.png og-*.png robots.txt sitemap.xml
   vercel.json            ★ /bind · /call · /store rewrite
   bind.webmanifest store.webmanifest
@@ -318,6 +322,12 @@ const underOneRoof = ONE_ROOF[APP_KEY] === location.pathname.replace(/\/+$/,'');
 **로그인 정보는 세 서비스가 똑같습니다.** 보관 자리도 셋 다 `ndna-auth` 라
 한 지붕(`dnalabs.kr/*`)에서는 한 번 로그인하면 산 것이 다 열립니다.
 
+칸의 예시 글자도 셋이 같습니다 — `예: ABCDEF` / `예: gdhong`.
+한동안 Re:Store 만 `예: GUDORO / 예: admin` 을 썼습니다. 회사 코드 하나를
+그대로 적어 둔 것이라, 같은 화면에서 토글만 눌렀는데 예시가 달라져 눈에 걸렸습니다.
+Re:Call 에만 있던 안내줄("회사에서 받은 코드와 아이디로 들어옵니다")도 뺐습니다 —
+토글할 때마다 제목과 칸 사이가 벌어졌다 좁아졌고, 아래 꼬리말이 같은 말을 합니다.
+
 PC(가로 1000px 이상)에서는 고객 목록이 두 단, 시트가 화면 가운데 모달로 뜹니다.
 상세·팀·설정·새 고객은 **두 단으로 안 했습니다** — "제목 → 목록 → 설명 → 단추"
 처럼 순서가 있는 흐름이라 칸으로 쪼개면 읽는 순서가 끊깁니다.
@@ -358,6 +368,7 @@ io.open('/tmp/app.js','w',encoding='utf-8').write(re.findall(r'<script>(.*?)</sc
 | SQL | `supabase db query --linked -f supabase/migrations/….sql` |
 | **홈페이지 · rewrite** | `npx vercel --prod --scope chhanj40-5991s-projects` |
 | 공유 이미지 | `./build-og.sh` (크롬 필요) |
+| **사용 화면** | `./build-shots.sh` → `web/shot-*.png` 여섯 장. 앱을 고쳤으면 다시 돌립니다 |
 | 로고 | `python3 ~/Desktop/Rebind/make-logo.py` → 세 앱과 홈페이지 파비콘까지 |
 
 `--scope` 를 빼면 `Not authorized` — `.vercel/project.json` 의 `orgId` 와
@@ -380,6 +391,7 @@ io.open('/tmp/app.js','w',encoding='utf-8').write(re.findall(r'<script>(.*?)</sc
 | 새 회사 | `apps` 를 꼭 함께 넣으세요 |
 | SPF | 도메인당 한 줄. 새 줄을 만들면 둘 다 깨집니다 |
 | 네임서버 | Vercel 로 바꾸면 `recall`·`rebind`·`restore` 가 죽습니다. **A 레코드만** 넣습니다 |
+| 크롬 `--screenshot` | 맥에서 창이 **500px 밑으로 안 내려갑니다.** 390 을 시키면 화면은 500 으로 짜 놓고 그림만 390 으로 잘라 냅니다 — 오른쪽이 잘립니다. `--force-device-scale-factor` 를 함께 주면 창 크기 지시가 아예 무시됩니다. 그래서 `shoot.mjs` 가 크롬 안쪽에 직접 시킵니다 |
 
 ---
 
