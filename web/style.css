@@ -1,0 +1,384 @@
+/* ═══════════════════════════════════════════════════════════
+   DNA Labs · 공용 스타일
+   색과 서체는 Re:Call 앱(network-dna.html)과 같은 것을 씁니다.
+   앱에서 넘어온 사람이 같은 제품이라고 느껴야 합니다.
+   ═══════════════════════════════════════════════════════════ */
+
+:root{
+  --bg:#FFFFFF; --bg2:#F2F4F6; --card:#FFFFFF;
+  --ink:#191F28; --sub:#4E5968; --mut:#8B95A1; --dim:#B0B8C1;
+  --line:#E5E8EB; --fill:#F2F4F6; --fill2:#F9FAFB;
+  --blue:#3182F6; --blue-d:#1B64DA; --blue-bg:#E8F3FF;
+  --red:#F04452;  --red-bg:#FDEEF0;
+  --green:#00A66C; --green-bg:#E4F6EF;
+  --amber:#E08700; --amber-bg:#FFF4DF;
+  --r:16px; --r2:20px; --rs:12px;
+  --sh:0 1px 2px rgba(25,31,40,.05);
+  --shx:0 4px 24px rgba(25,31,40,.10);
+  --w:1080px;
+}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{font-size:17px;-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;
+  font-size:1rem; line-height:1.6; letter-spacing:-.02em;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit;text-decoration:none}
+img{max-width:100%}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;letter-spacing:-.02em}
+
+.wrap{max-width:var(--w);margin:0 auto;padding:0 24px}
+.narrow{max-width:760px}
+
+/* ───── 머리띠 ───── */
+.nav{
+  position:sticky;top:0;z-index:50;
+  background:rgba(255,255,255,.88);
+  backdrop-filter:saturate(180%) blur(12px);
+  -webkit-backdrop-filter:saturate(180%) blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.nav .wrap{display:flex;align-items:center;gap:28px;height:62px}
+/* 머리글의 회사 이름 앞에 마크를 붙입니다.
+   글자만 있으면 탭·명함·간판 어디에도 같은 얼굴이 없습니다.
+   그림 태그를 일곱 쪽에 하나씩 넣는 대신 여기 한 줄로 붙입니다 —
+   한 쪽만 빠뜨려 마크가 없는 쪽이 생기는 일이 없습니다. */
+.logo{font-weight:800;font-size:1.06rem;letter-spacing:-.045em;white-space:nowrap;
+      display:inline-flex;align-items:center;gap:9px}
+.logo::before{content:"";width:26px;height:26px;flex:none;border-radius:50%;
+      background:url(logo.png) center/contain no-repeat}
+.logo b{color:var(--blue)}
+.navlinks{display:flex;gap:22px;margin-left:auto;align-items:center}
+.navlinks a{font-size:.88rem;font-weight:600;color:var(--sub);white-space:nowrap}
+.navlinks a:hover{color:var(--ink)}
+@media(max-width:720px){ .navlinks .hide-s{display:none} }
+
+/* ───── 버튼 ───── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  height:50px;padding:0 22px;border-radius:var(--rs);
+  font-size:.95rem;font-weight:700;white-space:nowrap;
+  transition:transform .12s, background .15s, box-shadow .15s;
+}
+.btn:active{transform:scale(.985)}
+.btn-p{background:var(--blue);color:#fff}
+.btn-p:hover{background:var(--blue-d)}
+.btn-g{background:var(--fill);color:var(--ink)}
+.btn-g:hover{background:var(--line)}
+.btn-o{border:1px solid var(--line);background:#fff;color:var(--ink)}
+.btn-o:hover{border-color:var(--dim)}
+.btn-s{height:40px;padding:0 15px;font-size:.85rem;border-radius:10px}
+.btn-lg{height:56px;padding:0 30px;font-size:1.02rem}
+.btn[disabled]{opacity:.42;pointer-events:none}
+.btn-full{width:100%}
+
+/* ───── 히어로 ───── */
+.hero{padding:96px 0 84px;text-align:center}
+.eyebrow{
+  display:inline-block;font-size:.78rem;font-weight:700;letter-spacing:.02em;
+  color:var(--blue);background:var(--blue-bg);
+  padding:6px 13px;border-radius:999px;margin-bottom:22px;
+}
+h1{
+  font-size:clamp(2rem,5.4vw,3.15rem);font-weight:800;
+  letter-spacing:-.045em;line-height:1.24;margin:0 0 20px;
+  text-wrap:balance;
+}
+.lede{
+  font-size:clamp(1rem,2.1vw,1.16rem);color:var(--sub);
+  line-height:1.72;margin:0 auto 34px;max-width:56ch;text-wrap:pretty;
+}
+.herobtns{display:flex;gap:11px;justify-content:center;flex-wrap:wrap}
+
+/* ───── 구획 ───── */
+section{padding:84px 0}
+section.alt{background:var(--bg2)}
+.shead{text-align:center;margin-bottom:52px}
+.shead .kicker{
+  font-size:.82rem;font-weight:700;color:var(--blue);
+  letter-spacing:.04em;
+  /* margin:0 0 12px 이었습니다. 아래 .shead p 가 max-width:52ch 로 폭을 줄이는데
+     여기서 왼쪽 여백을 0 으로 못 박아 버려, 가운데 정렬해 놓은 칸의 머리글자만
+     왼쪽으로 밀려 있었습니다(모든 칸에서). auto 로 되돌립니다. */
+  margin:0 auto 12px;
+}
+h2{
+  font-size:clamp(1.5rem,3.4vw,2.1rem);font-weight:800;
+  letter-spacing:-.04em;line-height:1.32;margin:0 0 14px;text-wrap:balance;
+}
+h3{font-size:1.08rem;font-weight:800;letter-spacing:-.032em;margin:0 0 9px}
+.shead p{font-size:1rem;color:var(--sub);margin:0 auto;max-width:52ch;line-height:1.7}
+
+/* ───── 격자 ───── */
+.grid{display:grid;gap:18px}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:900px){ .g3,.g4{grid-template-columns:repeat(2,1fr)} }
+@media(max-width:640px){ .g2,.g3,.g4{grid-template-columns:1fr} }
+
+.card{
+  background:var(--card);border:1px solid var(--line);
+  border-radius:var(--r);padding:26px 24px;
+}
+.card .ico{
+  width:42px;height:42px;border-radius:11px;background:var(--blue-bg);
+  display:grid;place-items:center;margin-bottom:16px;font-size:1.2rem;
+}
+.card p{font-size:.92rem;color:var(--sub);line-height:1.68;margin:0}
+
+/* ───── 요금제 ───── */
+.plans{display:grid;gap:16px;grid-template-columns:repeat(4,1fr);align-items:start}
+@media(max-width:1000px){ .plans{grid-template-columns:repeat(2,1fr)} }
+@media(max-width:620px){ .plans{grid-template-columns:1fr} }
+.plan{
+  background:#fff;border:1px solid var(--line);border-radius:var(--r);
+  padding:26px 22px;display:flex;flex-direction:column;height:100%;
+}
+.plan.on{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue)}
+.plan .pname{font-size:1.02rem;font-weight:800;letter-spacing:-.03em;margin:0 0 3px}
+.plan .plabel{font-size:.8rem;font-weight:600;color:var(--mut);margin:0 0 16px}
+.plan .price{font-size:1.75rem;font-weight:800;letter-spacing:-.045em;margin:0}
+.plan .price small{font-size:.85rem;font-weight:600;color:var(--mut);letter-spacing:-.02em}
+.plan .quote{font-size:1.3rem;font-weight:800;letter-spacing:-.04em;margin:0}
+.plan .tag{
+  display:inline-block;font-size:.74rem;font-weight:700;
+  color:var(--green);background:var(--green-bg);
+  padding:4px 9px;border-radius:7px;margin-top:9px;
+}
+.plan .blurb{font-size:.86rem;color:var(--sub);line-height:1.62;margin:16px 0 0}
+.plan ul{list-style:none;margin:18px 0 22px;padding:0;flex:1}
+.plan li{
+  font-size:.855rem;color:var(--sub);line-height:1.55;
+  padding:6px 0 6px 22px;position:relative;
+}
+/* Enterprise 는 성격이 달라 격자 아래 가로 띠로 눕힙니다.
+   4열 격자에 다섯째로 들어가면 혼자 둘째 줄에 남습니다. */
+.plan.wide{
+  grid-column:1/-1;flex-direction:row;align-items:center;
+  gap:12px 28px;flex-wrap:wrap;padding:22px 24px;
+}
+.plan.wide .hd{flex:0 0 auto}
+.plan.wide .plabel{margin:0}
+.plan.wide .quote{margin:4px 0 0}
+.plan.wide .blurb{margin:0;flex:1 1 280px;min-width:0}
+.plan.wide ul{margin:0;flex:0 1 auto;display:flex;flex-wrap:wrap;gap:0 18px}
+.plan.wide .btn{width:auto;flex:0 0 auto;padding:0 26px}
+@media(max-width:760px){
+  .plan.wide{flex-direction:column;align-items:stretch}
+  .plan.wide .btn{width:100%}
+}
+
+.plan li::before{
+  content:'';position:absolute;left:3px;top:12px;
+  width:8px;height:5px;border-left:2px solid var(--blue);
+  border-bottom:2px solid var(--blue);transform:rotate(-45deg);
+}
+
+/* ───── 업종 판정 ───── */
+.chip{
+  display:inline-block;font-size:.74rem;font-weight:800;
+  padding:3px 9px;border-radius:7px;white-space:nowrap;
+}
+.chip.A{color:var(--green);background:var(--green-bg)}
+.chip.B{color:var(--amber);background:var(--amber-bg)}
+.chip.C{color:var(--red);background:var(--red-bg)}
+
+.indrow{
+  display:flex;gap:14px;align-items:flex-start;
+  padding:15px 0;border-bottom:1px solid var(--line);
+}
+.indrow:last-child{border-bottom:0}
+.indrow .bd{flex:1;min-width:0}
+.indrow .nm{font-size:.94rem;font-weight:700;margin:0 0 3px;letter-spacing:-.028em}
+.indrow .wy{font-size:.85rem;color:var(--sub);line-height:1.62;margin:0}
+.indrow .cond{font-size:.83rem;color:var(--amber);line-height:1.6;margin:5px 0 0;font-weight:600}
+.indrow .law{
+  display:block;font-size:.75rem;color:var(--mut);margin-top:5px;
+  font-variant-numeric:tabular-nums;
+}
+
+/* ───── 알림 상자 ───── */
+.note{
+  border-radius:var(--r);padding:20px 22px;margin:22px 0;
+  font-size:.9rem;line-height:1.7;
+}
+.note.info{background:var(--blue-bg);color:#124A9E}
+.note.warn{background:var(--amber-bg);color:#8A5300}
+.note.stop{background:var(--red-bg);color:#9B1B27}
+.note b{font-weight:800}
+.note p{margin:0}
+.note p + p{margin-top:9px}
+
+/* ───── 양식 ───── */
+.field{margin-bottom:17px}
+.field label{
+  display:block;font-size:.83rem;font-weight:700;
+  color:var(--sub);margin-bottom:7px;
+}
+.inp{
+  width:100%;height:52px;padding:0 15px;
+  border:1px solid var(--line);border-radius:var(--rs);
+  background:#fff;font-size:.97rem;color:var(--ink);
+  transition:border-color .15s, box-shadow .15s;
+}
+.inp:focus{outline:0;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-bg)}
+.inp::placeholder{color:var(--dim)}
+.inp.bad{border-color:var(--red)}
+select.inp{
+  appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%238B95A1' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 15px center;
+  padding-right:38px;
+}
+.err{font-size:.8rem;color:var(--red);font-weight:600;margin:6px 0 0}
+.hint{font-size:.8rem;color:var(--mut);margin:6px 0 0;line-height:1.55}
+
+/* ───── 꼬리 ───── */
+footer{
+  background:var(--bg2);border-top:1px solid var(--line);
+  padding:52px 0 40px;font-size:.85rem;color:var(--mut);
+}
+footer .cols{display:flex;gap:56px;flex-wrap:wrap;margin-bottom:34px}
+footer h4{font-size:.84rem;font-weight:800;color:var(--sub);margin:0 0 12px}
+footer ul{list-style:none;margin:0;padding:0}
+footer li{margin-bottom:8px}
+footer a:hover{color:var(--ink)}
+footer .legal{
+  border-top:1px solid var(--line);padding-top:22px;
+  line-height:1.75;font-size:.79rem;
+}
+
+/* ───── 법무 문서 (약관 · 환불정책 · 처리방침) ───── */
+.legalwrap{max-width:760px;margin:0 auto;padding:44px 24px 90px}
+.legalwrap h1{font-size:clamp(1.6rem,4vw,2rem);margin:0 0 6px}
+.legalwrap .upd0{
+  font-size:.85rem;color:var(--mut);margin:0 0 30px;
+  padding-bottom:18px;border-bottom:1px solid var(--line);
+}
+.legalwrap h2{font-size:1.1rem;font-weight:800;margin:34px 0 10px;letter-spacing:-.03em}
+.legalwrap h3, .priv h3{font-size:1.02rem;font-weight:800;margin:30px 0 9px;color:var(--ink)}
+.priv h3:first-child{margin-top:0}
+.legalwrap p, .priv p{font-size:.93rem;line-height:1.75;color:var(--sub);margin:0 0 10px}
+.legalwrap ul, .legalwrap ol, .priv ul{margin:0 0 12px;padding-left:19px}
+.legalwrap li, .priv li{font-size:.93rem;line-height:1.75;color:var(--sub);margin-bottom:5px}
+.legalwrap b, .priv b{color:var(--ink);font-weight:700}
+.priv .upd{font-size:.82rem;color:var(--mut);margin-bottom:20px}
+.legalwrap table{width:100%;border-collapse:collapse;margin:12px 0 18px;font-size:.88rem}
+.legalwrap th, .legalwrap td{
+  border:1px solid var(--line);padding:10px 13px;text-align:left;
+  line-height:1.6;vertical-align:top;
+}
+.legalwrap th{background:var(--fill2);color:var(--sub);font-weight:700;white-space:nowrap}
+.legalwrap td{color:var(--sub)}
+.tblx{border:1px solid var(--line);border-radius:var(--rs);overflow:hidden;margin:12px 0 16px}
+.tblx div{display:grid;grid-template-columns:140px 1fr;gap:12px;padding:12px 15px;font-size:.88rem;line-height:1.6}
+.tblx div + div{border-top:1px solid var(--line)}
+.tblx b{color:var(--mut);font-weight:700}
+.tblx span{color:var(--sub)}
+
+/* ───── 좁은 화면 ─────
+   데스크톱 기준으로 잡은 여백이 폰에서는 과합니다.
+   첫 화면에 내용이 들어오도록 줄입니다. */
+@media(max-width:640px){
+  .wrap{padding:0 18px}
+  .hero{padding:52px 0 44px}
+  section{padding:56px 0}
+  .shead{margin-bottom:34px}
+  .card{padding:22px 20px}
+  .herobtns{flex-direction:column}
+  .herobtns .btn{width:100%}
+  .btn-lg{height:54px;font-size:1rem}
+  footer .cols{gap:30px}
+  .legalwrap{padding:32px 18px 70px}
+}
+
+/* ═════════ 서비스 소개 — 실제 사용 화면 ═════════
+   그림을 그리지 않고 진짜 앱을 띄워 찍은 것을 넣습니다(build-shots.sh).
+   원본은 780×1688 인데 화면에서는 210px 안팎으로 보여 줍니다 —
+   레티나에서도 또렷하고, 옆에 두 장을 나란히 놓을 수 있습니다. */
+.svc{display:grid;gap:46px;grid-template-columns:1fr 1fr;align-items:center;
+  margin-bottom:78px}
+.svc:last-child{margin-bottom:0}
+.svc.rev .shots{order:2}
+.shots{display:flex;gap:18px;justify-content:center}
+.phone{
+  /* 좁은 폰에서 두 장이 나란히 들어가야 합니다. 44vw 로 잡았더니
+     칸 여백을 빼고 나서 7px 씩 넘쳤습니다 — 칸 폭의 절반에서 사이를 뺍니다. */
+  width:min(212px,calc(50% - 9px));flex:0 0 auto;padding:7px;background:#fff;
+  border:1px solid var(--line);border-radius:30px;
+  box-shadow:0 20px 44px rgba(25,31,40,.14);
+}
+/* 두 장 중 뒤엣것은 살짝 내려 둡니다 — 나란히 붙여 놓으면 벽처럼 보입니다 */
+.shots .phone:nth-child(2){margin-top:34px}
+/* height 속성(1688)을 함께 적어 두었습니다 — 글이 먼저 뜰 때 자리가 안 흔들리라고.
+   그 값이 CSS 높이로도 먹으니 height:auto 로 풀어 줘야 비율이 안 늘어납니다. */
+.phone img{display:block;width:100%;height:auto;border-radius:24px}
+.svc h3{font-size:1.42rem;font-weight:800;letter-spacing:-.045em;margin:0 0 6px}
+.svc .who{font-size:.88rem;font-weight:700;color:var(--blue);margin:0 0 16px}
+.svc ul{list-style:none;margin:0 0 22px;padding:0}
+.svc li{position:relative;padding-left:22px;margin-bottom:11px;
+  font-size:.96rem;color:var(--sub);line-height:1.65}
+.svc li::before{content:"";position:absolute;left:4px;top:.62em;width:7px;height:7px;
+  border-radius:50%;background:var(--blue)}
+.svc li b{color:var(--ink);font-weight:700}
+@media(max-width:860px){
+  .svc{grid-template-columns:1fr;gap:30px;margin-bottom:56px}
+  .svc.rev .shots{order:0}
+  .shots{order:0}
+}
+
+/* ═════════ 서비스 둘러보기 (services.html) ═════════ */
+
+/* 작은 폰 그림 — 카드 안에 들어갑니다.
+   높이는 안 맞춥니다. 앱마다 화면 비율이 달라(16:9 도 있고 19.5:9 도 있습니다)
+   억지로 맞추면 잘리거나 위아래가 비어 보입니다. 격자를 위쪽에 붙여 둡니다. */
+.phone.sm{width:170px;padding:5px;border-radius:22px;box-shadow:0 12px 26px rgba(25,31,40,.12)}
+.phone.sm img{border-radius:18px}
+/* 아직 스토어용 화면이 없어 앱 마크만 있는 것 */
+.phone.sm.noshot{background:var(--fill);border-style:dashed}
+.phone.sm.noshot img{border-radius:18px}
+
+.appgrid{display:grid;gap:22px;grid-template-columns:repeat(2,1fr);align-items:start}
+@media(max-width:820px){ .appgrid{grid-template-columns:1fr} }
+.appcard{
+  display:flex;gap:20px;align-items:flex-start;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:20px;
+}
+.appcard .bd{flex:1;min-width:0}
+.appcard h3{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:2px 0 4px}
+.appcard .on{
+  font-size:.7rem;font-weight:700;letter-spacing:0;
+  color:var(--green);background:var(--green-bg);padding:2px 8px;border-radius:99px;
+}
+/* 아직 안 나온 것 — 나온 것과 같은 초록이면 구분이 안 됩니다 */
+.appcard .on.soon{color:var(--amber);background:var(--amber-bg)}
+.appcard p{font-size:.9rem;color:var(--sub);line-height:1.66;margin:0}
+.one{font-size:.86rem!important;font-weight:700;color:var(--blue)!important;margin:0 0 8px!important}
+@media(max-width:420px){
+  .appcard{flex-direction:column;align-items:center;text-align:center}
+  .appcard h3{justify-content:center}
+}
+
+/* 웹서비스 석 장 — 카드 위에 화면을 얹습니다 */
+.svccard{display:flex;flex-direction:column;align-items:center;text-align:center}
+.svccard .phone.sm{margin-bottom:16px}
+.svccard h3{margin:0 0 4px}
+
+/* 칸 아래 한 줄 덧붙임 */
+.note2{
+  margin:34px auto 0;max-width:60ch;text-align:center;
+  font-size:.92rem;color:var(--mut);line-height:1.7;
+}
+
+/* 아직 채우지 않은 값을 눈에 띄게 표시합니다.
+   사업자등록번호처럼 대괄호로 남겨 둔 것이 그대로 배포되면
+   법정 표시의무 위반이라, 못 보고 지나칠 수 없게 합니다. */
+span[data-todo]{
+  background:#FFF4DF;color:#8A5300;font-weight:700;
+  padding:1px 6px;border-radius:5px;
+}

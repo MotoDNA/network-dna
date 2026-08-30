@@ -1,0 +1,17 @@
+{
+  "name": "Re:Bind · 제조 공정과 거래명세서",
+  "short_name": "Re:Bind",
+  "description": "제본소의 공정 기록과 거래명세서",
+  "lang": "ko",
+  "start_url": "/bind",
+  "scope": "/bind",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F2F4F6",
+  "theme_color": "#FFFFFF",
+  "icons": [
+    { "src": "https://rebind.dnalabs.kr/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "https://rebind.dnalabs.kr/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "https://rebind.dnalabs.kr/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

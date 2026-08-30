@@ -1,0 +1,81 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "geolocation=(), microphone=(), camera=()"
+        },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=31536000; includeSubDomains"
+        }
+      ]
+    },
+    {
+      "source": "/catalog.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=300, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/(.*).(png|svg)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.dnalabs.kr"
+        }
+      ],
+      "destination": "https://dnalabs.kr/$1",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/reservice",
+      "destination": "https://rebind.dnalabs.kr/bindery.html"
+    },
+    {
+      "source": "/bind",
+      "destination": "https://rebind.dnalabs.kr/bindery.html"
+    },
+    {
+      "source": "/call",
+      "destination": "https://recall.dnalabs.kr/network-dna.html"
+    },
+    {
+      "source": "/store",
+      "destination": "https://restore.dnalabs.kr/store.html"
+    }
+  ]
+}

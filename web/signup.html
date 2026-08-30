@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Re:Call 회원가입</title>
+<link rel="canonical" href="https://dnalabs.kr/signup">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="style.css">
+<style>
+  body{background:var(--bg2)}
+  .sheet{max-width:620px;margin:0 auto;padding:0 20px 80px}
+  .steps{display:flex;gap:6px;margin:28px 0 26px}
+  .steps i{flex:1;height:4px;border-radius:2px;background:var(--line);transition:background .25s}
+  .steps i.on{background:var(--blue)}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:var(--r2);padding:30px 28px}
+  @media(max-width:560px){ .panel{padding:24px 20px} }
+  .panel h2{font-size:1.42rem;margin-bottom:8px}
+  .panel .sub{font-size:.92rem;color:var(--sub);line-height:1.65;margin:0 0 24px}
+  .back{font-size:.86rem;font-weight:600;color:var(--mut);margin-bottom:16px;display:inline-block}
+  .back:hover{color:var(--ink)}
+
+  /* 업종 고르기 */
+  .indpick{display:grid;gap:8px;max-height:390px;overflow-y:auto;padding-right:4px;margin-bottom:6px}
+  .indpick button{
+    display:flex;align-items:center;gap:11px;text-align:left;
+    border:1px solid var(--line);border-radius:var(--rs);
+    padding:13px 15px;background:#fff;transition:border-color .14s,background .14s;
+  }
+  .indpick button:hover{border-color:var(--dim);background:var(--fill2)}
+  .indpick button.sel{border-color:var(--blue);background:var(--blue-bg)}
+  .indpick .nm{font-size:.92rem;font-weight:600;flex:1}
+
+  /* 요금제 고르기 */
+  .planpick{display:grid;gap:10px}
+  .planpick button{
+    display:block;text-align:left;border:1px solid var(--line);
+    border-radius:var(--rs);padding:16px 17px;background:#fff;transition:border-color .14s;
+  }
+  .planpick button:hover{border-color:var(--dim)}
+  .planpick button.sel{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue)}
+  .planpick button[disabled]{opacity:.4;pointer-events:none}
+  .planpick .top{display:flex;align-items:baseline;gap:9px}
+  .planpick .nm{font-size:1rem;font-weight:800;letter-spacing:-.03em}
+  .planpick .lb{font-size:.79rem;color:var(--mut);font-weight:600}
+  .planpick .pr{margin-left:auto;font-size:1.05rem;font-weight:800;letter-spacing:-.03em}
+  .planpick .bl{font-size:.84rem;color:var(--sub);margin:6px 0 0;line-height:1.55}
+
+  /* 약관 */
+  .agree{border:1px solid var(--line);border-radius:var(--rs);overflow:hidden}
+  .agree label{
+    display:flex;gap:11px;align-items:flex-start;padding:14px 16px;cursor:pointer;
+    font-size:.89rem;line-height:1.55;
+  }
+  .agree label + label{border-top:1px solid var(--line)}
+  .agree label.all{background:var(--fill2);font-weight:700}
+  .agree input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--blue);flex:none;cursor:pointer}
+  .agree .req{color:var(--blue);font-weight:700}
+  .agree .opt{color:var(--mut);font-weight:600}
+  .agree a{text-decoration:underline;color:var(--mut)}
+
+  /* 발급 결과 */
+  .issued{border:1px solid var(--line);border-radius:var(--rs);overflow:hidden;margin:18px 0}
+  .issued div{display:grid;grid-template-columns:104px 1fr auto;gap:12px;padding:15px 16px;align-items:center}
+  .issued div + div{border-top:1px solid var(--line)}
+  .issued b{font-size:.83rem;color:var(--mut);font-weight:700}
+  .issued span{font-size:1.06rem;font-weight:800;letter-spacing:.01em;font-variant-numeric:tabular-nums;word-break:break-all}
+  .cp{font-size:.78rem;font-weight:700;color:var(--blue);padding:5px 9px;border-radius:7px;background:var(--blue-bg)}
+
+  .testbar{
+    background:var(--amber-bg);color:#8A5300;font-size:.82rem;font-weight:700;
+    text-align:center;padding:9px 16px;line-height:1.5;
+  }
+  .spin{
+    width:17px;height:17px;border:2px solid rgba(255,255,255,.35);
+    border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;
+  }
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="testbar" id="testbar" hidden>
+  테스트 모드 — 결제대행사가 아직 연결되지 않았습니다. 실제 결제는 일어나지 않습니다.
+</div>
+
+<nav class="nav">
+  <div class="wrap">
+    <a href="index.html" class="logo">DNA <b>Labs</b></a>
+    <div class="navlinks"><a href="recall.html">Re:Call 소개</a></div>
+  </div>
+</nav>
+
+<div class="sheet">
+  <div class="steps" id="steps"></div>
+  <div class="panel" id="panel"></div>
+</div>
+
+<script src="catalog.js"></script>
+<script src="pg.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════════
+   Re:Call 회원가입
+
+   흐름 — 업종 → 요금제 → 회사·담당자 → 약관 → 결제수단 → 발급
+
+   업종을 맨 앞에 두는 것은 의도한 것입니다.
+   가입이 안 되는 업종이라면 이름·연락처를 받기 전에 돌려보내는 것이
+   서로에게 낫습니다. 받아 놓고 나중에 막으면 그 개인정보는
+   받을 이유가 없던 정보가 됩니다.
+   ═══════════════════════════════════════════════════════════ */
+
+const CFG = {
+  supabaseUrl: 'https://izrtclsqhsgkuwsffifn.supabase.co',
+  anonKey: 'sb_publishable_G5wx-YdgwUU630x1vKmZmQ_15BgxvEX'
+};
+
+/* 가입을 열지 말지.
+   결제대행사 계약과 통신판매업 신고가 끝나기 전에는 닫아 둡니다.
+   닫아 두는 이유는 두 가지입니다 —
+     · 결제가 안 되는데 이름·연락처만 받으면, 그건 받을 이유가 없던 개인정보입니다
+     · 실패하는 가입 화면을 열어 두는 것보다 "준비 중"이 정직합니다
+   셋이 준비되면 true 로 바꾸세요:
+     1) PG 계약 → web/pg.js 의 PROVIDER 를 stub 이 아닌 것으로
+     2) supabase functions deploy signup
+     3) 통신판매업 신고번호를 꼬리말에 기입 */
+const SIGNUP_OPEN = false;
+
+const STEPS = ['업종', '요금제', '정보', '약관', '결제수단', '완료'];
+let step = 0;
+let C = null;                       // catalog.json
+const S = {                         // 모아 둔 답
+  industryId: null, grade: null, conditionOk: false,
+  planKey: null, seats: null,
+  company: '', name: '', email: '', phone: '',
+  agreed: {}, billingKey: null, result: null
+};
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g,
+  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const won = n => n.toLocaleString('ko-KR');
+
+/* ── 진행 표시 ── */
+function drawSteps(){
+  $('steps').innerHTML = STEPS.map((_, i) =>
+    `<i class="${i <= step ? 'on' : ''}"></i>`).join('');
+}
+
+function go(n){ step = n; render(); window.scrollTo({top:0, behavior:'smooth'}); }
+
+/* ═════════ 1. 업종 ═════════ */
+function stepIndustry(){
+  const list = Catalog.allIndustries(C);
+  return `
+    <h2>어떤 일을 하시나요</h2>
+    <p class="sub">
+      업종에 따라 Re:Call 을 쓰실 수 있는지가 갈립니다.
+      가장 가까운 것 하나를 골라 주세요.
+    </p>
+    <div class="indpick" id="indpick">
+      ${list.map(i => `
+        <button data-id="${i.id}" class="${S.industryId === i.id ? 'sel' : ''}">
+          <span class="chip ${i.grade}">${i.grade === 'A' ? '가능' : i.grade === 'B' ? '조건부' : '불가'}</span>
+          <span class="nm">${esc(i.name)}</span>
+        </button>`).join('')}
+    </div>
+    <p class="hint">
+      목록에 없는 업종이면 <a href="mailto:hello@dnalabs.kr?subject=Re:Call 업종 문의" style="color:var(--blue);font-weight:600">문의해 주세요</a>.
+      쓰실 수 있는지 확인해 드립니다.
+    </p>
+    <div id="verdict"></div>`;
+}
+
+function drawVerdict(){
+  const box = $('verdict');
+  if (!S.industryId) { box.innerHTML = ''; return }
+  const i = Catalog.industry(C, S.industryId);
+  S.grade = i.grade;
+
+  if (i.grade === 'C') {
+    box.innerHTML = `
+      <div class="note stop" style="margin-top:22px">
+        <p><b>${esc(i.name)}</b> 은 Re:Call 을 쓰실 수 없습니다.</p>
+        <p>${esc(i.why)}</p>
+        ${i.law ? `<p style="font-size:.82rem;opacity:.85">근거 · ${esc(i.law)}</p>` : ''}
+        <p>${esc(C.industries.refusalNote)}</p>
+      </div>
+      <a href="recall.html" class="btn btn-g btn-full" style="margin-top:14px">돌아가기</a>`;
+    return;
+  }
+
+  if (i.grade === 'B') {
+    box.innerHTML = `
+      <div class="note warn" style="margin-top:22px">
+        <p><b>${esc(i.name)}</b> 은 조건을 지키시면 쓰실 수 있습니다.</p>
+        <p><b>조건 —</b> ${esc(i.condition)}</p>
+        ${i.law ? `<p style="font-size:.82rem;opacity:.85">근거 · ${esc(i.law)}</p>` : ''}
+      </div>
+      <div class="agree" style="margin-top:14px">
+        <label><input type="checkbox" id="condok" ${S.conditionOk ? 'checked' : ''}>
+          <span>위 조건을 확인했고, 해당 정보를 Re:Call 에 넣지 않겠습니다.</span></label>
+      </div>
+      <button class="btn btn-p btn-full" style="margin-top:16px" id="next1" ${S.conditionOk ? '' : 'disabled'}>다음</button>`;
+    $('condok').onchange = e => { S.conditionOk = e.target.checked; drawVerdict() };
+    $('next1').onclick = () => go(1);
+    return;
+  }
+
+  box.innerHTML = `
+    <div class="note info" style="margin-top:22px">
+      <p><b>${esc(i.name)}</b> — 바로 쓰실 수 있습니다.</p>
+      <p>${esc(i.why)}</p>
+    </div>
+    <button class="btn btn-p btn-full" style="margin-top:16px" id="next1">다음</button>`;
+  $('next1').onclick = () => go(1);
+}
+
+/* ═════════ 2. 요금제 ═════════ */
+function stepPlan(){
+  const plans = Catalog.planList(C);
+  return `
+    <a class="back" id="back">← 업종 다시 고르기</a>
+    <h2>몇 분이 쓰시나요</h2>
+    <p class="sub">
+      혼자 쓰시면 Personal, 회사에서 여럿이 쓰시면 Business 입니다.
+      나중에 인원이 늘면 상위 요금제로 바꾸실 수 있습니다.
+    </p>
+    <div class="planpick" id="planpick">
+      ${plans.map(p => `
+        <button data-key="${p.key}" class="${S.planKey === p.key ? 'sel' : ''}"
+                ${p.per === 'quote' ? 'disabled' : ''}>
+          <div class="top">
+            <span class="nm">${esc(p.name)}</span>
+            <span class="lb">${esc(p.label)}</span>
+            <span class="pr">${p.price === null ? '별도 협의' : won(p.price) + '원'}</span>
+          </div>
+          <p class="bl">${esc(p.tagline)}${p.trialDays ? ` · 첫 ${p.trialDays}일 무료` : ''}</p>
+        </button>`).join('')}
+    </div>
+    <p class="hint">
+      50명 이상은 <a href="mailto:hello@dnalabs.kr?subject=Re:Call 도입 문의 (50명 이상)" style="color:var(--blue);font-weight:600">따로 문의</a>해 주세요.
+    </p>
+    <div id="seatbox"></div>`;
+}
+
+function drawSeats(){
+  const box = $('seatbox');
+  if (!S.planKey) { box.innerHTML = ''; return }
+  const p = Catalog.plan(C, S.planKey);
+
+  if (p.key === 'personal') {
+    S.seats = 1;
+    box.innerHTML = `
+      <div class="note info" style="margin-top:20px">
+        <p><b>첫 ${p.trialDays}일 무료입니다.</b> 결제 수단은 지금 등록하지만
+        무료 기간에는 청구되지 않고, 기간이 끝나기 전에 해지하시면 한 푼도 나가지 않습니다.</p>
+        <p>이후 매월 ${won(p.price)}원 (부가세 별도)</p>
+      </div>
+      <button class="btn btn-p btn-full" style="margin-top:16px" id="next2">다음</button>`;
+  } else {
+    box.innerHTML = `
+      <div class="field" style="margin-top:20px">
+        <label for="seats">직원 수 (관리자 본인 포함)</label>
+        <input class="inp" id="seats" type="number" min="${p.seatMin}" max="${p.seatMax}"
+               inputmode="numeric" value="${S.seats || ''}" placeholder="예: 8">
+        <p class="hint">${esc(p.name)} 는 ${p.seatMin}명부터 ${p.seatMax}명까지입니다.</p>
+        <p class="err" id="seaterr" hidden></p>
+      </div>
+      <div class="note info">
+        <p><b>매월 ${won(p.price)}원</b> (부가세 별도) · 무료 기간 없음</p>
+        <p>Business 요금제는 회사 단위 정액입니다. 인원이 늘어도 한도 안에서는 같은 금액입니다.</p>
+      </div>
+      <button class="btn btn-p btn-full" style="margin-top:16px" id="next2">다음</button>`;
+
+    $('seats').oninput = e => { S.seats = parseInt(e.target.value, 10) || null; };
+  }
+
+  $('next2').onclick = () => {
+    if (p.key !== 'personal') {
+      const err = $('seaterr');
+      if (!Catalog.seatsFit(p, S.seats)) {
+        const better = Catalog.planForSeats(C, S.seats);
+        err.textContent = !S.seats
+          ? '직원 수를 넣어 주세요.'
+          : better
+            ? `${S.seats}명은 ${better.name} (${won(better.price)}원) 에 해당합니다. 그쪽을 골라 주세요.`
+            : `${S.seats}명은 별도 협의가 필요합니다. 문의해 주세요.`;
+        err.hidden = false;
+        $('seats').classList.add('bad');
+        return;
+      }
+      err.hidden = true;
+      $('seats').classList.remove('bad');
+    }
+    go(2);
+  };
+}
+
+/* ═════════ 3. 회사·담당자 ═════════ */
+function stepInfo(){
+  const p = Catalog.plan(C, S.planKey);
+  const solo = p.key === 'personal';
+  return `
+    <a class="back" id="back">← 요금제 다시 고르기</a>
+    <h2>가입 정보</h2>
+    <p class="sub">
+      여기 적으신 것으로 계정을 만듭니다.
+      ${solo ? '' : '회사코드를 받으신 분이 관리자가 되어 직원 계정을 추가하실 수 있습니다.'}
+    </p>
+
+    <div class="field">
+      <label for="f-company">${solo ? '상호 또는 활동명' : '회사 이름'}</label>
+      <input class="inp" id="f-company" value="${esc(S.company)}" placeholder="${solo ? '예: 최환준 컨설팅' : '예: 액티바코리아'}" autocomplete="organization">
+    </div>
+    <div class="field">
+      <label for="f-name">담당자 이름</label>
+      <input class="inp" id="f-name" value="${esc(S.name)}" placeholder="예: 최환준" autocomplete="name">
+    </div>
+    <div class="field">
+      <label for="f-email">이메일</label>
+      <input class="inp" id="f-email" type="email" value="${esc(S.email)}" placeholder="예: hello@company.co.kr" autocomplete="email">
+      <p class="hint">청구서와 서비스 안내를 보내는 주소입니다.</p>
+    </div>
+    <div class="field">
+      <label for="f-phone">연락처</label>
+      <input class="inp" id="f-phone" type="tel" inputmode="tel" value="${esc(S.phone)}" placeholder="예: 010-1234-5678" autocomplete="tel">
+    </div>
+    <p class="err" id="inferr" hidden></p>
+    <button class="btn btn-p btn-full" style="margin-top:8px" id="next3">다음</button>`;
+}
+
+function wireInfo(){
+  $('next3').onclick = () => {
+    S.company = $('f-company').value.trim();
+    S.name    = $('f-name').value.trim();
+    S.email   = $('f-email').value.trim();
+    S.phone   = $('f-phone').value.trim();
+
+    const bad = [];
+    if (S.company.length < 2) bad.push('회사 이름');
+    if (S.name.length < 2)    bad.push('담당자 이름');
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(S.email)) bad.push('이메일');
+    if (!/^0\d{1,2}-?\d{3,4}-?\d{4}$/.test(S.phone.replace(/\s/g,''))) bad.push('연락처');
+
+    const err = $('inferr');
+    if (bad.length) {
+      err.textContent = bad.join(' · ') + ' 을(를) 다시 확인해 주세요.';
+      err.hidden = false;
+      return;
+    }
+    err.hidden = true;
+    go(3);
+  };
+}
+
+/* ═════════ 4. 약관 ═════════ */
+const TERMS = [
+  { id:'tos',     req:true,  label:'이용약관 동의',                    link:'terms.html' },
+  { id:'privacy', req:true,  label:'개인정보 수집·이용 동의',            link:'privacy.html' },
+  { id:'billing', req:true,  label:'유료 서비스 이용 및 자동결제 동의',   link:'refund.html' },
+  { id:'oversea', req:false, label:'명함 자동 인식의 국외 전송 동의',     link:'privacy.html',
+    note:'동의하지 않으셔도 가입되고, 명함을 직접 입력해 쓰실 수 있습니다. 나중에 설정에서 켜고 끌 수 있습니다.' },
+  { id:'market',  req:false, label:'제품 소식 이메일 수신',             link:null }
+];
+
+function stepTerms(){
+  return `
+    <a class="back" id="back">← 정보 다시 쓰기</a>
+    <h2>약관 동의</h2>
+    <p class="sub">필수 항목에 동의하셔야 가입이 진행됩니다.</p>
+    <div class="agree">
+      <label class="all"><input type="checkbox" id="allck">
+        <span>전체 동의합니다</span></label>
+      ${TERMS.map(t => `
+        <label><input type="checkbox" data-t="${t.id}" ${S.agreed[t.id] ? 'checked' : ''}>
+          <span>
+            <span class="${t.req ? 'req' : 'opt'}">${t.req ? '[필수]' : '[선택]'}</span>
+            ${esc(t.label)}
+            ${t.link ? ` <a href="${t.link}" target="_blank" rel="noopener">보기</a>` : ''}
+            ${t.note ? `<br><span style="font-size:.82rem;color:var(--mut)">${esc(t.note)}</span>` : ''}
+          </span></label>`).join('')}
+    </div>
+    <p class="err" id="tmerr" hidden></p>
+    <button class="btn btn-p btn-full" style="margin-top:18px" id="next4">다음</button>`;
+}
+
+function wireTerms(){
+  const boxes = [...document.querySelectorAll('[data-t]')];
+  const sync = () => {
+    boxes.forEach(b => S.agreed[b.dataset.t] = b.checked);
+    $('allck').checked = boxes.every(b => b.checked);
+  };
+  boxes.forEach(b => b.onchange = sync);
+  $('allck').onchange = e => { boxes.forEach(b => b.checked = e.target.checked); sync() };
+  sync();
+
+  $('next4').onclick = () => {
+    const missing = TERMS.filter(t => t.req && !S.agreed[t.id]);
+    const err = $('tmerr');
+    if (missing.length) {
+      err.textContent = '필수 항목에 동의해 주세요 — ' + missing.map(t => t.label).join(', ');
+      err.hidden = false;
+      return;
+    }
+    err.hidden = true;
+    go(4);
+  };
+}
+
+/* ═════════ 5. 결제수단 ═════════ */
+function stepPay(){
+  const p = Catalog.plan(C, S.planKey);
+  const free = p.trialDays > 0;
+  return `
+    <a class="back" id="back">← 약관 다시 보기</a>
+    <h2>결제 수단 등록</h2>
+    <p class="sub">
+      ${free
+        ? `첫 ${p.trialDays}일은 무료입니다. 지금은 카드가 쓸 수 있는 것인지만 확인하고, 요금은 무료 기간이 끝난 뒤부터 청구됩니다.`
+        : '매월 자동으로 결제됩니다. 지금 카드가 쓸 수 있는 것인지 확인합니다.'}
+    </p>
+
+    <div class="issued">
+      <div><b>요금제</b><span style="font-size:.95rem">${esc(p.name)}</span><span></span></div>
+      <div><b>인원</b><span style="font-size:.95rem">${S.seats}명</span><span></span></div>
+      <div><b>월 요금</b><span style="font-size:.95rem">${won(p.price)}원 <span style="font-weight:600;color:var(--mut);font-size:.85rem">(부가세 별도)</span></span><span></span></div>
+      <div><b>첫 청구</b><span style="font-size:.95rem">${free ? `${p.trialDays}일 뒤` : '오늘'}</span><span></span></div>
+    </div>
+
+    <div class="note info">
+      <p><b>카드번호는 저희 서버에 저장되지 않습니다.</b>
+      카드 정보는 결제대행사 화면에서 직접 입력하시고, 저희는 다음 달에 결제할 때 쓰는
+      열쇠값만 받습니다. 카드번호 자체는 저희가 볼 수 없습니다.</p>
+    </div>
+
+    <button class="btn btn-p btn-full btn-lg" style="margin-top:18px" id="paybtn">
+      카드 등록하고 가입 마치기
+    </button>
+    <p class="err" id="payerr" hidden></p>
+    <p class="hint" style="margin-top:12px">
+      해지는 언제든 설정에서 하실 수 있고, 해지하면 다음 달부터 청구되지 않습니다.
+    </p>`;
+}
+
+function wirePay(){
+  const btn = $('paybtn'), err = $('payerr');
+  btn.onclick = async () => {
+    err.hidden = true;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin"></span> 카드 확인 중…';
+
+    try {
+      /* 1) 결제대행사 화면에서 빌링키를 받아옵니다.
+            카드번호는 이 코드가 보지 않습니다. */
+      const billing = await PG.requestBillingKey({
+        customerName: S.name,
+        email: S.email,
+        planName: Catalog.plan(C, S.planKey).name
+      });
+      S.billingKey = billing.billingKey;
+
+      /* 2) 0원 승인으로 카드가 살아 있는지 확인합니다. */
+      const check = await PG.authorizeZero(billing.billingKey);
+      if (!check.ok) throw new Error(check.message || '카드 확인에 실패했습니다.');
+
+      /* 3) 서버가 회사코드와 계정을 발급합니다. */
+      S.result = await createAccount();
+      go(5);
+
+    } catch (e) {
+      err.textContent = e.message || '문제가 생겼습니다. 잠시 뒤 다시 시도해 주세요.';
+      err.hidden = false;
+      btn.disabled = false;
+      btn.textContent = '카드 등록하고 가입 마치기';
+    }
+  };
+}
+
+/* 서버에 가입을 요청합니다.
+   금액·좌석·업종 판정은 서버가 catalog 를 보고 다시 검사합니다.
+   화면에서 고른 값을 그대로 믿지 않습니다. */
+async function createAccount(){
+  const res = await fetch(CFG.supabaseUrl + '/functions/v1/signup', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': CFG.anonKey,
+      'Authorization': 'Bearer ' + CFG.anonKey
+    },
+    body: JSON.stringify({
+      industryId: S.industryId,
+      planKey: S.planKey,
+      seats: S.seats,
+      company: S.company,
+      name: S.name,
+      email: S.email,
+      phone: S.phone,
+      agreed: S.agreed,
+      billingKey: S.billingKey
+    })
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || `가입 처리에 실패했습니다 (${res.status})`);
+  return data;
+}
+
+/* ═════════ 6. 완료 ═════════ */
+function stepDone(){
+  const r = S.result || {};
+  return `
+    <h2>가입이 끝났습니다</h2>
+    <p class="sub">
+      아래 세 가지로 로그인하십니다. <b>비밀번호는 지금 한 번만 보입니다.</b>
+      옮겨 적어 두시고, 첫 로그인 뒤에 바꾸세요.
+    </p>
+
+    <div class="issued">
+      <div><b>회사코드</b><span id="v-code">${esc(r.companyCode || '——')}</span>
+        <button class="cp" data-cp="v-code">복사</button></div>
+      <div><b>아이디</b><span id="v-id">${esc(r.loginId || '——')}</span>
+        <button class="cp" data-cp="v-id">복사</button></div>
+      <div><b>비밀번호</b><span id="v-pw">${esc(r.password || '——')}</span>
+        <button class="cp" data-cp="v-pw">복사</button></div>
+    </div>
+
+    <div class="note warn">
+      <p><b>비밀번호는 다시 볼 수 없습니다.</b>
+      저희도 저장해 두지 않아서 알려 드릴 수 없고, 잊으신 경우에는 재발급만 됩니다.</p>
+    </div>
+
+    ${r.trialEndsAt ? `
+      <div class="note info">
+        <p><b>${esc(r.trialEndsAt)}</b> 까지 무료입니다.
+        그 전에 해지하시면 요금이 청구되지 않습니다.</p>
+      </div>` : ''}
+
+    <a href="https://recall.dnalabs.kr" class="btn btn-p btn-full btn-lg" style="margin-top:18px">Re:Call 열기</a>
+    <p class="hint" style="margin-top:12px">
+      화면을 닫기 전에 위 세 가지를 꼭 옮겨 적어 두세요.
+    </p>`;
+}
+
+function wireDone(){
+  document.querySelectorAll('.cp').forEach(b => {
+    b.onclick = async () => {
+      const t = $(b.dataset.cp).textContent.trim();
+      try { await navigator.clipboard.writeText(t); b.textContent = '복사됨'; }
+      catch { b.textContent = '복사 실패'; }
+      setTimeout(() => b.textContent = '복사', 1400);
+    };
+  });
+}
+
+/* ═════════ 그리기 ═════════ */
+function render(){
+  drawSteps();
+  const p = $('panel');
+  if (step === 0){ p.innerHTML = stepIndustry(); wireIndustry(); }
+  if (step === 1){ p.innerHTML = stepPlan();     wirePlan(); }
+  if (step === 2){ p.innerHTML = stepInfo();     wireInfo();  wireBack(1); }
+  if (step === 3){ p.innerHTML = stepTerms();    wireTerms(); wireBack(2); }
+  if (step === 4){ p.innerHTML = stepPay();      wirePay();   wireBack(3); }
+  if (step === 5){ p.innerHTML = stepDone();     wireDone(); }
+}
+
+function wireBack(n){ const b = $('back'); if (b) b.onclick = () => go(n); }
+
+function wireIndustry(){
+  $('indpick').onclick = e => {
+    const b = e.target.closest('button[data-id]');
+    if (!b) return;
+    S.industryId = b.dataset.id;
+    S.conditionOk = false;
+    document.querySelectorAll('#indpick button').forEach(x => x.classList.toggle('sel', x === b));
+    drawVerdict();
+  };
+  drawVerdict();
+}
+
+function wirePlan(){
+  wireBack(0);
+  $('planpick').onclick = e => {
+    const b = e.target.closest('button[data-key]');
+    if (!b) return;
+    S.planKey = b.dataset.key;
+    S.seats = b.dataset.key === 'personal' ? 1 : null;
+    document.querySelectorAll('#planpick button').forEach(x => x.classList.toggle('sel', x === b));
+    drawSeats();
+  };
+  drawSeats();
+}
+
+/* ═════════ 시작 ═════════ */
+function closedPanel(){
+  return `
+    <h2>가입은 곧 열립니다</h2>
+    <p class="sub">
+      Re:Call 을 정식 서비스로 준비하고 있습니다.
+      결제와 사업자 신고 절차를 마치는 대로 이 화면에서 바로 가입하실 수 있습니다.
+    </p>
+    <div class="note info">
+      <p><b>먼저 써 보고 싶으시면 알려 주세요.</b>
+      업종만 확인되면 열리는 대로 가장 먼저 연락드리겠습니다.</p>
+    </div>
+    <a href="mailto:hello@dnalabs.kr?subject=Re:Call 사전 문의&body=회사명:%0D%0A업종:%0D%0A쓰실 인원:%0D%0A연락처:%0D%0A"
+       class="btn btn-p btn-full btn-lg" style="margin-top:18px">사전 문의하기</a>
+    <div class="btnrow" style="margin-top:10px;display:flex;gap:10px">
+      <a href="recall.html#pricing" class="btn btn-g" style="flex:1">요금제 보기</a>
+      <a href="recall.html#industries" class="btn btn-g" style="flex:1">쓰는 업종 보기</a>
+    </div>`;
+}
+
+Catalog.load().then(c => {
+  C = c;
+
+  if (!SIGNUP_OPEN) {
+    document.getElementById('steps').hidden = true;
+    $('panel').innerHTML = closedPanel();
+    return;
+  }
+
+  if (PG.isStub) $('testbar').hidden = false;
+
+  /* 요금제 페이지에서 넘어온 경우 그것을 미리 골라 둡니다 */
+  const want = new URLSearchParams(location.search).get('plan');
+  if (want && Catalog.plan(C, want)) S.planKey = want;
+
+  render();
+}).catch(e => {
+  $('panel').innerHTML =
+    `<div class="note stop"><p>${esc(e.message)}</p>
+     <p>잠시 뒤 다시 열어 주세요.</p></div>`;
+});
+</script>
+
+</body>
+</html>
