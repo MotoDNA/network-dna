@@ -39,6 +39,18 @@ body{
   font-family:Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;
   font-size:1rem; line-height:1.5; letter-spacing:-.02em;
   overscroll-behavior-y:none;
+  /* 브라우저 기본값은 한글을 **아무 글자에서나** 자릅니다.
+     "계약합니 / 다." 처럼 낱말이 두 줄로 쪼개져 읽다가 걸립니다.
+     keep-all 은 띄어쓰기에서만 넘깁니다.
+
+     대신 띄어쓰기 없는 긴 것(주소·발주번호·영문 한 덩어리)이 칸보다 길면
+     삐져나가므로 overflow-wrap 을 함께 둡니다. **둘을 같이 써야 합니다** —
+     keep-all 만 두면 긴 링크 하나에 가로 스크롤이 생깁니다.
+
+     주소·코드처럼 아무 데서나 잘려도 되는 자리는 그 자리에서
+     word-break:break-all 로 따로 못 박아 두었습니다. 그쪽이 이깁니다. */
+  word-break:keep-all;
+  overflow-wrap:break-word;
 }
 button,input,textarea,select{font-family:inherit;font-size:1rem;color:inherit;letter-spacing:-.02em}
 button{cursor:pointer;border:0;background:none;padding:0;color:inherit;-webkit-user-select:none;user-select:none}
@@ -336,7 +348,7 @@ nav.tabs button:active{opacity:.6}
 .cb svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:0}
 .cb.on{background:var(--blue);border-color:var(--blue)}
 .cb.on svg{opacity:1}
-.todo .tx{flex:1;font-size:.91rem;font-weight:600;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+.todo .tx{flex:1;font-size:.91rem;font-weight:600;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
 .todo .due{font-size:.76rem;color:var(--mut);font-weight:600;margin-top:3px}
 .todo .due.over{color:var(--red)}
 .todo.done .tx{color:var(--dim);font-weight:400}
@@ -352,7 +364,7 @@ nav.tabs button:active{opacity:.6}
 .ent .top{display:flex;align-items:center;gap:8px;margin-bottom:7px}
 .kind{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:7px;font-size:.72rem;font-weight:800;letter-spacing:-.01em}
 .ent .tm{font-size:.75rem;color:var(--dim);font-weight:600;margin-left:auto}
-.ent .bd{font-size:.91rem;font-weight:500;line-height:1.6;white-space:pre-wrap;word-break:break-word;color:var(--ink)}
+.ent .bd{font-size:.91rem;font-weight:500;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--ink)}
 .ent.done .bd{color:var(--dim);font-weight:400}
 .ent .del{position:absolute;right:8px;bottom:8px;width:30px;height:30px;border-radius:9px;color:var(--dim);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s}
 .ent:hover .del,.ent:focus-within .del{opacity:1}
