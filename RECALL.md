@@ -58,6 +58,7 @@ build-shots.sh           ★ 홈페이지에 넣을 **실제 사용 화면** 여
 shoot.mjs                  그 안에서 크롬을 직접 몰아 찍는 부분
 shots/*.js                 앱마다 넣을 예시 자료 (bind- · call- · store-)
 build-appshots.py        ★ 앱 일곱의 화면 한 컷씩 — 각 프로젝트의 스토어용 원본을 줄입니다
+set-mailorder.py         ★ 통신판매업 신고번호를 꼬리말 네 곳에 한 번에 넣습니다
 build-privacy.sh         개인정보 처리방침 PDF
 
 supabase/migrations/
@@ -291,7 +292,7 @@ curl -s -o /dev/null -D - -X OPTIONS \
 | 할 일 | 왜 막혀 있나 |
 |---|---|
 | **결제대행사(PG) 계약** | 계약 전이라 `web/pg.js` 가 **스텁**입니다. 가입 화면에 "테스트 모드" 띠가 뜨고 실제 돈은 안 움직입니다. 계약 후 `pg.js` · `signup` 의 `pgAuthorizeZero` · `subscription` 의 `pgChargeOnce` **셋**을 채우면 됩니다 |
-| **통신판매업 신고** | 구매안전서비스 확인증 심사 대기. ⚠ 신고 후 **꼬리말에 신고번호를 넣어야** 합니다 — 자리표시자를 뺐기 때문에 알림이 안 뜹니다 |
+| **통신판매업 신고** | 구매안전서비스 확인증 심사 대기. 나오면 **`python3 set-mailorder.py "신고번호"`** 한 번이면 됩니다 — 법정 표시가 네 쪽(index · services · reservice-guide · recall)에 똑같이 들어 있어서 손으로 고치면 한 군데를 빠뜨립니다 |
 | **회원가입 잠금 해제** | 지금 `SIGNUP_OPEN = false` 로 닫혀 있습니다. PG 계약 · 신고번호 둘이 되면 `true` 로 |
 | **가입 안내 메일** | 안 만들었습니다. 그래서 화면에서 "메일로 보내 드립니다" 문구를 뺐고, 지금은 비밀번호를 화면에서 한 번만 보여 줍니다 |
 | **매월 요금 걷기** | 없습니다. `apply_due_plan_changes()` 를 먼저 부르는 순서를 지켜야 합니다 |
