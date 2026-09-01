@@ -74,7 +74,10 @@ input,select{font:inherit;color:inherit;letter-spacing:-.02em}
 .top .out{font-size:.82rem;font-weight:700;color:var(--mut);padding:6px 10px;border-radius:8px}
 .top .out:hover{background:var(--fill)}
 
-.tabs{max-width:1080px;margin:0 auto;padding:0 20px;display:flex;gap:4px;border-bottom:1px solid var(--line);background:#fff}
+/* 위 막대(58px) 바로 밑에 붙입니다. 안 붙여 두면 조금만 내려도 탭이 사라져서
+   다른 자리로 갈 방법이 없어 보입니다. */
+.tabswrap{position:sticky;top:58px;z-index:19;background:#fff;border-bottom:1px solid var(--line)}
+.tabs{max-width:1080px;margin:0 auto;padding:0 20px;display:flex;gap:4px}
 .tabs button{
   padding:13px 14px;font-size:.9rem;font-weight:700;color:var(--mut);
   border-bottom:2px solid transparent;margin-bottom:-1px;
@@ -250,9 +253,11 @@ p.ps{font-size:.88rem;color:var(--mut);margin:0 0 20px}
       <button class="out" id="signOut">나가기</button>
     </div>
   </div>
-  <div class="tabs" id="tabs">
-    <button data-p="co" aria-selected="true">회사</button>
-    <button data-p="log" aria-selected="false">기록</button>
+  <div class="tabswrap">
+    <div class="tabs" id="tabs">
+      <button data-p="co" aria-selected="true">회사</button>
+      <button data-p="log" aria-selected="false">기록</button>
+    </div>
   </div>
 
   <main>
@@ -416,7 +421,7 @@ function paintCo(){
 
   $('coSub').textContent = cs.length ? cs.length + '곳' : '아직 없습니다';
   $('sum').innerHTML =
-    [['회사', cs.length], ['계정', 계정],
+    [['회사', cs.length], ['쓰는 계정', 계정],
      ['Re:Bind', 쓰는곳.rebind], ['Re:Call', 쓰는곳.recall]]
     .map(([k,n]) => '<div class="b"><div class="n">'+num(n)+'</div><div class="k">'+esc(k)+'</div></div>').join('');
 
@@ -440,11 +445,14 @@ function paintCo(){
         '<span class="apps">'+
           (c.apps.length
             ? c.apps.map(a=>'<span class="tag '+a+'">'+esc(APP_KO[a]||a)+'</span>').join('')
-            : '<span class="tag none">서비스 없음</span>')+
+            /* 우리 회사는 apps 가 비어 있는 것이 정상입니다. 세 서비스를 안 쓰니까요.
+               고객사가 비어 있는 것만 빨갛게 — 그건 만들어 놓고 아무도 못 들어가는 상태입니다. */
+            : (c.isOps ? '<span class="tag off">운영</span>'
+                       : '<span class="tag none">서비스 없음</span>'))+
         '</span>'+
       '</div>'+
       '<div class="use">'+
-        '<span class="q">계정</span> <b>'+num(c.users)+'</b>'+
+        '<span class="q">쓰는 계정</span> <b>'+num(c.users)+'</b>'+
         u.map(([k,n])=>'<span><span class="q">'+esc(k)+'</span> <b>'+num(n)+'</b></span>').join('')+
         '<span class="sp"></span>'+
         '<span class="q">마지막 접속 '+esc(언제(c.lastSeen))+'</span>'+

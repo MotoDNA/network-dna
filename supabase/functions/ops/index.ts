@@ -116,6 +116,16 @@ Deno.serve(async (req) => {
        한 번에 받아 와서 회사별 최댓값을 구합니다. */
     const seen: Record<string, string> = {};
     const { data: people } = await admin.from('profiles').select('id, company_id');
+
+    /* 운영자가 속한 회사는 우리 회사입니다. apps 가 비어 있는 것이 정상이라
+       "서비스 없음" 이라는 빨간 딱지를 붙이면 안 됩니다 — 고쳐야 할 것처럼 보입니다. */
+    const opsCo = new Set<string>();
+    {
+      const { data: ops } = await admin.from('operators').select('user_id');
+      const cid: Record<string, string> = {};
+      for (const p of (people ?? [])) cid[p.id] = p.company_id;
+      for (const o of (ops ?? [])) if (cid[o.user_id]) opsCo.add(cid[o.user_id]);
+    }
     const byUser: Record<string, string> = {};
     for (const p of (people ?? [])) byUser[p.id] = p.company_id;
     try {
@@ -140,6 +150,7 @@ Deno.serve(async (req) => {
         },
         users: prof[c.id] ?? 0,
         subs: sub[c.id] ?? 0,
+        isOps: opsCo.has(c.id),
         lastSeen: seen[c.id] ?? null,
       })),
     });
