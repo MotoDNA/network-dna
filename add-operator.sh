@@ -23,6 +23,18 @@ fi
 CODE="$(echo "$CODE" | tr '[:lower:]' '[:upper:]')"
 LOGIN="$(echo "$LOGIN" | tr '[:upper:]' '[:lower:]')"
 
+# 아래에서 이 값을 SQL 문장 안에 그대로 끼워 넣습니다. 따옴표가 섞이면
+# 문장이 깨지고, 나쁘게 쓰면 다른 SQL 을 붙일 수도 있습니다.
+# 이 스크립트는 우리가 직접 치는 것이지만, 값이 회사 코드·아이디 모양이
+# 아니면 아예 진행하지 않는 편이 확실합니다.
+# (회사 코드·아이디 규칙은 admin-user 함수의 CODE_RE · ID_RE 와 같습니다)
+if ! echo "$CODE"  | grep -qE '^[A-Z0-9]{4,12}$'; then
+  echo "  ‼ 회사 코드는 영문 대문자와 숫자 4~12자입니다: $CODE"; exit 1
+fi
+if ! echo "$LOGIN" | grep -qE '^[a-z0-9._-]{2,32}$'; then
+  echo "  ‼ 아이디는 영문 소문자·숫자·-_. 2~32자입니다: $LOGIN"; exit 1
+fi
+
 if [ "$MODE" = "--빼기" ]; then
   SQL="delete from public.operators where user_id = (
          select p.id from public.profiles p
