@@ -85,7 +85,43 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;letter
 .btn-full{width:100%}
 
 /* ───── 히어로 ───── */
-.hero{padding:96px 0 84px;text-align:center}
+/* ═════════ 첫 화면 배경 영상 ═════════
+   배경은 **눈에 안 띌수록** 좋습니다. 여기서 하는 일은 셋뿐입니다 —
+   덮개로 글씨를 지키고, 스크롤하면 사라지고, 안 되면 조용히 빠집니다. */
+.hero{padding:96px 0 84px;text-align:center;position:relative;isolation:isolate;overflow:hidden}
+.herobg{position:absolute;inset:0;z-index:-1;pointer-events:none;background:var(--bg)}
+.herobg video,
+.herobg img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* 덮개 — 이게 없으면 영상이 밝은 자리에서 글씨를 먹습니다.
+   아래로 갈수록 흰색이 짙어져 다음 칸과 자연스럽게 이어집니다. */
+.herobg .veil{
+  position:absolute;inset:0;
+  background:linear-gradient(180deg,
+    rgba(255,255,255,.72) 0%,
+    rgba(255,255,255,.80) 45%,
+    rgba(255,255,255,.96) 88%,
+    var(--bg) 100%);
+}
+
+/* 스크롤하면 옅어집니다. 첫 화면을 지나면 배경이 계속 도는 것을
+   볼 이유가 없고, 아래 내용과 겹쳐 보이면 산만합니다.
+   animation-timeline 을 모르는 브라우저에서는 그냥 계속 보입니다 — 그래도 됩니다. */
+@supports (animation-timeline: view()){
+  .herobg{
+    animation:heroFade linear both;
+    animation-timeline:view();
+    animation-range:exit 0% exit 90%;
+  }
+  @keyframes heroFade{ to{ opacity:0 } }
+}
+
+/* 움직임을 불편해하는 분에게는 멈춘 그림 한 장만 보여 줍니다.
+   기기 설정(손쉬운 사용 → 동작 줄이기)을 그대로 따릅니다. */
+@media (prefers-reduced-motion: reduce){
+  .herobg video{display:none}
+  .herobg{background:var(--bg) url(hero-poster.jpg) center/cover}
+}
 .eyebrow{
   display:inline-block;font-size:.78rem;font-weight:700;letter-spacing:.02em;
   color:var(--blue);background:var(--blue-bg);
