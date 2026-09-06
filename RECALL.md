@@ -24,20 +24,21 @@
 
 ---
 
-## 2. 형제 서비스 셋
+## 2. 형제 서비스 넷
 
-DNA Labs 서비스가 셋이고 **같은 Supabase 프로젝트·같은 계정 목록**을 씁니다.
+DNA Labs 서비스가 넷이고 **같은 Supabase 프로젝트·같은 계정 목록**을 씁니다.
 
 | 서비스 | 하는 일 | 새 주소 | 옛 주소 | 폴더 |
 |---|---|---|---|---|
 | Re:Bind | 프로젝트별 공정 관리 | `dnalabs.kr/bind` | `rebind.dnalabs.kr` | `~/Desktop/Rebind` |
 | **Re:Call** | **고객관리** | `dnalabs.kr/call` | `recall.dnalabs.kr` | `~/Desktop/network-dna` |
 | Re:Store | 가맹점 발주·정산 | `dnalabs.kr/store` | `restore.dnalabs.kr` | `~/Desktop/Restore` |
+| **Re:O-S** | 제작 외주관리 | `dnalabs.kr/os` | — | `~/Desktop/05_개발프로젝트/Reos` |
 
-⚠ **셋이 얽혀 있어 하나만 보고 고치면 다른 쪽이 멈추는 것 셋**
+⚠ **넷이 얽혀 있어 하나만 보고 고치면 다른 쪽이 멈추는 것 셋**
 1. `ALLOWED_ORIGIN` (6장) — **이 저장소가 홈페이지도 갖고 있어 특히 조심**
 2. `companies.apps` (5장)
-3. 로그인 화면의 서비스 토글 — 세 앱이 같은 차례·같은 문구
+3. 로그인 화면의 서비스 토글 — **네 앱**이 같은 차례·같은 문구
 
 **Re:Call 이 형제 중 맏이입니다.** `0001_init.sql` 에서 만든 도우미 함수
 (`current_company_id()` · `is_admin()`)를 셋이 다 씁니다.
@@ -146,7 +147,7 @@ apps text[]   {rebind} · {recall} · {restore} · 여러 개 가능
 
 **비어 있으면 아무 데도 못 들어갑니다.** 새 회사를 만들 때 꼭 함께 넣으세요.
 
-지금: `ACTIVA {rebind,recall}` · `BKT {rebind}` · `9DORO {restore}`
+지금: `ACTIVA {rebind,recall,reos}` · `BKT {rebind}` · `9DORO {restore}` · `DNALABS {}`
 
 **화면이 아니라 데이터베이스가 막습니다.**
 `company_for_app('recall')` 이 산 서비스면 회사 id, 아니면 null 을 돌려주고,
@@ -158,6 +159,7 @@ null 과의 비교는 참이 되지 않아 그대로 닫힙니다.
 |---|---|
 | Re:Bind 의 표 | `projects` · `project_steps` · `project_money` · `client_favorites` |
 | Re:Store 의 표 | `stores` · `supply_items` · `orders` · `order_lines` |
+| Re:O-S 의 표 | `os_*` 스물 (프로젝트·사양·견적·발주·샘플·원가…) |
 | 공용 | `companies` · `profiles` · `company_settings` · `audit_log` |
 
 ### 결제 표는 더 닫혀 있습니다
@@ -202,7 +204,8 @@ supabase secrets set ALLOWED_ORIGIN="https://rebind.dnalabs.kr,https://recall.dn
 
 바꾼 뒤 **함수를 모두 다시 배포**해야 반영됩니다 —
 `read-card` `admin-user` `signup` `subscription` (여기) ·
-`share-view` `read-order` (Re:Bind) · `store-gate` (Re:Store) · `ops` (운영).
+`share-view` `read-order` (Re:Bind) · `store-gate` (Re:Store) ·
+`reos-gate` (Re:O-S) · `ops` (운영).
 
 **넣고 끝내지 말고 되읽어 확인하세요.**
 
@@ -311,21 +314,24 @@ curl -s -o /dev/null -D - -X OPTIONS \
 
 ## 8. 로그인 화면
 
-세 서비스 토글. 세 앱이 **같은 차례·같은 문구**를 씁니다.
+**네 서비스** 토글. 네 앱이 **같은 차례·같은 문구**를 씁니다.
 
 ```js
-const APPS     = ['rebind','recall','restore'];
-const ONE_ROOF = {rebind:'/bind', recall:'/call', restore:'/store'};
+const APPS     = ['rebind','recall','restore','reos'];
+const ONE_ROOF = {rebind:'/bind', recall:'/call', restore:'/store', reos:'/os'};
 const underOneRoof = ONE_ROOF[APP_KEY] === location.pathname.replace(/\/+$/,'');
 ```
 
-서비스가 늘면 **세 파일에서 이 표에 한 줄씩** 더합니다.
+서비스가 늘면 **네 파일에서 이 표에 한 줄씩** 더합니다.
+
+토글이 넷이 되면서 390px 폰에서는 한 칸이 78px 밖에 안 남습니다.
+좁은 화면에서는 설명줄을 감추고 이름과 그림만 둡니다(`.pick.four`).
 
 | `dnalabs.kr/call` | 로그인 칸이 그대로. 여기서 로그인하고 그쪽으로 넘어갑니다 |
 |---|---|
 | `recall.dnalabs.kr` | 칸을 감추고 이동 단추만 — **엉뚱한 앱에 비밀번호를 치면 안 됩니다** |
 
-**로그인 정보는 세 서비스가 똑같습니다.** 보관 자리도 셋 다 `ndna-auth` 라
+**로그인 정보는 네 서비스가 똑같습니다.** 보관 자리도 넷 다 `ndna-auth` 라
 한 지붕(`dnalabs.kr/*`)에서는 한 번 로그인하면 산 것이 다 열립니다.
 
 칸의 예시 글자도 셋이 같습니다 — `예: ABCDEF` / `예: gdhong`.
@@ -409,7 +415,7 @@ io.open('/tmp/app.js','w',encoding='utf-8').write(re.findall(r'<script>(.*?)</sc
 | 공유 이미지 | `./build-og.sh` (크롬 필요) |
 | **사용 화면** | `./build-shots.sh` → `web/shot-*.png` 여섯 장. 앱을 고쳤으면 다시 돌립니다 |
 | **앱 화면** | `python3 build-appshots.py` → `web/app-*.png` 일곱 장. 원본은 각 앱 프로젝트에 있습니다 |
-| 로고 | `python3 ~/Desktop/Rebind/make-logo.py` → 세 앱과 홈페이지 파비콘까지 |
+| 로고 | `python3 ~/Desktop/05_개발프로젝트/Rebind/make-logo.py` → 네 앱과 홈페이지 파비콘까지 |
 
 `--scope` 를 빼면 `Not authorized` — `.vercel/project.json` 의 `orgId` 와
 로그인 계정의 팀 이름이 다릅니다.
