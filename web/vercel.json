@@ -76,6 +76,10 @@
     {
       "source": "/store",
       "destination": "https://restore.dnalabs.kr/store.html"
+    },
+    {
+      "source": "/os",
+      "destination": "https://motodna.github.io/Reos/reos.html"
     }
   ]
 }

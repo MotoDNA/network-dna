@@ -1,0 +1,32 @@
+{
+  "name": "Re:O-S · 제작 프로젝트와 외주관리",
+  "short_name": "Re:O-S",
+  "description": "제작기획사의 기획부터 외주·샘플·생산·정산까지",
+  "lang": "ko",
+  "start_url": "/os",
+  "scope": "/os",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F2F4F6",
+  "theme_color": "#FFFFFF",
+  "icons": [
+    {
+      "src": "https://motodna.github.io/Reos/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://motodna.github.io/Reos/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://motodna.github.io/Reos/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
