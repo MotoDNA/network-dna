@@ -357,5 +357,125 @@ Deno.serve(async (req) => {
     });
   }
 
+  /* ═════════ 홈페이지(dnalabs.kr) ═════════
+     회사·계정과 달리 이쪽은 우리 홈페이지 자체를 다룹니다. */
+
+  /* ── 한눈에 ── */
+  if (action === 'site') {
+    // 지날 때가 된 문의를 먼저 치웁니다. 따로 청소하는 일을 만들지 않습니다.
+    let 지운수 = 0;
+    try { const { data } = await admin.rpc('site_purge'); 지운수 = Number(data ?? 0) } catch { /* 막혀도 나머지는 보여 줍니다 */ }
+
+    const 오늘 = new Date().toISOString().slice(0, 10);
+    const 이레전 = new Date(Date.now() - 6 * 86400000).toISOString().slice(0, 10);
+    const 서른전 = new Date(Date.now() - 29 * 86400000).toISOString().slice(0, 10);
+
+    const [inq, hits, copy, cat] = await Promise.all([
+      admin.from('site_inquiries').select('*').order('at', { ascending: false }).limit(100),
+      admin.from('site_hits').select('day, path, n').gte('day', 서른전).order('day', { ascending: false }),
+      admin.from('site_copy').select('key, value, updated_at').order('key'),
+      admin.from('site_catalog').select('data, updated_at').eq('id', 1).maybeSingle(),
+    ]);
+
+    const 줄 = hits.data ?? [];
+    const 쪽별: Record<string, number> = {};
+    const 날별: Record<string, number> = {};
+    for (const r of 줄) {
+      쪽별[r.path] = (쪽별[r.path] ?? 0) + Number(r.n);
+      날별[r.day] = (날별[r.day] ?? 0) + Number(r.n);
+    }
+    const 이번주 = 줄.filter((r: any) => r.day >= 이레전)
+                     .reduce((a: number, r: any) => a + Number(r.n), 0);
+
+    return json({
+      ok: true,
+      inquiries: (inq.data ?? []).map((r: any) => ({
+        id: r.id, at: r.at, name: r.name, company: r.company, contact: r.contact,
+        want: r.want, people: r.people, message: r.message, source: r.source,
+        status: r.status, memo: r.memo, purgeOn: r.purge_on,
+      })),
+      hits: {
+        today: 날별[오늘] ?? 0,
+        week: 이번주,
+        byPath: Object.entries(쪽별).sort((a, b) => b[1] - a[1]).slice(0, 12),
+        byDay: Object.entries(날별).sort().slice(-30),
+      },
+      copy: copy.data ?? [],
+      catalog: cat.data ? { updatedAt: cat.data.updated_at, data: cat.data.data } : null,
+      purged: 지운수,
+    });
+  }
+
+  /* ── 문의 상태·메모 ── */
+  if (action === 'inquiry-set') {
+    const id = String(body.id ?? '');
+    const patch: Record<string, unknown> = {};
+    if (typeof body.status === 'string' &&
+        ['new', 'read', 'replied', 'closed'].includes(body.status)) patch.status = body.status;
+    if (typeof body.memo === 'string') patch.memo = String(body.memo).slice(0, 2000);
+    if (!Object.keys(patch).length) return json({ ok: false, error: '바꿀 것이 없습니다.' }, 400);
+    const { error } = await admin.from('site_inquiries').update(patch).eq('id', id);
+    if (error) return json({ ok: false, error: error.message }, 500);
+    await audit(null, me.id, 'ops.inquiry.set', id, patch);
+    return json({ ok: true });
+  }
+
+  /* ── 문의 지우기 ──
+     보관기간 전이라도 지울 수 있어야 합니다. 잘못 들어온 것, 스팸이 있습니다. */
+  if (action === 'inquiry-delete') {
+    const id = String(body.id ?? '');
+    const { error } = await admin.from('site_inquiries').delete().eq('id', id);
+    if (error) return json({ ok: false, error: error.message }, 500);
+    await audit(null, me.id, 'ops.inquiry.delete', id, null);
+    return json({ ok: true });
+  }
+
+  /* ── 홈페이지 글 덮어쓰기 ──
+     ⚠ 검색엔진은 HTML 원본을 봅니다. 여기 값은 사람에게만 보입니다.
+     그래서 "급할 때 고치는 자리" 입니다 — 오래 둘 글은 HTML 을 고쳐 올려야 합니다. */
+  if (action === 'copy-set') {
+    const key = String(body.key ?? '').trim();
+    const value = String(body.value ?? '');
+    if (!/^[a-z0-9][a-z0-9._-]{2,60}$/.test(key)) {
+      return json({ ok: false, error: '글 자리 이름이 올바르지 않습니다.' }, 400);
+    }
+    if (value.length > 2000) return json({ ok: false, error: '너무 깁니다 (2000자).' }, 400);
+    if (!value.trim()) {
+      // 비우면 HTML 원본으로 되돌아갑니다
+      await admin.from('site_copy').delete().eq('key', key);
+      await audit(null, me.id, 'ops.copy.reset', key, null);
+      return json({ ok: true, reset: true });
+    }
+    const { error } = await admin.from('site_copy')
+      .upsert({ key, value, updated_at: new Date().toISOString(), updated_by: me.id });
+    if (error) return json({ ok: false, error: error.message }, 500);
+    await audit(null, me.id, 'ops.copy.set', key, { len: value.length });
+    return json({ ok: true });
+  }
+
+  /* ── 요금제·업종 ──
+     catalog.json 이 단일 출처인 것은 그대로 둡니다. 여기서 고친 것은 사본이고,
+     내보내서 catalog.json 을 갈아 끼우고 sync-catalog.sh 를 돌려야 서버까지 맞습니다.
+     그걸 안 하면 화면과 서버 값이 어긋나고, 그건 그대로 결제 사고입니다. */
+  if (action === 'catalog-set') {
+    const data = body.data;
+    if (!data || typeof data !== 'object') return json({ ok: false, error: '값이 올바르지 않습니다.' }, 400);
+    const d = data as Record<string, any>;
+    if (!d.plans || typeof d.plans !== 'object') return json({ ok: false, error: 'plans 가 없습니다.' }, 400);
+    for (const [k, p] of Object.entries(d.plans)) {
+      if (k === '_') continue;
+      const v = p as Record<string, unknown>;
+      const per = String(v.per ?? '');
+      if (per !== 'quote' && !(typeof v.price === 'number' && v.price >= 0)) {
+        return json({ ok: false, error: k + ' 의 금액이 숫자가 아닙니다.' }, 400);
+      }
+    }
+    const { error } = await admin.from('site_catalog')
+      .upsert({ id: 1, data: d, updated_at: new Date().toISOString(), updated_by: me.id });
+    if (error) return json({ ok: false, error: error.message }, 500);
+    await audit(null, me.id, 'ops.catalog.set', 'catalog', { plans: Object.keys(d.plans).length });
+    return json({ ok: true });
+  }
+
   return json({ ok: false, error: '알 수 없는 요청입니다: ' + action }, 400);
 });

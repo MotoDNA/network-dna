@@ -252,6 +252,40 @@
       <a href="mailto:hello@dnalabs.kr?subject=Re:Service 문의&body=회사명:%0D%0A하시는 일:%0D%0A쓰실 인원:%0D%0A연락처:%0D%0A" class="btn btn-p btn-lg">이메일로 문의</a>
       <a href="tel:010-6451-5807" class="btn btn-o btn-lg">010-6451-5807</a>
     </div>
+    <form class="askbox" data-ask novalidate>
+      <div class="row2">
+        <div class="f"><label for="rs-nm">성함 *</label>
+          <input id="rs-nm" name="name" placeholder="홍길동" autocomplete="name" maxlength="40"></div>
+        <div class="f"><label for="rs-co">회사</label>
+          <input id="rs-co" name="company" placeholder="○○인쇄" autocomplete="organization" maxlength="60"></div>
+      </div>
+      <div class="row2">
+        <div class="f"><label for="rs-ct">연락받으실 곳 *</label>
+          <input id="rs-ct" name="contact" placeholder="메일 또는 전화" autocomplete="email" maxlength="120"></div>
+        <div class="f"><label for="rs-pp">쓰실 인원</label>
+          <input id="rs-pp" name="people" placeholder="예: 12명" maxlength="20"></div>
+      </div>
+      <div class="f"><label for="rs-wt">무엇이 궁금하신가요</label>
+        <select id="rs-wt" name="want">
+          <option value="">고르지 않아도 됩니다</option>
+          <option value="rebind">Re:Bind — 제조 공정과 거래명세서</option>
+          <option value="recall">Re:Call — 고객관리</option>
+          <option value="restore">Re:Store — 가맹점 발주와 정산</option>
+          <option value="custom">맞춤형 소프트웨어</option>
+          <option value="site">웹사이트</option>
+          <option value="app">앱 개발</option>
+        </select></div>
+      <div class="f"><label for="rs-ms">하시는 일과 궁금한 점 *</label>
+        <textarea id="rs-ms" name="message" placeholder="지금 어떻게 일하고 계신지 적어 주시면 그것부터 봅니다." maxlength="2000"></textarea></div>
+      <div class="hp"><label>이 칸은 비워 두세요<input name="website" tabindex="-1" autocomplete="off"></label></div>
+      <label class="agree"><input type="checkbox" name="agreed">
+        <span>답변을 위해 <b>성함 · 연락처 · 문의 내용</b>을 받습니다. <b>180일</b> 뒤 지웁니다.
+        동의하지 않으셔도 <a href="mailto:hello@dnalabs.kr">메일</a>이나 전화로 문의하실 수 있습니다.
+        (<a href="privacy.html">개인정보 처리방침</a>)</span></label>
+      <button class="btn btn-p btn-lg btn-full" type="submit">보내기</button>
+      <div class="msg"></div>
+    </form>
+
     <p class="note2" style="margin-top:26px">
       이미 계정이 있으시면 <a href="/reservice" style="color:var(--blue);font-weight:700">dnalabs.kr/reservice</a> 에서 들어가십시오.
     </p>
@@ -345,5 +379,6 @@ Catalog.load().then(c => {
 });
 </script>
 
+<script src="site.js" defer></script>
 </body>
 </html>

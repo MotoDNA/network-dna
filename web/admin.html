@@ -196,6 +196,56 @@ p.ps{font-size:.88rem;color:var(--mut);margin:0 0 20px}
 }
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 
+/* 문의 · 홈페이지 */
+.dot{width:6px;height:6px;border-radius:50%;background:var(--red);display:inline-block;margin-left:5px;vertical-align:middle}
+.chips{display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap}
+.chip2{
+  padding:7px 13px;border-radius:99px;border:1px solid var(--line);background:#fff;
+  font-size:.84rem;font-weight:700;color:var(--mut);
+}
+.chip2[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.chip2 .n{margin-left:5px;opacity:.7;font-variant-numeric:tabular-nums}
+.inq{
+  background:#fff;border:1px solid var(--line);border-radius:var(--r);
+  padding:18px 20px;margin-bottom:12px;
+}
+.inq.new{border-left:3px solid var(--blue)}
+.inq .hd{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:8px}
+.inq .who{font-size:1.02rem;font-weight:800;letter-spacing:-.03em}
+.inq .sp{flex:1}
+.inq .when{font-size:.79rem;color:var(--mut);font-variant-numeric:tabular-nums}
+.inq .msg{
+  font-size:.92rem;color:var(--sub);line-height:1.7;white-space:pre-wrap;
+  background:var(--fill2);border-radius:var(--rs);padding:13px 15px;margin:10px 0;
+}
+.inq .meta{display:flex;gap:16px;flex-wrap:wrap;font-size:.83rem;color:var(--sub)}
+.inq .meta b{font-weight:700}
+.inq .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:820px){ .two{grid-template-columns:1fr} }
+.sh{font-size:1rem;font-weight:800;letter-spacing:-.035em;margin:0 0 12px}
+.sh .q{font-size:.78rem;font-weight:600;color:var(--mut);margin-left:6px}
+.card2{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:18px 20px}
+.bar2{display:flex;align-items:flex-end;gap:3px;height:110px}
+.bar2 i{flex:1;background:var(--blue-bg);border-radius:3px 3px 0 0;min-height:2px}
+.bar2 i.on{background:var(--blue)}
+.hp{display:flex;align-items:center;gap:12px;padding:11px 18px;border-top:1px solid var(--line);font-size:.87rem}
+.hp:first-child{border-top:0}
+.hp .p{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hp .n{font-weight:800;font-variant-numeric:tabular-nums}
+.hp .g{width:84px;height:5px;background:var(--fill);border-radius:99px;overflow:hidden;flex:none}
+.hp .g i{display:block;height:100%;background:var(--blue)}
+.cp{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;margin-bottom:10px}
+.cp .k{font-size:.76rem;font-weight:700;color:var(--mut);margin-bottom:7px;font-family:ui-monospace,Menlo,monospace}
+.cp textarea{
+  width:100%;min-height:64px;padding:11px 13px;border:1px solid var(--line);border-radius:var(--rs);
+  background:var(--fill2);font:inherit;font-size:.92rem;line-height:1.6;resize:vertical;
+}
+.cp textarea:focus{outline:0;border-color:var(--blue);background:#fff}
+.cp .row{display:flex;gap:8px;align-items:center;margin-top:9px}
+.cp .row .sp{flex:1}
+.cp .was{font-size:.78rem;color:var(--dim)}
+
 /* 기록 */
 .log .r{display:flex;gap:12px;padding:11px 18px;border-top:1px solid var(--line);font-size:.85rem}
 .log .r:first-child{border-top:0}
@@ -256,6 +306,8 @@ p.ps{font-size:.88rem;color:var(--mut);margin:0 0 20px}
   <div class="tabswrap">
     <div class="tabs" id="tabs">
       <button data-p="co" aria-selected="true">회사</button>
+      <button data-p="inq" aria-selected="false">문의<span class="dot" id="inqDot" hidden></span></button>
+      <button data-p="site" aria-selected="false">홈페이지</button>
       <button data-p="log" aria-selected="false">기록</button>
     </div>
   </div>
@@ -273,6 +325,41 @@ p.ps{font-size:.88rem;color:var(--mut);margin:0 0 20px}
       </div>
       <div class="sum" id="sum"></div>
       <div id="coList"></div>
+    </section>
+
+    <!-- ── 문의 ── -->
+    <section id="p-inq" hidden>
+      <h2 class="pt">문의</h2>
+      <p class="ps" id="inqSub">—</p>
+      <div class="chips" id="inqChips"></div>
+      <div id="inqList"></div>
+    </section>
+
+    <!-- ── 홈페이지 ── -->
+    <section id="p-site" hidden>
+      <h2 class="pt">홈페이지</h2>
+      <p class="ps">dnalabs.kr 을 여기서 봅니다.</p>
+      <div class="sum" id="hitSum"></div>
+      <div class="two">
+        <div>
+          <h3 class="sh">어느 쪽을 많이 보나 <span class="q">최근 30일</span></h3>
+          <div class="tbl" id="hitPath"></div>
+        </div>
+        <div>
+          <h3 class="sh">날마다 <span class="q">최근 30일</span></h3>
+          <div class="card2" id="hitDay"></div>
+        </div>
+      </div>
+
+      <h3 class="sh" style="margin-top:30px">글 고치기</h3>
+      <div class="warn info" style="margin-bottom:14px">
+        여기서 고친 글은 <b>사람에게만</b> 보입니다. 검색엔진은 마지막으로 올린
+        HTML 을 봅니다. 급할 때 쓰는 자리이고, 오래 둘 글은 HTML 을 고쳐 올려야 합니다.
+      </div>
+      <div id="copyList"></div>
+
+      <h3 class="sh" style="margin-top:30px">요금제</h3>
+      <div id="catBox"></div>
     </section>
 
     <!-- ── 기록 ── -->
@@ -388,9 +475,12 @@ $('tabs').addEventListener('click', e => {
 function go(p){
   page = p;
   document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.p === p)));
-  $('p-co').hidden  = p !== 'co';
-  $('p-log').hidden = p !== 'log';
-  if(p === 'log') loadLog();
+  $('p-co').hidden   = p !== 'co';
+  $('p-inq').hidden  = p !== 'inq';
+  $('p-site').hidden = p !== 'site';
+  $('p-log').hidden  = p !== 'log';
+  if(p === 'log')  loadLog();
+  if(p === 'inq' || p === 'site') loadSite();
 }
 
 const APP_KO = { rebind:'Re:Bind', recall:'Re:Call', restore:'Re:Store' };
@@ -474,6 +564,159 @@ async function loadLog(){
         '<span class="rest">'+esc(r.code)+' · '+esc(r.target||'—')+' · '+esc(r.who)+'</span>'+
       '</div>').join('') : '<div class="empty">아직 기록이 없습니다.</div>';
   }catch(e){ $('logList').innerHTML = '<div class="empty">'+esc(e.message)+'</div>' }
+}
+
+/* ═════════ 홈페이지 ═════════ */
+let 홈 = null;
+let 문의보기 = 'open';        // open(안 끝난 것) · all · new · replied · closed
+
+/* 어느 글을 고칠 수 있게 열어 둘지.
+   HTML 전체를 열어 주면 실수로 화면이 깨집니다. 자주 고칠 만한 것만 냅니다.
+   여기 없는 글은 HTML 을 고쳐 올려야 합니다 — 그게 원본입니다. */
+const COPY_SLOTS = [
+  ['index.hero.title',  '첫 화면 큰 제목',       '쓰는 사람이 있는 소프트웨어를 만듭니다'],
+  ['index.hero.lede',   '첫 화면 설명',          '보여주기용 시연이 아니라 매일 열어 쓰는 것을 만듭니다…'],
+  ['index.cta.title',   '마지막 칸 제목',         '주소는 하나입니다'],
+  ['site.notice',       '알림 띠 (비우면 안 뜸)',  '예: 9월 15일 오전 서버 점검이 있습니다'],
+];
+
+async function loadSite(){
+  if(홈){ paintInq(); paintSite(); return }
+  try{
+    홈 = await ops('site');
+    paintInq(); paintSite();
+    if(홈.purged) toast('보관기간이 지난 문의 ' + 홈.purged + '건을 지웠습니다');
+  }catch(e){ toast(e.message) }
+}
+
+/* ───── 문의 ───── */
+const 상태말 = { new:'새로운', read:'읽음', replied:'답장함', closed:'끝' };
+function paintInq(){
+  const 다 = (홈 && 홈.inquiries) || [];
+  const 새것 = 다.filter(x => x.status === 'new').length;
+  $('inqDot').hidden = !새것;
+  $('inqSub').textContent = 다.length
+    ? (새것 ? '새로 들어온 것 ' + 새것 + '건' : '새로 들어온 것은 없습니다') + ' · 모두 ' + 다.length + '건'
+    : '아직 문의가 없습니다';
+
+  const 셈 = k => k === 'open' ? 다.filter(x => x.status==='new' || x.status==='read').length
+                : k === 'all'  ? 다.length : 다.filter(x => x.status===k).length;
+  $('inqChips').innerHTML = [['open','안 끝난 것'],['new','새로운'],['replied','답장함'],['closed','끝'],['all','전체']]
+    .map(([k,ko]) => '<button class="chip2" data-f="'+k+'" aria-pressed="'+(문의보기===k)+'">'+
+      ko+'<span class="n">'+셈(k)+'</span></button>').join('');
+  $('inqChips').querySelectorAll('.chip2').forEach(b =>
+    b.addEventListener('click', () => { 문의보기 = b.dataset.f; paintInq() }));
+
+  const 볼것 = 문의보기==='all' ? 다
+    : 문의보기==='open' ? 다.filter(x => x.status==='new' || x.status==='read')
+    : 다.filter(x => x.status===문의보기);
+
+  $('inqList').innerHTML = 볼것.length ? 볼것.map(x => {
+    const 메일 = /@/.test(x.contact);
+    return '<div class="inq'+(x.status==='new'?' new':'')+'">'+
+      '<div class="hd">'+
+        '<span class="who">'+esc(x.name || '(이름 없음)')+'</span>'+
+        (x.company ? '<span class="tag off">'+esc(x.company)+'</span>' : '')+
+        (x.want ? '<span class="tag '+esc(x.want)+'">'+esc(APP_KO[x.want] || x.want)+'</span>' : '')+
+        '<span class="tag '+(x.status==='new'?'recall':'off')+'">'+esc(상태말[x.status]||x.status)+'</span>'+
+        '<span class="sp"></span>'+
+        '<span class="when">'+esc(날짜(x.at))+' '+esc(new Date(x.at).toTimeString().slice(0,5))+'</span>'+
+      '</div>'+
+      '<div class="meta">'+
+        '<span><b>'+esc(x.contact)+'</b></span>'+
+        (x.people ? '<span>쓸 인원 '+esc(x.people)+'</span>' : '')+
+        (x.source ? '<span class="q">'+esc(x.source)+' 에서</span>' : '')+
+      '</div>'+
+      '<div class="msg">'+esc(x.message)+'</div>'+
+      (x.memo ? '<div class="meta"><span class="q">우리 메모</span> '+esc(x.memo)+'</div>' : '')+
+      '<div class="acts">'+
+        (메일 ? '<a class="btn sm" href="mailto:'+esc(x.contact)+'?subject='+
+                encodeURIComponent('[DNA Labs] 문의 주셔서 감사합니다')+'">메일 쓰기</a>'
+              : '<a class="btn sm" href="tel:'+esc(x.contact.replace(/[^0-9+]/g,''))+'">전화 걸기</a>')+
+        (x.status!=='replied' ? '<button class="btn sm line" data-st="replied" data-id="'+x.id+'">답장함</button>' : '')+
+        (x.status!=='closed'  ? '<button class="btn sm line" data-st="closed"  data-id="'+x.id+'">끝</button>' : '')+
+        (x.status==='new' ? '<button class="btn sm ghost" data-st="read" data-id="'+x.id+'">읽음</button>' : '')+
+        '<button class="btn sm ghost" data-memo="'+x.id+'">메모</button>'+
+        '<button class="btn sm danger" data-del="'+x.id+'" style="margin-left:auto">지우기</button>'+
+      '</div>'+
+      '<div class="meta" style="margin-top:10px"><span class="q">'+esc(x.purgeOn)+' 에 저절로 지워집니다</span></div>'+
+    '</div>';
+  }).join('') : '<div class="tbl"><div class="empty">' +
+      (다.length ? '이 칸에는 없습니다.' : '아직 문의가 없습니다.<br>홈페이지 문의 양식으로 들어오면 여기 쌓입니다.') +
+    '</div></div>';
+
+  $('inqList').querySelectorAll('[data-st]').forEach(b => b.addEventListener('click', async () => {
+    try{ await ops('inquiry-set', { id:b.dataset.id, status:b.dataset.st });
+         홈 = null; await loadSite(); toast('바꿨습니다') }catch(e){ toast(e.message) }
+  }));
+  $('inqList').querySelectorAll('[data-memo]').forEach(b => b.addEventListener('click', async () => {
+    const 지금 = (다.find(x => x.id === b.dataset.memo) || {}).memo || '';
+    const v = prompt('우리끼리 남기는 말입니다. 문의하신 분께는 안 보입니다.', 지금);
+    if(v === null) return;
+    try{ await ops('inquiry-set', { id:b.dataset.memo, memo:v }); 홈 = null; await loadSite() }
+    catch(e){ toast(e.message) }
+  }));
+  $('inqList').querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async () => {
+    if(!confirm('이 문의를 지웁니다. 되돌릴 수 없습니다.')) return;
+    try{ await ops('inquiry-delete', { id:b.dataset.del }); 홈 = null; await loadSite(); toast('지웠습니다') }
+    catch(e){ toast(e.message) }
+  }));
+}
+
+/* ───── 방문 · 글 · 요금 ───── */
+function paintSite(){
+  const h = (홈 && 홈.hits) || { today:0, week:0, byPath:[], byDay:[] };
+  const 다 = (홈 && 홈.inquiries) || [];
+  $('hitSum').innerHTML = [['오늘 본 횟수', h.today], ['이번 주', h.week],
+      ['문의 전체', 다.length], ['새 문의', 다.filter(x=>x.status==='new').length]]
+    .map(([k,n]) => '<div class="b"><div class="n">'+num(n)+'</div><div class="k">'+esc(k)+'</div></div>').join('');
+
+  const 최대 = Math.max(1, ...h.byPath.map(x => x[1]));
+  $('hitPath').innerHTML = h.byPath.length ? h.byPath.map(([p,n]) =>
+    '<div class="hp"><span class="p">'+esc(p)+'</span>'+
+    '<span class="g"><i style="width:'+Math.round(n/최대*100)+'%"></i></span>'+
+    '<span class="n">'+num(n)+'</span></div>').join('')
+    : '<div class="empty">아직 기록이 없습니다.</div>';
+
+  const 날 = h.byDay, 큰 = Math.max(1, ...날.map(x => x[1]));
+  $('hitDay').innerHTML = 날.length
+    ? '<div class="bar2">'+날.map(([d,n],i) =>
+        '<i class="'+(i===날.length-1?'on':'')+'" style="height:'+Math.max(2,Math.round(n/큰*100))+'%" title="'+esc(d)+' · '+n+'"></i>').join('')+'</div>'+
+      '<div style="margin-top:10px;font-size:.78rem;color:var(--mut)">'+
+      esc(날[0][0])+' — '+esc(날[날.length-1][0])+' · 가장 많은 날 '+num(큰)+'</div>'
+    : '<div class="empty">아직 기록이 없습니다.</div>';
+
+  const 고친것 = {};
+  for(const c of ((홈 && 홈.copy) || [])) 고친것[c.key] = c;
+  $('copyList').innerHTML = COPY_SLOTS.map(([k, ko, 예]) => {
+    const c = 고친것[k];
+    return '<div class="cp"><div class="k">'+esc(ko)+' · '+esc(k)+'</div>'+
+      '<textarea data-copy="'+esc(k)+'" placeholder="'+esc(예)+'">'+esc(c ? c.value : '')+'</textarea>'+
+      '<div class="row">'+
+        '<span class="was">'+(c ? '고쳐 둠 · '+esc(날짜(c.updated_at)) : '비우면 HTML 에 적힌 글이 나옵니다')+'</span>'+
+        '<span class="sp"></span>'+
+        '<button class="btn sm" data-save="'+esc(k)+'">저장</button>'+
+      '</div></div>';
+  }).join('');
+  $('copyList').querySelectorAll('[data-save]').forEach(b => b.addEventListener('click', async () => {
+    const t = $('copyList').querySelector('[data-copy="'+b.dataset.save+'"]');
+    b.disabled = true;
+    try{ const r = await ops('copy-set', { key:b.dataset.save, value:t.value });
+         홈 = null; await loadSite(); toast(r.reset ? '원래 글로 되돌렸습니다' : '저장했습니다') }
+    catch(e){ toast(e.message); b.disabled = false }
+  }));
+
+  const cat = 홈 && 홈.catalog;
+  $('catBox').innerHTML = cat
+    ? '<div class="warn">화면에서 고친 사본입니다 ('+esc(날짜(cat.updatedAt))+'). '+
+      '<b>catalog.json 을 갈아 끼우고 sync-catalog.sh 를 돌려야</b> 가입 화면과 서버까지 같아집니다.</div>'+
+      '<div class="tbl">'+Object.entries(cat.data.plans||{}).filter(([k])=>k!=='_').map(([k,p]) =>
+        '<div class="r"><div class="m"><div class="t1">'+esc(p.name)+'</div>'+
+        '<div class="t2">'+esc(p.label)+'</div></div>'+
+        '<b>'+(p.price==null ? '별도 협의' : num(p.price)+'원')+'</b></div>').join('')+'</div>'
+    : '<div class="warn info">아직 화면에서 고친 적이 없습니다. 지금은 <b>catalog.json</b> 이 그대로 쓰이고 있습니다 — '+
+      '요금은 그 파일을 고치고 <b>./sync-catalog.sh</b> 를 돌리는 것이 정석입니다. '+
+      '화면에서 고치는 기능은 결제(PG)가 붙은 뒤에 여는 편이 안전합니다.</div>';
 }
 
 /* ───── 시트 ───── */

@@ -460,6 +460,42 @@ footer .legal{
 .qa p{font-size:.94rem;color:var(--sub);line-height:1.75;margin:0 0 22px}
 .qa a{color:var(--blue);font-weight:700;text-decoration:underline}
 
+/* ═════════ 문의 양식 ═════════
+   지금까지 문의는 mailto 였습니다. 누르면 메일 앱이 열리는데, 폰에 메일 앱을
+   안 쓰는 분은 거기서 끝났고 우리는 그 사실조차 몰랐습니다.
+   양식으로 받으면 바로 남고, 메일·전화도 그대로 둡니다 — 편한 길을 뺏지 않습니다. */
+.askbox{
+  max-width:560px;margin:26px auto 0;text-align:left;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:26px;
+}
+.askbox .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){ .askbox .row2{grid-template-columns:1fr} }
+.askbox .f{margin-bottom:14px}
+.askbox label{display:block;font-size:.82rem;font-weight:700;color:var(--sub);margin-bottom:6px}
+.askbox input,.askbox textarea,.askbox select{
+  width:100%;padding:0 13px;height:46px;border:1px solid var(--line);border-radius:11px;
+  background:var(--fill2);font:inherit;font-size:.96rem;color:var(--ink);
+}
+.askbox textarea{height:auto;min-height:104px;padding:12px 13px;line-height:1.6;resize:vertical}
+.askbox input:focus,.askbox textarea:focus,.askbox select:focus{outline:0;border-color:var(--blue);background:#fff}
+/* 사람에게는 안 보이는 칸. 자동으로 채워 보내는 것을 거릅니다. */
+.askbox .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.askbox .agree{display:flex;gap:9px;align-items:flex-start;margin:4px 0 16px}
+.askbox .agree input{width:18px;height:18px;flex:none;margin-top:2px}
+.askbox .agree span{font-size:.84rem;color:var(--sub);line-height:1.6}
+.askbox .agree a{color:var(--blue);font-weight:700;text-decoration:underline}
+.askbox .msg{margin-top:12px;font-size:.86rem;font-weight:600;min-height:20px}
+.askbox .msg.bad{color:var(--red)}
+.askbox .done{text-align:center;padding:20px 0}
+.askbox .done h3{font-size:1.1rem;font-weight:800;letter-spacing:-.04em;margin:0 0 8px}
+.askbox .done p{font-size:.92rem;color:var(--sub);line-height:1.7;margin:0}
+
+/* 알림 띠 — 운영 화면에서 글을 넣으면 뜹니다. 비우면 사라집니다. */
+.notice{
+  background:var(--ink);color:#fff;font-size:.88rem;font-weight:600;
+  padding:11px 20px;text-align:center;letter-spacing:-.02em;
+}
+
 /* 아직 채우지 않은 값을 눈에 띄게 표시합니다.
    사업자등록번호처럼 대괄호로 남겨 둔 것이 그대로 배포되면
    법정 표시의무 위반이라, 못 보고 지나칠 수 없게 합니다. */
