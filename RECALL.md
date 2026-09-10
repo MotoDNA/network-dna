@@ -230,6 +230,23 @@ curl -s -o /dev/null -D - -X OPTIONS \
 
 ## 7. 결제 — 지은 것과 안 지은 것
 
+### ⚠ 요금표가 둘입니다 (2026-09-10 부터)
+
+| | 무엇 | 누가 봅니다 |
+|---|---|---|
+| **`tiers` × `services`** | **지금 파는 값.** 인원 구간 다섯 × 서비스 넷 | 안내 쪽 요금표(`reservice-guide.html#price`) · `llms.txt` |
+| `plans` | Re:Call 하나만 팔던 때의 표(Personal·Business 5·20·49) | 가입 화면(`signup.html`) · 서버(`signup`·`subscription`) · `recall.html` |
+
+요금 = `base + addon × (고른 서비스 수 - 1)`. 서비스마다 값이 다르지 않습니다.
+`base` 는 옛 `plans` 값과 같은 숫자라 **Re:Call 하나만 쓸 때는 두 표가 같은 값**을 냅니다 —
+그래서 지금은 어긋나지 않습니다. 서비스를 둘 이상 고르는 순간부터 다릅니다.
+
+**아직 안 한 것** — 가입 화면에서 서비스를 고르게 하고, 그것이 곧 `companies.apps` 가 되게 하는 것.
+지금은 `apps` 를 손으로 넣습니다. 통합 결제를 열 때 `plans` 를 지우고 `tiers` 하나만 남깁니다.
+가입은 `SIGNUP_OPEN=false` 로 닫혀 있어 그때까지 어긋날 일이 없습니다.
+
+`Re:Store` 는 인원이 아니라 **점포 수**가 값을 정해 구간을 따로 둡니다(아직 안 정했습니다).
+
 ### 값은 `catalog.json` 한 군데에만 있습니다
 
 홈페이지·가입 화면·서버가 모두 이 파일을 봅니다. 고치면:
