@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>서비스 추가 — DNA Labs</title>
+<link rel="canonical" href="https://dnalabs.kr/add-service">
+<meta name="description" content="이미 쓰고 계신 Re:Service 에 다른 서비스를 더합니다. 계정은 그대로 하나이고, 더할 때마다 붙는 금액만 늘어납니다.">
+<meta name="robots" content="noindex">
+<meta property="og:title" content="서비스 추가 — DNA Labs">
+<meta property="og:description" content="계정은 그대로. 쓰시던 곳에 서비스만 더합니다.">
+<meta property="og:url" content="https://dnalabs.kr/add-service">
+<meta property="og:image" content="https://dnalabs.kr/og-dnalabs.png">
+<meta property="og:site_name" content="DNA Labs">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap">
+    <a href="/" class="logo">DNA <b>Labs</b></a>
+    <div class="navlinks">
+      <a href="reservice-guide.html#price" class="hide-s">요금</a>
+      <a href="/reservice" class="btn btn-p btn-s">Re:Service 접속하기</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ───────── 머리 ───────── -->
+<header class="hero">
+  <div class="wrap narrow">
+    <span class="eyebrow">서비스 추가</span>
+    <h1 id="ttl">쓰시던 곳에 하나 더합니다</h1>
+    <p class="lede" id="lede">
+      계정을 새로 만들지 않습니다. 지금 쓰시는 회사 코드와 아이디 그대로,
+      로그인하면 더한 서비스가 함께 열립니다.
+    </p>
+  </div>
+</header>
+
+<!-- ───────── 무엇을 더할 수 있나 ───────── -->
+<section class="alt">
+  <div class="wrap">
+    <div class="shead">
+      <p class="kicker">고르기</p>
+      <h2>어느 것을 더하시겠습니까</h2>
+      <p>넷 중에 지금 안 쓰고 계신 것을 고르시면 됩니다. 여러 개도 됩니다.</p>
+    </div>
+    <div class="grid g4" id="cards"></div>
+  </div>
+</section>
+
+<!-- ───────── 얼마나 붙나 ───────── -->
+<section>
+  <div class="wrap">
+    <div class="shead">
+      <p class="kicker">추가 요금</p>
+      <h2>하나 더할 때 이만큼 붙습니다</h2>
+      <p>
+        쓰시던 요금은 그대로 두고, 아래 금액이 <b>월 요금에 더해집니다</b>.
+        부가세 별도이고, 더한 서비스만 따로 해지하실 수도 있습니다.
+      </p>
+    </div>
+    <div id="atab"></div>
+    <p class="ptabnote" id="atabnote"></p>
+
+    <div class="note info" style="margin-top:26px">
+      <p>
+        <b>지금은 결제 화면이 닫혀 있습니다.</b>
+        결제대행사 심사를 마치는 대로 화면에서 바로 더하실 수 있게 열립니다.
+        그때까지는 아래로 알려 주시면 <b>영업일 하루 안에</b> 열어 드리고,
+        요금은 다음 청구분부터 반영합니다.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ───────── 문의 ───────── -->
+<section class="alt" id="ask">
+  <div class="wrap narrow">
+    <div class="shead">
+      <p class="kicker">신청</p>
+      <h2>더할 서비스를 알려 주세요</h2>
+      <p>지금 쓰고 계신 회사 코드와 함께 적어 주시면 확인 후 열어 드립니다.</p>
+    </div>
+<form class="askbox" data-ask novalidate>
+      <div class="row2">
+        <div class="f"><label for="ax-nm">성함 *</label>
+          <input id="ax-nm" name="name" placeholder="홍길동" autocomplete="name" maxlength="40"></div>
+        <div class="f"><label for="ax-co">회사</label>
+          <input id="ax-co" name="company" placeholder="○○인쇄" autocomplete="organization" maxlength="60"></div>
+      </div>
+      <div class="row2">
+        <div class="f"><label for="ax-ct">연락받으실 곳 *</label>
+          <input id="ax-ct" name="contact" placeholder="메일 또는 전화" autocomplete="email" maxlength="120"></div>
+        <div class="f"><label for="ax-pp">사용 인원</label>
+          <input id="ax-pp" name="people" placeholder="예: 12명" maxlength="20"></div>
+      </div>
+      <div class="f"><label for="ax-wt">무엇이 궁금하신가요</label>
+        <select id="ax-wt" name="want">
+          <option value="">선택하지 않아도 됩니다</option>
+          <option value="rebind">Re:Bind — 제조 공정과 거래명세서</option>
+          <option value="recall">Re:Call — 고객관리</option>
+          <option value="restore">Re:Store — 가맹점 발주와 정산</option>
+            <option value="reos">Re:O-S — 제작 외주관리</option>
+          <option value="custom">맞춤형 소프트웨어</option>
+          <option value="site">웹사이트</option>
+          <option value="app">앱 개발</option>
+        </select></div>
+      <div class="f"><label for="ax-ms">하시는 일과 궁금한 점 *</label>
+        <textarea id="ax-ms" name="message" placeholder="지금 쓰고 계신 서비스와, 더하고 싶은 것을 적어 주세요." maxlength="2000"></textarea></div>
+      <div class="hp"><label>이 칸은 비워 두세요<input name="website" tabindex="-1" autocomplete="off"></label></div>
+      <label class="agree"><input type="checkbox" name="agreed">
+        <span>답변을 위해 <b>성함 · 연락처 · 문의 내용</b>을 받습니다. <b>180일</b> 뒤 지웁니다.
+        동의하지 않으셔도 <a href="mailto:hello@dnalabs.kr">메일</a>이나 전화로 문의하실 수 있습니다.
+        (<a href="privacy.html">개인정보 처리방침</a>)</span></label>
+      <button class="btn btn-p btn-lg btn-full" type="submit">보내기</button>
+      <div class="msg"></div>
+    </form>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="cols">
+      <div>
+        <p class="fh">서비스</p>
+        <ul>
+          <li><a href="services.html">서비스 전체 보기</a></li>
+          <li><a href="reservice-guide.html">Re:Service 안내</a></li>
+          <li><a href="/reservice">Re:Service 접속</a></li>
+          <li><a href="/bind">Re:Bind 공정 관리</a></li>
+          <li><a href="recall.html">Re:Call 고객관리</a></li>
+          <li><a href="/store">Re:Store 가맹점 발주</a></li>
+          <li><a href="/os">Re:O-S 제작 외주관리</a></li>
+          <li><a href="recall.html#pricing">요금제</a></li>
+          <li><a href="signup.html">회원가입</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="fh">회사</p>
+        <ul>
+          <li><a href="index.html#work">하는 일</a></li>
+          <li><a href="index.html#cases">만든 것</a></li>
+          <li><a href="index.html#how">일하는 방식</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="fh">문의</p>
+        <ul>
+          <li><a href="mailto:hello@dnalabs.kr">hello@dnalabs.kr</a></li>
+          <li><a href="tel:010-6451-5807">010-6451-5807</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="legal">
+      <p>
+        <b style="color:var(--sub)">디엔에이랩스</b> (DNA Labs) ·
+        대표 최환준 ·
+        사업자등록번호 119-37-01707 ·
+        통신판매업신고 2026-경기파주-3695<br>
+        주소 경기도 파주시 문발로 140, 301-D57호 ·
+        개인정보 보호책임자 최환준 (hello@dnalabs.kr) · 010-6451-5807<br>
+        <a href="terms.html" style="text-decoration:underline">이용약관</a> ·
+        <a href="privacy.html" style="text-decoration:underline">개인정보 처리방침</a> ·
+        <a href="refund.html" style="text-decoration:underline">환불정책</a>
+      </p>
+      <p style="margin-top:14px">© 2026 DNA Labs. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="catalog.js"></script>
+<script>
+/* 어느 서비스를 누르고 오셨는지는 주소의 ?want= 로 옵니다.
+   ⚠ 회사 코드는 주소에 싣지 않습니다 — 주소는 기록에 남고 링크로 새어 나갑니다.
+      필요한 것은 아래 양식에서 직접 적으시게 합니다. */
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const won = n => n.toLocaleString('ko-KR');
+const qs   = new URLSearchParams(location.search);
+const want = (qs.get('want') || '').replace(/[^a-z]/g, '').slice(0, 12);
+const from = (qs.get('from') || '').replace(/[^a-z]/g, '').slice(0, 12);
+
+Catalog.load().then(c => {
+  const svcs = Catalog.serviceList(c);
+  const 고른것 = svcs.find(s => s.key === want) || null;
+
+  if (고른것) {
+    document.getElementById('ttl').textContent = 고른것.name + ' 을 더하시겠습니까';
+    document.getElementById('lede').innerHTML =
+      '계정을 새로 만들지 않습니다. 지금 쓰시는 회사 코드와 아이디 그대로, ' +
+      '로그인하면 <b>' + esc(고른것.name) + '</b> 이 함께 열립니다.';
+  }
+
+  /* ── 넷을 늘어놓고, 누르고 오신 것을 도드라지게 ── */
+  document.getElementById('cards').innerHTML = svcs.map(s => `
+    <div class="card svccard${s.key === want ? ' pickon' : ''}">
+      <h3>${esc(s.name)}</h3>
+      <p class="one">${esc(s.label)}</p>
+      ${s.note ? `<p style="font-size:.84rem">${esc(s.note)}</p>` : ''}
+      <p style="margin-top:12px">
+        <a href="${s.path}" style="color:var(--blue);font-weight:700;font-size:.88rem">화면 열어 보기 →</a>
+      </p>
+    </div>`).join('');
+
+  /* ── 하나 더할 때 붙는 금액 ── */
+  const tiers = Catalog.tierList(c).filter(t => t.addon);
+  const st    = Catalog.storeTierList(c).filter(t => t.addon);
+  const 줄 = t => `<tr><th scope="row">${esc(t.name)}<span>${esc(t.label)}</span></th>` +
+                  `<td class="one">+${won(t.addon)}</td></tr>`;
+  document.getElementById('atab').innerHTML =
+    `<div class="ptabwrap"><table class="ptab">
+      <thead><tr><th scope="col">지금 구간</th><th scope="col">하나 더할 때마다</th></tr></thead>
+      <tbody>
+        ${tiers.map(줄).join('')}
+        <tr><th scope="row" style="color:var(--mut)">Re:Store 는 점포 수로</th>
+            <td class="quote">아래 줄로 봅니다</td></tr>
+        ${st.map(줄).join('')}
+      </tbody>
+    </table></div>`;
+  document.getElementById('atabnote').innerHTML =
+    '월 요금 · 원 · 부가세 별도. 인원 구간과 점포 구간이 둘 다 해당하면 <b>더 위의 줄</b>을 씁니다. ' +
+    '전체 표는 <a href="reservice-guide.html#price" style="color:var(--blue);font-weight:700">요금 안내</a>에 있습니다.';
+
+  /* ── 양식을 미리 채워 둡니다 — 같은 말을 두 번 적게 하지 않습니다 ── */
+  if (고른것) {
+    const sel = document.querySelector('[name=want]');
+    if (sel && [...sel.options].some(o => o.value === want)) sel.value = want;
+    const ms = document.querySelector('[name=message]');
+    const 쓰던것 = Catalog.serviceList(c).find(s => s.key === from);
+    if (ms && !ms.value) {
+      ms.value = (쓰던것 ? 쓰던것.name + ' 을 쓰고 있습니다. ' : '') +
+                 고른것.name + ' 을 더하고 싶습니다.\n회사 코드: \n쓰실 인원: ';
+    }
+  }
+}).catch(() => {
+  document.getElementById('cards').innerHTML =
+    `<div class="note stop"><p>요금표를 불러오지 못했습니다.</p>
+     <p>hello@dnalabs.kr 또는 010-6451-5807 로 알려 주시면 열어 드립니다.</p></div>`;
+});
+</script>
+
+<script src="site.js" defer></script>
+</body>
+</html>

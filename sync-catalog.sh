@@ -79,6 +79,20 @@ export function serviceList() {
     .map(([key, s]) => ({ key, ...(s as any) }));
 }
 
+export function storeTierList() {
+  return Object.entries(CATALOG.storeTiers as any)
+    .filter(([k]) => k !== '_')
+    .map(([key, t]) => ({ key, ...(t as any) }));
+}
+
+/* 점포 수에 맞는 구간 (Re:Store 전용) */
+export function storeTierFor(stores: number) {
+  if (!Number.isInteger(stores) || stores < 1) return null;
+  return storeTierList().find((t: any) =>
+    stores >= t.storeMin && (t.storeMax === null || stores <= t.storeMax)
+  ) || null;
+}
+
 export function tierList() {
   return Object.entries(CATALOG.tiers as any)
     .filter(([k]) => k !== '_')

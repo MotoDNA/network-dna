@@ -62,6 +62,21 @@ const Catalog = (() => {
       .map(([key, s]) => ({ key, ...s }));
   }
 
+  function storeTierList(c){
+    return Object.entries(c.storeTiers || {})
+      .filter(([k]) => k !== '_')
+      .map(([key, t]) => ({ key, ...t }));
+  }
+
+  /* 점포 수에 맞는 구간 (Re:Store 전용) */
+  function storeTierFor(c, stores){
+    const n = Number(stores);
+    if (!Number.isInteger(n) || n < 1) return null;
+    return storeTierList(c).find(t =>
+      n >= t.storeMin && (t.storeMax === null || n <= t.storeMax)
+    ) || null;
+  }
+
   function tierList(c){
     return Object.entries(c.tiers || {})
       .filter(([k]) => k !== '_')
@@ -111,6 +126,7 @@ const Catalog = (() => {
 
   return { load, planList, plan, planForSeats, seatsFit,
            serviceList, tierList, tierForSeats, priceFor,
+           storeTierList, storeTierFor,
            gradeOf, industry, allIndustries };
 })();
 

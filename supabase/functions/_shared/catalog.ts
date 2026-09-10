@@ -24,13 +24,52 @@ export const CATALOG = {
       "label": "가맹점 발주와 정산",
       "by": "stores",
       "path": "/store",
-      "note": "쓰는 인원보다 점포 수가 값을 정합니다(본사 직원 셋에 점포 마흔인 곳이 있습니다). 점포 구간은 아직 정하지 않았습니다 — 문의로 맞춥니다."
+      "note": "쓰는 인원보다 점포 수가 값을 정합니다(본사 직원 셋에 점포 마흔인 곳이 있습니다). 줄은 storeTiers 에서 고릅니다."
     },
     "reos": {
       "name": "Re:O-S",
       "label": "제작 외주관리",
       "by": "seats",
       "path": "/os"
+    }
+  },
+  "storeTiers": {
+    "_": "Re:Store 만 줄을 고르는 기준이 다릅니다 — 인원이 아니라 점포 수입니다. base/addon 의 뜻은 tiers 와 같고, 사다리(49,000 → 99,000 → 249,000)도 tiers 와 같은 것을 씁니다. 사다리를 따로 두면 '10개까지인데 왜 5명까지보다 비싸냐' 는 물음에 답할 말이 없습니다. 인원 구간과 점포 구간이 둘 다 해당하면 더 위의 줄을 씁니다.",
+    "s10": {
+      "name": "10개까지",
+      "label": "점포 열 곳까지",
+      "storeMin": 1,
+      "storeMax": 10,
+      "base": 49000,
+      "addon": 19000,
+      "trialDays": 0
+    },
+    "s30": {
+      "name": "30개까지",
+      "label": "점포 서른 곳까지",
+      "storeMin": 11,
+      "storeMax": 30,
+      "base": 99000,
+      "addon": 39000,
+      "trialDays": 0
+    },
+    "s50": {
+      "name": "50개까지",
+      "label": "점포 쉰 곳까지",
+      "storeMin": 31,
+      "storeMax": 50,
+      "base": 249000,
+      "addon": 99000,
+      "trialDays": 0
+    },
+    "sOver": {
+      "name": "50개 초과",
+      "label": "별도 협의",
+      "storeMin": 51,
+      "storeMax": null,
+      "base": null,
+      "addon": null,
+      "trialDays": 0
     }
   },
   "tiers": {
@@ -350,6 +389,20 @@ export function serviceList() {
   return Object.entries(CATALOG.services as any)
     .filter(([k]) => k !== '_')
     .map(([key, s]) => ({ key, ...(s as any) }));
+}
+
+export function storeTierList() {
+  return Object.entries(CATALOG.storeTiers as any)
+    .filter(([k]) => k !== '_')
+    .map(([key, t]) => ({ key, ...(t as any) }));
+}
+
+/* 점포 수에 맞는 구간 (Re:Store 전용) */
+export function storeTierFor(stores: number) {
+  if (!Number.isInteger(stores) || stores < 1) return null;
+  return storeTierList().find((t: any) =>
+    stores >= t.storeMin && (t.storeMax === null || stores <= t.storeMax)
+  ) || null;
 }
 
 export function tierList() {
