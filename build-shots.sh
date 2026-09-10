@@ -13,7 +13,8 @@
 #   안 내려가서, 화면은 500px 로 짜 놓고 그림만 390px 로 잘라 냅니다.
 #   오른쪽이 잘린 그림이 나옵니다. 자세한 것은 shoot.mjs 머리말에.
 #
-#   ./build-shots.sh          → web/shot-*.png
+#   ./build-shots.sh          → web/shot-*.png 전부
+#   ./build-shots.sh os       → 이름이 os- 로 시작하는 것만 (다른 앱 그림은 건드리지 않습니다)
 # ─────────────────────────────────────────────────────────────
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -27,8 +28,10 @@ UP="$(dirname "$PWD")"    # 형제 저장소들이 있는 자리
 BIND="$UP/Rebind/bindery.html"
 CALL="$PWD/network-dna.html"
 STORE="$UP/Restore/store.html"
+OS="$UP/Reos/reos.html"
+ONLY="${1:-}"
 
-for f in "$BIND" "$CALL" "$STORE"; do
+for f in "$BIND" "$CALL" "$STORE" "$OS"; do
   [ -f "$f" ] || { echo "‼ 앱 파일을 찾을 수 없습니다: $f"; exit 1; }
 done
 
@@ -40,12 +43,16 @@ mkdir -p "$TMPDIR_SHOT"
 # 앱 파일에 예시 자료를 넣은 임시본을 만듭니다.
 # web/ 안에 두는 이유: 앱이 같은 폴더의 파일을 상대주소로 찾을 수도 있어서입니다.
 ARGS=()
+OUTS=()
 for f in shots/*.js; do
   name="$(basename "$f" .js)"
+  case "$name" in _*) continue ;; esac                     # _ 로 시작하면 공용 자료. 따로 찍지 않습니다
+  if [ -n "$ONLY" ] && [ "${name#$ONLY}" = "$name" ]; then continue; fi
   case "$name" in
     bind-*)  app="$BIND"  ;;
     call-*)  app="$CALL"  ;;
     store-*) app="$STORE" ;;
+    os-*)    app="$OS"    ;;
     *) echo "  건너뜀 $name (앱을 못 고름)"; continue ;;
   esac
   tmp="$TMPDIR_SHOT/$name.html"
@@ -54,11 +61,17 @@ import io,sys
 app,inj,out=sys.argv[1],sys.argv[2],sys.argv[3]
 s=io.open(app,encoding='utf-8').read()
 js=io.open(inj,encoding='utf-8').read()
+import os
+공용=os.path.join(os.path.dirname(inj), '_'+os.path.basename(inj).split('-')[0]+'-data.js')
+if os.path.exists(공용): js=io.open(공용,encoding='utf-8').read()+'\n'+js
 # 앱의 시작 코드가 먼저 돌고(로그인 화면이 뜹니다) 그 뒤에 우리가 화면을 채웁니다
-s=s.replace('</body>', '<script>setTimeout(function(){\n'+js+'\n},400);</script>\n</body>',1)
+주입='<script>setTimeout(function(){\n'+js+'\n},400);</script>\n'
+# Re:O-S 는 </body> 없이 </script> 로 끝납니다 — 그러면 아무것도 안 들어가고 조용히 로그인 화면만 찍힙니다(겪었습니다)
+s = s.replace('</body>', 주입+'</body>',1) if '</body>' in s else s+'\n'+주입
 io.open(out,'w',encoding='utf-8').write(s)
 PY
   ARGS+=("$PWD/web/shot-$name.png" "$PWD/$tmp")
+  OUTS+=("web/shot-$name.png")
 done
 
 "$CHROME" --headless --disable-gpu --no-sandbox --hide-scrollbars \
@@ -80,11 +93,11 @@ node shoot.mjs "$PORT" "${ARGS[@]}"
 # 폰으로 들어온 사람이 그걸 다 내려받습니다.
 # 520px 이면 3배 화면에서도 여유가 있고, 색은 사실상 UI 색 몇 가지뿐이라
 # 128색으로 줄여도 눈에 차이가 없습니다.
-python3 - <<'PY2'
-import glob, os
+python3 - "${OUTS[@]}" <<'PY2'
+import sys, os
 from PIL import Image
 전, 후 = 0, 0
-for p in sorted(glob.glob('web/shot-*.png')):
+for p in sys.argv[1:]:                       # 이번에 찍은 것만 줄입니다
     전 += os.path.getsize(p)
     im = Image.open(p).convert('RGB')
     w = 520

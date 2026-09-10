@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────
 # 개인정보 처리방침을 network-dna.html 에서 뽑아 두 벌 만듭니다.
-#   · 고객사 전달용 PDF   (바탕화면 Re-Call 문서/)
+#   · 고객사 전달용 PDF   (바탕화면 Re-Call 문서/) — 네 서비스를 한 방침으로 다룹니다
 #   · 홈페이지용 web/privacy.html
 #
 # 방침 문구를 여기에 베껴 쓰지 않습니다. 앱이 실제로 화면에 그리는
@@ -92,7 +92,7 @@ const holes = (body.match(/\[[^\]<>]{2,40}\]/g) || []);
 
 const page = `<!doctype html>
 <html lang="ko"><head><meta charset="utf-8">
-<title>Re:Call 개인정보 처리방침</title>
+<title>DNA Labs 개인정보 처리방침</title>
 <style>${css}</style>
 <style>
   /* 종이에 맞추는 부분만 덧씁니다. 위 CSS 는 앱 것 그대로입니다. */
@@ -125,12 +125,12 @@ fs.writeFileSync(process.env.OUT + '.holes', holes.join('\n'));
 if (process.env.WEBOUT) {
   const nav = `<nav class="nav"><div class="wrap">
   <a href="index.html" class="logo">DNA <b>Labs</b></a>
-  <div class="navlinks"><a href="recall.html">Re:Call 소개</a><a href="terms.html">이용약관</a><a href="refund.html">환불정책</a></div>
+  <div class="navlinks"><a href="services.html">서비스</a><a href="terms.html">이용약관</a><a href="refund.html">환불정책</a></div>
 </div></nav>`;
   const web = `<!DOCTYPE html>
 <html lang="ko"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>개인정보 처리방침 · Re:Call</title>
+<title>개인정보 처리방침 · DNA Labs</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="stylesheet" href="style.css">
@@ -139,7 +139,7 @@ if (process.env.WEBOUT) {
 ${nav}
 <div class="legalwrap">
 <h1 style="margin-bottom:18px">개인정보 처리방침</h1>
-${body}
+${body.replace(/<h3>/g, '<h2>').replace(/<\/h3>/g, '</h2>')}
 </div>
 </body></html>`;
   fs.writeFileSync(process.env.WEBOUT, web);
@@ -149,7 +149,7 @@ NODE
 
 HOLES="$(cat "$TMPHTML.holes")"
 # 회사 이름을 넣어 만든 것이 일반 배포용을 덮어쓰지 않도록 이름을 나눕니다.
-BASE="Re-Call_개인정보_처리방침"
+BASE="DNA-Labs_개인정보_처리방침"
 [ -n "$COMPANY" ] && BASE="${BASE}_${COMPANY}"
 [ -n "$HOLES" ]   && BASE="${BASE}_초안"
 PDF="$OUTDIR/$BASE.pdf"
