@@ -175,7 +175,44 @@ h3{font-size:1.08rem;font-weight:800;letter-spacing:-.032em;margin:0 0 9px}
 }
 .card p{font-size:.92rem;color:var(--sub);line-height:1.68;margin:0}
 
-/* ───── 요금제 ───── */
+/* ───── 통합 요금표 ─────
+   줄이 인원 구간, 칸이 고른 서비스 개수입니다. 숫자는 catalog.json 에서 옵니다.
+   폰에서는 표를 줄이지 않고 표만 옆으로 굴립니다 — 숫자를 줄이면 못 읽습니다. */
+.ptabwrap{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+}
+.ptab{width:100%;border-collapse:collapse;min-width:540px}
+.ptab th,.ptab td{padding:15px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+.ptab tr:last-child th,.ptab tr:last-child td{border-bottom:0}
+.ptab thead th{
+  font-size:.8rem;font-weight:700;color:var(--mut);background:var(--fill2);
+  text-align:right;letter-spacing:-.01em;
+}
+.ptab thead th:first-child{text-align:left}
+.ptab tbody th{
+  text-align:left;font-size:.95rem;font-weight:800;color:var(--ink);letter-spacing:-.03em;
+}
+.ptab tbody th span{display:block;font-size:.78rem;font-weight:600;color:var(--mut);margin-top:3px}
+.ptab tbody td{text-align:right;font-size:.98rem;font-weight:700;color:var(--sub);
+  font-variant-numeric:tabular-nums}
+.ptab tbody td.one{color:var(--ink);font-weight:800}
+.ptab tbody td.quote{text-align:left;font-size:.9rem;font-weight:600;color:var(--sub);white-space:normal}
+.ptab .free{
+  display:inline-block;font-size:.72rem;font-weight:700;
+  color:var(--green);background:var(--green-bg);padding:3px 8px;border-radius:7px;margin-top:6px;
+}
+.ptabnote{font-size:.86rem;color:var(--mut);line-height:1.66;margin:14px 2px 0}
+.ptabnote b{color:var(--sub);font-weight:700}
+.picks{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}
+.pick{
+  display:inline-flex;align-items:baseline;gap:7px;
+  background:var(--card);border:1px solid var(--line);border-radius:999px;padding:8px 15px;
+}
+.pick b{font-size:.88rem;font-weight:800;color:var(--ink);letter-spacing:-.02em}
+.pick span{font-size:.79rem;color:var(--mut)}
+
+/* ───── 요금제 (Re:Call 한 가지만 팔던 때의 표. recall.html 이 씁니다) ───── */
 .plans{display:grid;gap:16px;grid-template-columns:repeat(4,1fr);align-items:start}
 @media(max-width:1000px){ .plans{grid-template-columns:repeat(2,1fr)} }
 @media(max-width:620px){ .plans{grid-template-columns:1fr} }

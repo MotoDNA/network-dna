@@ -52,6 +52,39 @@ const Catalog = (() => {
     return n >= p.seatMin && (p.seatMax === null || n <= p.seatMax);
   }
 
+  /* ───── 통합 요금 (services × tiers) ─────
+     서비스마다 값이 다르지 않습니다. 인원 구간을 고르고, 고른 서비스 개수만큼
+     addon 이 붙습니다. 요금표·가입 화면·서버가 모두 이 셈을 씁니다 —
+     한 군데서만 고치면 화면과 청구가 어긋납니다. */
+  function serviceList(c){
+    return Object.entries(c.services || {})
+      .filter(([k]) => k !== '_')
+      .map(([key, s]) => ({ key, ...s }));
+  }
+
+  function tierList(c){
+    return Object.entries(c.tiers || {})
+      .filter(([k]) => k !== '_')
+      .map(([key, t]) => ({ key, ...t }));
+  }
+
+  /* 인원 수에 맞는 구간. 구간끼리 겹치지 않으므로 처음 맞는 것이 답입니다. */
+  function tierForSeats(c, seats){
+    const n = Number(seats);
+    if (!Number.isInteger(n) || n < 1) return null;
+    return tierList(c).find(t =>
+      n >= t.seatMin && (t.seatMax === null || n <= t.seatMax)
+    ) || null;
+  }
+
+  /* 그 구간에서 서비스 count 개를 쓸 때의 월 요금. 협의 구간은 null 입니다. */
+  function priceFor(t, count){
+    if (!t || t.base === null) return null;
+    const n = Number(count);
+    if (!Number.isInteger(n) || n < 1) return null;
+    return t.base + t.addon * (n - 1);
+  }
+
   /* 업종 id → 'A' | 'B' | 'C' | null */
   function gradeOf(c, id){
     for (const g of ['A','B','C']) {
@@ -76,7 +109,9 @@ const Catalog = (() => {
     return ['A','B','C'].flatMap(g => c.industries[g].map(i => ({ grade: g, ...i })));
   }
 
-  return { load, planList, plan, planForSeats, seatsFit, gradeOf, industry, allIndustries };
+  return { load, planList, plan, planForSeats, seatsFit,
+           serviceList, tierList, tierForSeats, priceFor,
+           gradeOf, industry, allIndustries };
 })();
 
 if (typeof module !== 'undefined') module.exports = Catalog;

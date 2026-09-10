@@ -70,6 +70,34 @@ export function seatsFit(p: any, seats: number) {
   return seats >= p.seatMin && (p.seatMax === null || seats <= p.seatMax);
 }
 
+/* ───── 통합 요금 (services × tiers) ─────
+   web/catalog.js 의 같은 이름 함수와 **같은 셈**이어야 합니다.
+   화면과 청구가 다른 값을 내면 그대로 결제 사고입니다. */
+export function serviceList() {
+  return Object.entries(CATALOG.services as any)
+    .filter(([k]) => k !== '_')
+    .map(([key, s]) => ({ key, ...(s as any) }));
+}
+
+export function tierList() {
+  return Object.entries(CATALOG.tiers as any)
+    .filter(([k]) => k !== '_')
+    .map(([key, t]) => ({ key, ...(t as any) }));
+}
+
+export function tierForSeats(seats: number) {
+  if (!Number.isInteger(seats) || seats < 1) return null;
+  return tierList().find((t: any) =>
+    seats >= t.seatMin && (t.seatMax === null || seats <= t.seatMax)
+  ) || null;
+}
+
+export function priceFor(t: any, count: number) {
+  if (!t || t.base === null) return null;
+  if (!Number.isInteger(count) || count < 1) return null;
+  return t.base + t.addon * (count - 1);
+}
+
 /* 업종 등급. C 는 가입을 막습니다. */
 export function gradeOf(id: string): 'A' | 'B' | 'C' | null {
   for (const g of ['A', 'B', 'C'] as const) {

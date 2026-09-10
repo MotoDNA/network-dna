@@ -1,6 +1,46 @@
 {
-  "_": "Re:Call 요금제와 업종 판정의 단일 출처입니다. 홈페이지·가입 화면·서버 검증이 모두 이 파일 하나를 봅니다. 값을 고치면 sync-catalog.sh 를 돌려 서버 쪽 사본을 다시 만드세요.",
-  "revision": "2026-08-30",
+  "_": "Re:Service 요금과 업종 판정의 단일 출처입니다. 요금표는 services × tiers 입니다. plans 는 Re:Call 하나만 팔던 때의 표로, 가입 화면과 서버가 아직 이것으로 검증하고 있어 남겨 둡니다 — 통합 결제로 옮길 때 함께 정리합니다. 홈페이지·가입 화면·서버 검증이 모두 이 파일 하나를 봅니다. 값을 고치면 sync-catalog.sh 를 돌려 서버 쪽 사본을 다시 만드세요.",
+  "revision": "2026-09-10",
+
+  "services": {
+    "_": "Re:Service 넷. 요금은 서비스마다 다르지 않습니다 — 인원 구간(tiers) 을 고르고, 그 위에 고른 서비스 개수를 곱합니다. by 는 무엇이 값을 정하는가입니다.",
+
+    "rebind":  { "name": "Re:Bind",  "label": "제조 공정과 거래명세서", "by": "seats",  "path": "/bind"  },
+    "recall":  { "name": "Re:Call",  "label": "고객관리",             "by": "seats",  "path": "/call"  },
+    "restore": { "name": "Re:Store", "label": "가맹점 발주와 정산",    "by": "stores", "path": "/store",
+      "note": "쓰는 인원보다 점포 수가 값을 정합니다(본사 직원 셋에 점포 마흔인 곳이 있습니다). 점포 구간은 아직 정하지 않았습니다 — 문의로 맞춥니다." },
+    "reos":    { "name": "Re:O-S",   "label": "제작 외주관리",         "by": "seats",  "path": "/os"    }
+  },
+
+  "tiers": {
+    "_": "base 는 서비스 하나를 쓸 때의 월 요금, addon 은 서비스를 하나 더할 때마다 붙는 월 요금입니다. 원(KRW) · 부가세 별도. n개를 쓰면 base + addon × (n-1) 입니다. seatMin/seatMax 는 포함(inclusive)이고 구간끼리 겹치지 않습니다. base 가 null 이면 협의입니다.",
+
+    "solo": {
+      "name": "1명", "label": "혼자 쓰실 때",
+      "seatMin": 1, "seatMax": 1,
+      "base": 19000, "addon": 9000, "trialDays": 30
+    },
+    "t5": {
+      "name": "5명까지", "label": "팀이 막 생겼을 때",
+      "seatMin": 2, "seatMax": 5,
+      "base": 49000, "addon": 19000, "trialDays": 0
+    },
+    "t20": {
+      "name": "20명까지", "label": "팀이 굴러가기 시작할 때",
+      "seatMin": 6, "seatMax": 20,
+      "base": 99000, "addon": 39000, "trialDays": 0
+    },
+    "t49": {
+      "name": "49명까지", "label": "부서가 나뉘어 있을 때",
+      "seatMin": 21, "seatMax": 49,
+      "base": 249000, "addon": 99000, "trialDays": 0
+    },
+    "ent": {
+      "name": "50명 이상", "label": "별도 협의",
+      "seatMin": 50, "seatMax": null,
+      "base": null, "addon": null, "trialDays": 0
+    }
+  },
 
   "plans": {
     "_": "price 는 원(KRW) 월 단가입니다. seatMin/seatMax 는 포함(inclusive)입니다. cardDailyLimit 은 1인이 하루에 인식할 수 있는 명함 수, cardMonthlyLimit 은 회사 전체가 한 달에 인식할 수 있는 명함 수입니다. 둘 다 한국시간(KST) 자정과 매월 1일을 기준으로 셉니다. null 은 제한 없음입니다. 영업용 숫자가 아니라 사고 방지선입니다 — 요금표에 적지 마세요.",
