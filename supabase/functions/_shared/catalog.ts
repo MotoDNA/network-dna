@@ -24,7 +24,7 @@ export const CATALOG = {
       "label": "가맹점 발주와 정산",
       "by": "stores",
       "path": "/store",
-      "note": "쓰는 인원보다 점포 수가 값을 정합니다(본사 직원 셋에 점포 마흔인 곳이 있습니다). 줄은 storeTiers 에서 고릅니다."
+      "note": "쓰는 인원이 아니라 점포 수로 요금 줄을 고릅니다."
     },
     "reos": {
       "name": "Re:O-S",
