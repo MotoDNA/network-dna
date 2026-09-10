@@ -1,0 +1,32 @@
+{
+  "name": "Re:Call · 고객관리",
+  "short_name": "Re:Call",
+  "description": "명함부터 할 일까지 — 고객관리",
+  "lang": "ko",
+  "start_url": "/call",
+  "scope": "/bind",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F2F4F6",
+  "theme_color": "#FFFFFF",
+  "icons": [
+    {
+      "src": "https://recall.dnalabs.kr/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://recall.dnalabs.kr/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://recall.dnalabs.kr/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -21,3 +21,5 @@ app/android/capacitor-cordova-android-plugins/
 app/android/app/src/main/assets/public/
 app/android/app/src/main/assets/capacitor.config.json
 app/android/app/src/main/assets/capacitor.plugins.json
+.vercel
+.env*

@@ -3,3 +3,6 @@ Allow: /
 Disallow: /signup.html
 
 Sitemap: https://dnalabs.kr/sitemap.xml
+
+# AI 답변 엔진용 소개
+# https://dnalabs.kr/llms.txt
