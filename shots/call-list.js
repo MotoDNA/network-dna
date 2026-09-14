@@ -2,15 +2,22 @@
 window.sbInit=function(){return true};
 sb={channel:function(){return{on:function(){return this},subscribe:function(){}}},
     removeAllChannels:function(){}};
-me={id:'u1',name:'담당자',loginId:'admin',role:'admin',companyId:'c1',
+me={id:'u1',name:'홍길동',loginId:'admin',role:'admin',companyId:'c1',
     companyCode:'BKT',companyName:'디엔에이랩스',apps:['recall']};
 /* 담당자·공유는 이름이 아니라 계정 id 로 잡습니다 — 이름으로 넣으면 동그라미가 '?' 로 뜹니다 */
-cfg.members=[{id:'u1',name:'담당자'},{id:'u2',name:'김서연'},{id:'u3',name:'박도현'}];
+cfg.members=[{id:'u1',name:'홍길동'},{id:'u2',name:'김서연'},{id:'u3',name:'박도현'}];
 cfg.groups=['신규','진행 중','주요 고객','대리점'];
 
 /* 앱은 'YYYY-MM-DDTHH:mm' 지역시각으로 씁니다. toISOString() 을 쓰면
    UTC 로 아홉 시간 당겨져 오후 2시가 05:30 으로 찍힙니다. */
-var 날=function(n,h,m){var d=new Date(2026,7,29); d.setDate(d.getDate()-n);
+/* ⚠ 날짜를 박아 두면 안 됩니다.
+   예전에는 '2026-08-30' 처럼 적어 두었더니, 몇 달 뒤 다시 찍었을 때 목록이
+   통째로 "납기 지남" 이 되어 홈페이지 대표 그림이 엉망으로 나왔습니다.
+   찍는 날을 기준으로 셉니다 — 언제 다시 찍어도 늘 지금 날짜입니다. */
+var 예시날=function(n){var d=new Date(); d.setDate(d.getDate()+n);
+  var p=function(x){return String(x).padStart(2,'0')};
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())};
+var 날=function(n,h,m){var d=new Date(); d.setDate(d.getDate()-n);
   var p=function(x){return String(x).padStart(2,'0')};
   return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(h)+':'+p(m)};
 var C=function(o){return Object.assign({groups:[],owner:'u1',shared:[],photo:null,
@@ -33,7 +40,7 @@ custs=[
 acts=[
  A({uid:'a1',cid:'c1',kind:'meeting',at:날(1,14,30),
     body:'연간 물량 계획 공유. 상반기 2000연, 하반기 3000연 예상한다고 함.'}),
- A({uid:'a2',cid:'c1',kind:'todo',at:날(1,14,40),due:'2026-09-02',
+ A({uid:'a2',cid:'c1',kind:'todo',at:날(1,14,40),due:예시날(3),
     body:'견적서 재발행해서 메일로 보내기'}),
  A({uid:'a3',cid:'c2',kind:'request',at:날(3,11,0),
     body:'MUSE 2 샘플 5종 요청. 다음 주 화요일까지 도착 희망.'}),
