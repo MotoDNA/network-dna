@@ -9,7 +9,7 @@ sb={from:function(){return{select:function(){return{eq:function(){return{maybeSi
     auth:{getUser:async function(){return{data:{user:null}}},signOut:async function(){}}};
 var T0=new Date(Date.now()+9*3600e3); function d(n){return new Date(T0.getTime()+n*86400e3).toISOString().slice(0,10)}
 function h(n){return new Date(Date.now()-n*3600e3).toISOString()}
-me={id:'u1',name:'최환준',loginId:'admin',role:'admin',companyId:'c0',companyCode:'DNALABS',companyName:'디엔에이랩스',apps:['reos']};
+me={id:'u1',name:'담당자',loginId:'admin',role:'admin',companyId:'c0',companyCode:'DNALABS',companyName:'디엔에이랩스',apps:['reos']};
 D=blankData();
 D.members=[me,{id:'u2',login_id:'seoyeon',name:'김서연',role:'user'}];
 D.customers=[{id:'c1',name:'블루밍문구',contacts:[]},{id:'c2',name:'액티바코리아',contacts:[]},{id:'c3',name:'그린라이프',contacts:[]}];
@@ -41,11 +41,11 @@ D.tasks=[
  {id:'t3',project_id:'p5',title:'견적서 2안 보내기',due_on:d(3),done:false,assignee_id:'u2'},
 ];
 D.acts=[
- {id:'a1',project_id:'p1',kind:'po',body:'한솔인쇄에 발주서를 보냈습니다',by_name:'최환준',at:h(2)},
+ {id:'a1',project_id:'p1',kind:'po',body:'한솔인쇄에 발주서를 보냈습니다',by_name:'담당자',at:h(2)},
  {id:'a2',project_id:'p3',kind:'approval',body:'고객 승인을 요청했습니다',by_name:'김서연',at:h(26)},
- {id:'a3',project_id:'p2',kind:'sample',body:'1차 샘플을 등록했습니다',by_name:'최환준',at:h(50)},
- {id:'a4',project_id:'p4',kind:'status',body:'생산 단계로 넘겼습니다',by_name:'최환준',at:h(72)},
- {id:'a5',project_id:'p1',kind:'rfq',body:'견적을 확정했습니다 — 한솔인쇄',by_name:'최환준',at:h(80)},
+ {id:'a3',project_id:'p2',kind:'sample',body:'1차 샘플을 등록했습니다',by_name:'담당자',at:h(50)},
+ {id:'a4',project_id:'p4',kind:'status',body:'생산 단계로 넘겼습니다',by_name:'담당자',at:h(72)},
+ {id:'a5',project_id:'p1',kind:'rfq',body:'견적을 확정했습니다 — 한솔인쇄',by_name:'담당자',at:h(80)},
 ];
 D.settings={company_id:'c0',staff_money:false}; staffMoney=false;
 document.getElementById('gate').hidden=true; document.getElementById('app').hidden=false;

@@ -2,7 +2,7 @@
 window.sbInit=function(){return true};
 sb={from:function(){return{select:function(){return{eq:function(){return{maybeSingle:async function(){return{data:null}}}}}}}},
     channel:function(){return{on:function(){return this},subscribe:function(){}}},removeAllChannels:function(){}};
-me={id:'u1',name:'최환준',loginId:'admin',role:'admin',companyId:'c1',
+me={id:'u1',name:'담당자',loginId:'admin',role:'admin',companyId:'c1',
     companyCode:'BKT',companyName:'비케이티',apps:['rebind']};
 members=[me];
 issuer={biz_no:'119-37-01707',ceo:'최환준',tel:'010-6451-5807',
