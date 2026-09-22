@@ -451,6 +451,11 @@ nav.tabs button:active{opacity:.6}
 
 .glist{background:#fff;border-radius:var(--r2);box-shadow:var(--sh);overflow:hidden}
 .grow{display:flex;align-items:center;gap:11px;padding:13px 17px}
+/* 고른 줄. .grow 는 위쪽 1px 선뿐이라 테두리 색만으로는 티가 안 납니다.
+   서비스를 더하고 빼는 화면은 누른 순간 돈이 나가므로, 무엇을 골랐는지
+   헷갈리면 안 됩니다. 바탕을 칠하고 왼쪽에 굵은 표를 세웁니다. */
+.grow.on{background:var(--blue-bg);box-shadow:inset 3px 0 0 var(--blue)}
+.grow.on .nm{color:var(--blue-d)}
 .grow + .grow{border-top:1px solid var(--line)}
 .dot{width:11px;height:11px;border-radius:4px;flex:0 0 auto}
 .grow .nm{flex:1;font-size:.92rem;font-weight:600}
@@ -1053,6 +1058,13 @@ nav.tabs button:active{opacity:.6}
     <button class="btn ghost sm" id="s-undoChange" style="width:100%;margin-top:8px" hidden>예약된 변경 취소</button>
     <button class="btn ghost sm" id="s-cancelSub" style="width:100%;margin-top:8px" hidden>구독 해지</button>
     <button class="btn ghost sm" id="s-resumeSub" style="width:100%;margin-top:8px" hidden>해지 취소</button>
+
+    <!-- 쓰고 있는 서비스 — 요금이 '인원 구간 × 서비스 개수' 라서 여기가 곧 금액입니다 -->
+    <h2 class="sec">쓰고 있는 서비스</h2>
+    <div class="info" id="svcList"></div>
+    <div class="note" id="svcNote2"></div>
+    <div class="note" id="svcPending" hidden style="background:var(--amber-bg);color:#8A5300"></div>
+    <button class="btn ghost sm" id="s-changeSvc" style="width:100%;margin-top:8px" hidden>서비스 더하기 · 빼기</button>
   </div>
 
   <!-- 명함 인식 사용량 — 한도에 걸린 뒤에 알면 늦습니다 -->
@@ -1266,6 +1278,18 @@ nav.tabs button:active{opacity:.6}
   <div class="btnrow" style="margin-top:12px">
     <button class="btn ghost" id="planCancel" style="flex:0 0 108px">닫기</button>
     <button class="btn" id="planApply" disabled>변경</button>
+  </div>
+</div>
+
+<div class="sheet" id="svcSheet" hidden>
+  <div class="grab"></div>
+  <h3>서비스 더하기 · 빼기</h3>
+  <div class="note" style="margin-top:0" id="svcIntro">불러오는 중…</div>
+  <div class="glist" id="svcPick"></div>
+  <div class="note" id="svcWhat" hidden></div>
+  <div class="btnrow" style="margin-top:12px">
+    <button class="btn ghost" id="svcCancel" style="flex:0 0 108px">닫기</button>
+    <button class="btn" id="svcApply" disabled>적용</button>
   </div>
 </div>
 
@@ -3089,7 +3113,7 @@ async function loadSub(){
   subInfo = null; seatInfo = null;
   if(!sb || !me){ renderSub(); return }
   const { data, error } = await sb.from('subscriptions')
-    .select('plan_key,plan_name,price,status,seat_limit,trial_ends_at,period_start,period_end,canceled_at,pending_plan_key,pending_plan_name,pending_price,pending_from')
+    .select('plan_key,plan_name,price,status,seat_limit,services,trial_ends_at,period_start,period_end,canceled_at,pending_plan_key,pending_plan_name,pending_price,pending_apps,pending_services,pending_from')
     .maybeSingle();
   if(error || !data){ renderSub(); return }   // 표가 없거나 예전 회사
   subInfo = data;
@@ -3223,12 +3247,143 @@ function renderSub(){
     pend.hidden = true;
   }
 
+  renderSvcBox(isAdmin);
+
   const changeable = isAdmin && subInfo.status !== 'canceled';
   $('s-changePlan').hidden = !changeable;
   $('s-undoChange').hidden = !isAdmin || !subInfo.pending_plan_key;
   $('s-cancelSub').hidden = !isAdmin || subInfo.status === 'canceled';
   $('s-resumeSub').hidden = !isAdmin || subInfo.status !== 'canceled';
 }
+
+/* ═════════ 쓰고 있는 서비스 ═════════
+   요금은 인원 구간 × 서비스 개수입니다. 그래서 여기 몇 개가 켜져 있느냐가
+   곧 매달 나가는 돈입니다. 설정 화면에 그대로 보여 드립니다.
+
+   ⚠ 금액은 여기서 셈하지 않습니다. 서버가 준 값을 그대로 씁니다.
+     화면에서 셈한 금액은 사용자가 바꿔 보낼 수 있고, 그러면 결제 사고입니다. */
+function renderSvcBox(isAdmin){
+  const 가진것 = (me && Array.isArray(me.apps)) ? me.apps : [];
+  const 예약 = Array.isArray(subInfo && subInfo.pending_apps) ? subInfo.pending_apps : null;
+
+  $('svcList').innerHTML = APPS.map(k=>{
+    const 씀 = 가진것.includes(k);
+    const 빠질것 = 씀 && 예약 && !예약.includes(k);
+    return '<div class="irow"><span class="k">' + esc(APP_KO[k]) + '</span>' +
+      '<span class="v">' + (빠질것 ? '곧 빠집니다' : 씀 ? '쓰는 중' : '안 씀') + '</span></div>';
+  }).join('');
+
+  const n = 가진것.length || 1;
+  $('svcNote2').innerHTML = '지금 <b>' + n + '개</b>를 쓰고 계십니다. ' +
+    '요금은 인원 구간과 서비스 개수로 정해집니다 — 하나를 더하면 그만큼 올라갑니다.' +
+    (isAdmin ? '' : ' 더하고 빼는 것은 <b>회사 관리자</b>가 합니다.');
+
+  const pend = $('svcPending');
+  if(예약){
+    const 빠지는것 = 가진것.filter(k=>!예약.includes(k)).map(k=>APP_KO[k]).join(' · ');
+    pend.hidden = false;
+    pend.innerHTML = '<b>' + ymd(subInfo.pending_from) + '</b> 부터 <b>' + esc(빠지는것) +
+      '</b> 이(가) 빠집니다. 그때까지는 그대로 쓰십니다.';
+  } else {
+    pend.hidden = true;
+  }
+
+  $('s-changeSvc').hidden = !isAdmin || (subInfo && subInfo.status === 'canceled');
+}
+
+let svcOpts = null, svcPickKey = null;
+
+async function openSvcSheet(){
+  svcOpts = null; svcPickKey = null;
+  $('svcPick').innerHTML = '';
+  $('svcWhat').hidden = true;
+  $('svcApply').disabled = true;
+  $('svcIntro').textContent = '불러오는 중…';
+  openSheetEl('svcSheet');
+
+  const r = await subAction('services');
+  if(!r || !r.ok){
+    $('svcIntro').textContent = (r && r.error) || '서비스를 불러오지 못했습니다.';
+    return;
+  }
+  svcOpts = r;
+  $('svcIntro').innerHTML = '지금 <b>' + r.count + '개</b> · 월 <b>' + won(r.monthly) +
+    '원</b>(부가세 별도)' + (r.trialing ? ' — 무료 체험 중입니다.' : '.');
+  renderSvcPick();
+}
+
+function renderSvcPick(){
+  const 쓰는수 = svcOpts.services.filter(v=>v.owned).length;
+  $('svcPick').innerHTML = svcOpts.services.map(v=>{
+    const on = svcPickKey === v.key;
+    // 마지막 하나는 뺄 수 없습니다. 그만 쓰시려면 해지입니다.
+    const dis = v.removeScheduled || (v.owned && 쓰는수 <= 1);
+    const 꼬리 = v.removeScheduled ? '빼기로 예약됨'
+      : v.owned ? (쓰는수 <= 1 ? '마지막 하나는 뺄 수 없습니다' : '누르면 뺍니다')
+      : (v.addNow > 0 ? '더하면 지금 ' + won(v.addNow) + '원' : '더해도 지금 낼 돈 없음');
+    return '<button class="grow' + (on ? ' on' : '') + '" data-s="' + esc(v.key) + '"' +
+      (dis ? ' disabled style="opacity:.45"' : '') + '>' +
+      '<span class="nm">' + esc(v.name) +
+        ' <span class="ct" style="margin-left:6px">' + (v.owned ? '쓰는 중' : '안 씀') + '</span></span>' +
+      '<span class="ct">' + esc(꼬리) + '</span></button>';
+  }).join('');
+}
+
+function svcWhatNote(v){
+  if(v.owned){
+    return '<b>' + ymd(svcOpts.periodEnd) + '</b> 부터 빠집니다. ' +
+      '그때까지는 그대로 쓰시고, 그날부터 월 <b>' + won(svcOpts.monthlyIfRemove) + '원</b>이 청구됩니다. ' +
+      '이미 결제된 당월분은 환불되지 않습니다.';
+  }
+  if(svcOpts.trialing){
+    return '지금 바로 쓰실 수 있습니다. <b>무료 체험 중이라 지금 내실 돈은 없습니다.</b> ' +
+      '무료가 끝나면 월 <b>' + won(svcOpts.monthlyIfAdd) + '원</b>으로 청구됩니다.';
+  }
+  return v.addNow > 0
+    ? '지금 바로 쓰실 수 있습니다. 이번 기간 남은 날짜만큼의 차액 <b>' + won(v.addNow) + '원</b>이 결제됩니다. ' +
+      '다음 달부터는 월 <b>' + won(svcOpts.monthlyIfAdd) + '원</b>입니다.'
+    : '지금 바로 쓰실 수 있습니다. 이번 기간에 더 낼 금액은 없습니다. ' +
+      '다음 달부터는 월 <b>' + won(svcOpts.monthlyIfAdd) + '원</b>입니다.';
+}
+
+$('svcCancel').addEventListener('click', ()=>closeSheetEl('svcSheet'));
+
+$('svcPick').addEventListener('click', e=>{
+  const b = e.target.closest('[data-s]'); if(!b || b.disabled || !svcOpts) return;
+  svcPickKey = b.dataset.s;
+  const v = svcOpts.services.find(x=>x.key === svcPickKey);
+  renderSvcPick();
+  $('svcWhat').hidden = false;
+  $('svcWhat').innerHTML = svcWhatNote(v);
+  $('svcApply').textContent = v.owned ? '빼기' : '더하기';
+  $('svcApply').disabled = false;
+});
+
+$('svcApply').addEventListener('click', async ()=>{
+  if(!svcPickKey) return;
+  const v = svcOpts.services.find(x=>x.key === svcPickKey);
+
+  /* 돈이 나가는 자리라 한 번 더 묻습니다. 금액은 서버가 준 값 그대로입니다. */
+  const ask = v.owned
+    ? v.name + ' 을(를) 뺍니다.\n\n' + ymd(svcOpts.periodEnd) +
+      ' 부터 빠지고, 그때까지는 그대로 쓰십니다.\n이미 결제된 당월분은 환불되지 않습니다.'
+    : v.name + ' 을(를) 더합니다.\n\n' +
+      (v.addNow > 0 ? '지금 ' + won(v.addNow) + '원이 결제됩니다.' : '지금 결제되는 금액은 없습니다.');
+  if(!confirm(ask + '\n\n진행할까요?')) return;
+
+  const btn = $('svcApply'); const 옛글 = btn.textContent;
+  btn.disabled = true; btn.textContent = '처리 중…';
+  const r = await subAction(v.owned ? 'service_remove' : 'service_add', { app: svcPickKey });
+  btn.disabled = false; btn.textContent = 옛글;
+  if(!r || !r.ok){ toast((r && r.error) || '바꾸지 못했습니다'); return }
+
+  toast(v.owned
+    ? ymd(r.from) + ' 부터 ' + v.name + ' 이(가) 빠집니다'
+    : (r.charged > 0 ? v.name + ' 추가 · ' + won(r.charged) + '원 결제' : v.name + ' 을(를) 더했습니다'));
+  closeSheetEl('svcSheet');
+  await loadMe();          // apps 가 바뀌었으니 다시 읽습니다 (위쪽 서비스 바꾸기 단추도 따라갑니다)
+  await loadSub();
+});
 
 /* ═════════ 요금제 변경 ═════════
    고를 수 있는 요금제와 각각 얼마가 나가는지는 전부 서버가 계산해 줍니다.
@@ -4371,6 +4526,12 @@ $('s-addUser').addEventListener('click', ()=>{
     return;
   }
   openUserNew();
+});
+
+/* ── 서비스 더하기·빼기 ── */
+$('s-changeSvc').addEventListener('click', ()=>{
+  if(!me || me.role !== 'admin'){ toast('관리자만 할 수 있습니다'); return }
+  openSvcSheet();
 });
 
 /* ── 요금제 변경 ── */
