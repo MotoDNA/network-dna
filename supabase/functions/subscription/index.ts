@@ -126,12 +126,39 @@ Deno.serve(async (req) => {
 
   const { data: sub } = await admin.from('subscriptions')
     .select('*').eq('company_id', me.company_id).maybeSingle();
-  if (!sub) return json({ ok: false, error: '구독 정보가 없습니다.' }, 404);
 
   /* 어느 서비스를 샀는가. 화면이 아니라 이 값이 문을 엽니다 —
      company_for_app(app) 이 데이터베이스 정책마다 들어 있습니다. */
   const { data: 회사 } = await admin.from('companies')
     .select('apps').eq('id', me.company_id).maybeSingle();
+
+  /* 구독 표가 생기기 전에 만들어진 회사들이 있습니다(ACTIVA·BKT·9DORO…).
+     쓰고는 계신데 요금제가 붙어 있지 않습니다.
+
+     읽기만 하는 'services' 는 그래도 답해 줍니다 — 자기가 무엇을 쓰고
+     있는지는 보셔야 합니다. 화면에 "불러오지 못했습니다" 만 띄우고
+     막다른 길로 두면 안 됩니다.
+
+     돈이 오가는 일(더하기·빼기·요금제 변경)은 요금제가 붙어야 합니다.
+     얼마를 받을지 모르는 채로 카드를 긁을 수는 없습니다. */
+  if (!sub) {
+    if (action === 'services') {
+      const 가진 = Array.isArray(회사?.apps) ? (회사!.apps as string[]) : [];
+      return json({
+        ok: true, noSub: true,
+        services: serviceList().map((v: { key: string; name: string; note?: string }) => ({
+          key: v.key, name: v.name, note: v.note ?? null,
+          owned: 가진.includes(v.key), addNow: null, removeScheduled: false,
+        })),
+        count: 가진.length,
+        monthly: null, monthlyPaid: null,
+        monthlyIfAdd: null, monthlyIfAddPaid: null,
+        monthlyIfRemove: null, monthlyIfRemovePaid: null,
+        status: null, periodEnd: null, trialing: false,
+      });
+    }
+    return json({ ok: false, error: '이 회사에는 아직 요금제가 연결돼 있지 않습니다. 010-6451-5807 로 알려 주시면 연결해 드립니다.' }, 404);
+  }
 
   const { count: usedCount } = await admin.from('profiles')
     .select('id', { count: 'exact', head: true })
