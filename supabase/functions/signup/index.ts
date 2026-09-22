@@ -201,7 +201,10 @@ Deno.serve(async (req) => {
   }
 
   // ── 6. 결제 수단 확정 (stub 은 확인, toss 는 발급) ──
-  const bill = await pgResolveBilling(body);
+  //    ⚠ 본문은 b 입니다. 여기서 body 라고 썼다가 이 함수가 통째로 죽었습니다.
+  //      없는 이름을 부르면 ReferenceError 로 터지고, 브라우저에는 응답이
+  //      아예 안 돌아갑니다 — 화면에는 "Failed to fetch" 한 줄만 남습니다.
+  const bill = await pgResolveBilling(b);
   if (!bill.ok) return await fail(bill.message, 402);
 
   // ── 7. 만들기 ──
