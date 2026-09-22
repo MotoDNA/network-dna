@@ -100,7 +100,7 @@
 </div>
 
 <script src="catalog.js"></script>
-<script src="pg.js?v=20260922f"></script>
+<script src="pg.js?v=20260922g"></script>
 <script>
 /* ═══════════════════════════════════════════════════════════
    Re:Call 회원가입
@@ -625,14 +625,15 @@ async function createAccount(){
      409 로 막습니다. 첫 번째가 사실은 도착했었다면 "이미 가입된
      이메일입니다" 라는 분명한 답이 오지, 조용히 두 개가 생기지 않습니다. */
   let res, 마지막오류;
-  for (let 번째 = 1; 번째 <= 3; 번째++) {
+  const 차례 = [false, true, true];   // 보통 → 사전확인 없는 모양 → 한 번 더
+  for (let 번째 = 0; 번째 < 차례.length; 번째++) {
     try {
-      res = await 서버부르기();
+      res = await 서버부르기(차례[번째]);
       마지막오류 = null;
       break;
     } catch (e) {
       마지막오류 = e;
-      if (번째 < 3) await new Promise(r => setTimeout(r, 번째 * 1200));
+      if (번째 < 차례.length - 1) await new Promise(r => setTimeout(r, (번째 + 1) * 1200));
     }
   }
   if (마지막오류) {
@@ -659,12 +660,17 @@ async function 못닿은까닭(e){
   const 찔러 = async (u) => {
     try { await fetch(u, { mode: 'no-cors', cache: 'no-store' }); return 1 } catch (_) { return 0 }
   };
-  const [뿌리, 함수, 토스] = await Promise.all([
+  // 사전 확인이 붙는 요청과 안 붙는 요청을 따로 재야 원인이 갈립니다.
+  const 단순찔러 = async () => {
+    try { await fetch(CFG.supabaseUrl + '/functions/v1/signup', { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: '{}', cache: 'no-store' }); return 1 } catch (_) { return 0 }
+  };
+  const [뿌리, 함수, 토스, 단순] = await Promise.all([
     찔러(CFG.supabaseUrl + '/'),
     찔러(CFG.supabaseUrl + '/functions/v1/signup'),
-    찔러('https://js.tosspayments.com/v2/standard')
+    찔러('https://js.tosspayments.com/v2/standard'),
+    단순찔러()
   ]);
-  const 코드 = `뿌리${뿌리}/함수${함수}/토스${토스}`;
+  const 코드 = `뿌리${뿌리}/함수${함수}/토스${토스}/단순${단순}`;
   const 끝말 = ` (진단 ${코드} · ${(e && e.message) || '알 수 없음'})`;
 
   if (함수) {
@@ -682,14 +688,27 @@ async function 못닿은까닭(e){
   );
 }
 
-function 서버부르기(){
+/* 단순=true 면 '사전 확인'이 붙지 않는 모양으로 보냅니다.
+
+   브라우저는 apikey 같은 제 맘대로 헤더나 application/json 이 붙으면
+   본 요청을 보내기 전에 OPTIONS 를 한 번 먼저 던져 서버에 물어봅니다.
+   이걸 사전 확인(preflight)이라고 합니다. 백신·보안 프로그램·회사
+   프록시가 이 OPTIONS 를 가로채면, 본 요청은 나가 보지도 못하고
+   "Failed to fetch" 로 끝납니다. 서버는 멀쩡한데도 말입니다.
+
+   헤더를 다 빼고 text/plain 으로 보내면 사전 확인이 아예 붙지 않습니다.
+   signup 함수는 --no-verify-jwt 로 올려 둬서 apikey 없이도 받습니다.
+   본문이 올바른 JSON 이면 req.json() 이 그대로 읽습니다. */
+function 서버부르기(단순){
   return fetch(CFG.supabaseUrl + '/functions/v1/signup', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': CFG.anonKey,
-      'Authorization': 'Bearer ' + CFG.anonKey
-    },
+    headers: 단순
+      ? { 'Content-Type': 'text/plain;charset=UTF-8' }
+      : {
+          'Content-Type': 'application/json',
+          'apikey': CFG.anonKey,
+          'Authorization': 'Bearer ' + CFG.anonKey
+        },
     body: JSON.stringify({
       industryId: S.industryId,
       planKey: S.planKey,
