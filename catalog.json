@@ -1,37 +1,41 @@
 {
   "_": "Re:Service 요금과 업종 판정의 단일 출처입니다. 요금표는 services × tiers 입니다. plans 는 Re:Call 하나만 팔던 때의 표로, 가입 화면과 서버가 아직 이것으로 검증하고 있어 남겨 둡니다 — 통합 결제로 옮길 때 함께 정리합니다. 홈페이지·가입 화면·서버 검증이 모두 이 파일 하나를 봅니다. 값을 고치면 sync-catalog.sh 를 돌려 서버 쪽 사본을 다시 만드세요.",
-  "revision": "2026-09-22",
+  "revision": "2026-09-22b",
   "tax": {
     "_": "이 파일의 모든 금액은 **공급가액**입니다. 부가가치세는 별도이고, 실제로 카드에서 빠져나가는 돈은 공급가액 + 부가세입니다. 화면에 '부가세 별도'라고만 적어 두고 공급가액만 긁으면 세금을 우리가 떠안게 됩니다 — 실제로 그렇게 돌고 있었습니다(2026-09-22 고침). 붙이는 셈은 catalog.js / catalog.ts 의 withVat() 하나뿐이어야 합니다.",
     "vatRate": 0.1,
     "label": "부가세 별도"
   },
   "services": {
-    "_": "Re:Service 넷. 요금은 서비스마다 다르지 않습니다 — 인원 구간(tiers) 을 고르고, 그 위에 고른 서비스 개수를 곱합니다. by 는 무엇이 값을 정하는가입니다.",
+    "_": "Re:Service 넷. 요금은 서비스마다 다르지 않습니다 — 인원 구간(tiers) 을 고르고, 그 위에 고른 서비스 개수를 곱합니다. by 는 무엇이 값을 정하는가입니다. path 는 그 서비스로 **들어가는 문**입니다 — 안 산 회사가 누르면 앱이 되돌려보냅니다. intro 는 사지 않은 분도 볼 수 있는 소개 화면입니다. 둘을 섞으면 '화면 열어 보기'를 눌렀는데 쫓겨납니다.",
     "rebind": {
       "name": "Re:Bind",
       "label": "제조 공정과 거래명세서",
       "by": "seats",
-      "path": "/bind"
+      "path": "/bind",
+      "intro": "services.html#sv-rebind"
     },
     "recall": {
       "name": "Re:Call",
       "label": "고객관리",
       "by": "seats",
-      "path": "/call"
+      "path": "/call",
+      "intro": "recall.html"
     },
     "restore": {
       "name": "Re:Store",
       "label": "가맹점 발주와 정산",
       "by": "stores",
       "path": "/store",
-      "note": "쓰는 인원이 아니라 점포 수로 요금 줄을 고릅니다."
+      "note": "쓰는 인원이 아니라 점포 수로 요금 줄을 고릅니다.",
+      "intro": "services.html#sv-restore"
     },
     "reos": {
       "name": "Re:O-S",
       "label": "제작 외주관리",
       "by": "seats",
-      "path": "/os"
+      "path": "/os",
+      "intro": "services.html#sv-reos"
     }
   },
   "storeTiers": {

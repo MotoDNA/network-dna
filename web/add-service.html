@@ -50,7 +50,9 @@
       <h2>어느 것을 더하시겠습니까</h2>
       <p>넷 중에 지금 안 쓰고 계신 것을 고르시면 됩니다. 여러 개도 됩니다.</p>
     </div>
+    <div id="mine" hidden style="margin-bottom:28px"></div>
     <div class="grid g4" id="cards"></div>
+    <div class="note info" id="mineHint" hidden style="margin-top:22px"></div>
   </div>
 </section>
 
@@ -68,7 +70,7 @@
     <div id="atab"></div>
     <p class="ptabnote" id="atabnote"></p>
 
-    <div class="note info" style="margin-top:26px">
+    <div class="note info" style="margin-top:26px" id="closedNote">
       <p>
         <b>지금은 결제 화면이 닫혀 있습니다.</b>
         결제대행사 심사를 마치는 대로 화면에서 바로 더하실 수 있게 열립니다.
@@ -177,6 +179,7 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="catalog.js"></script>
 <script>
 /* 어느 서비스를 누르고 오셨는지는 주소의 ?want= 로 옵니다.
@@ -206,7 +209,7 @@ Catalog.load().then(c => {
       <p class="one">${esc(s.label)}</p>
       ${s.note ? `<p style="font-size:.84rem">${esc(s.note)}</p>` : ''}
       <p style="margin-top:12px">
-        <a href="${s.path}" style="color:var(--blue);font-weight:700;font-size:.88rem">화면 열어 보기 →</a>
+        <a href="${s.intro || s.path}" style="color:var(--blue);font-weight:700;font-size:.88rem">화면 열어 보기 →</a>
       </p>
     </div>`).join('');
 
@@ -240,10 +243,153 @@ Catalog.load().then(c => {
                  고른것.name + ' 을 더하고 싶습니다.\n회사 코드: \n쓰실 인원: ';
     }
   }
+  내요금(c);
 }).catch(() => {
   document.getElementById('cards').innerHTML =
     `<div class="note stop"><p>요금표를 불러오지 못했습니다.</p>
      <p>hello@dnalabs.kr 또는 010-6451-5807 로 알려 주시면 열어 드립니다.</p></div>`;
+});
+
+/* ═══════════════════════════════════════════════════════════════
+   로그인해 계시면 여기서 바로 봅니다 — 지금 내는 돈, 그리고 더하기·빼기
+
+   왜 앱이 아니라 이 페이지인가:
+     요금 화면은 Re:Call 에만 있었습니다. 그래서 Re:Bind 만 산 회사는
+     자기가 얼마 내는지 볼 데가 없었고, 위쪽 서비스 단추로 여기까지 와도
+     막다른 길이었습니다. 네 앱에 같은 화면을 네 번 만드는 대신,
+     한 지붕(dnalabs.kr) 아래 한 곳에 둡니다.
+
+   로그인이 여기서도 통하는 이유:
+     dnalabs.kr/bind · /call · /store · /os 와 이 페이지가 **같은 출처**이고,
+     네 앱이 모두 'ndna-auth' 한 자리에 로그인을 보관합니다.
+     옛 주소(recall.dnalabs.kr 등)에서 오시면 출처가 달라 안 보입니다 —
+     그때는 안내만 하고 로그인으로 보냅니다.
+   ═══════════════════════════════════════════════════════════════ */
+const SB_URL = 'https://izrtclsqhsgkuwsffifn.supabase.co';
+const SB_KEY = 'sb_publishable_G5wx-YdgwUU630x1vKmZmQ_15BgxvEX';
+let sb = null, 지금 = null, CAT = null;
+
+async function 내요금(c){
+  CAT = c;
+  const 칸 = document.getElementById('mine');
+  const 안내 = document.getElementById('mineHint');
+  if (!window.supabase) return;
+
+  sb = window.supabase.createClient(SB_URL, SB_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, storageKey: 'ndna-auth' }
+  });
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    안내.hidden = false;
+    안내.innerHTML =
+      '<p><b>로그인하시면 이 화면에서 바로 더하실 수 있습니다.</b> ' +
+      '지금 내시는 요금과 더할 때 붙는 금액을 그 자리에서 보여 드립니다. ' +
+      '<a href="/reservice" style="color:var(--blue);font-weight:700">로그인하러 가기 →</a></p>' +
+      '<p style="margin-top:8px;color:var(--mut);font-size:.88rem">' +
+      '옛 주소(recall.dnalabs.kr 처럼)로 들어와 계시면 이 자리에 안 보입니다. ' +
+      'dnalabs.kr 로 들어오시면 보입니다.</p>';
+    return;
+  }
+
+  const r = await 부르기('services');
+  if (!r || !r.ok) {
+    안내.hidden = false;
+    안내.innerHTML = '<p>요금 정보를 불러오지 못했습니다. ' + esc((r && r.error) || '') + '</p>';
+    return;
+  }
+  지금 = r;
+  그리기();
+  /* 로그인해 계신 분은 위에서 바로 더하실 수 있습니다.
+     "결제 화면이 닫혀 있습니다" 를 그대로 두면 눌러 놓고도 안 되는 줄 아십니다. */
+  const 닫힘 = document.getElementById('closedNote');
+  if (닫힘) 닫힘.hidden = true;
+  const 문의 = document.getElementById('ask');
+  if (문의) {
+    const h = 문의.querySelector('h2');
+    if (h) h.textContent = '직접 하기 어려우시면 알려 주세요';
+  }
+}
+
+async function 부르기(action, extra){
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return { ok:false, error:'로그인이 필요합니다.' };
+  const res = await fetch(SB_URL + '/functions/v1/subscription', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', apikey: SB_KEY,
+              Authorization: 'Bearer ' + session.access_token },
+    body: JSON.stringify({ action, ...(extra || {}) })
+  });
+  return await res.json().catch(() => ({ ok:false, error:'응답을 읽지 못했습니다.' }));
+}
+
+const 날짜 = t => t ? new Date(t).toLocaleDateString('ko-KR') : '—';
+
+function 그리기(){
+  const 칸 = document.getElementById('mine');
+  const 쓰는것 = 지금.services.filter(v => v.owned).map(v => v.name).join(' · ');
+  칸.hidden = false;
+  칸.innerHTML =
+    '<div class="card" style="text-align:left">' +
+      '<h3 style="margin-top:0">지금 쓰고 계신 것</h3>' +
+      '<p class="one" style="margin:6px 0 14px">' + esc(쓰는것 || '—') + ' · ' + 지금.count + '개</p>' +
+      '<p style="font-size:1.05rem;font-weight:700;margin:0">월 ' + won(지금.monthlyPaid) + '원' +
+        '<span style="font-weight:600;color:var(--mut);font-size:.85rem"> (공급가 ' + won(지금.monthly) + '원 + 부가세)</span></p>' +
+      (지금.trialing
+        ? '<p style="color:var(--mut);font-size:.88rem;margin-top:6px">무료 체험 중입니다 — ' + 날짜(지금.periodEnd) + ' 까지</p>'
+        : '<p style="color:var(--mut);font-size:.88rem;margin-top:6px">다음 결제 ' + 날짜(지금.periodEnd) + '</p>') +
+    '</div>';
+
+  /* 카드마다 실제로 누를 수 있는 단추를 답니다.
+     금액은 서버가 준 값 그대로입니다 — 화면에서 셈하면 사고입니다. */
+  document.querySelectorAll('#cards .svccard').forEach((el, i) => {
+    const v = 지금.services.find(x => x.name === el.querySelector('h3').textContent);
+    if (!v) return;
+    const 쓰는수 = 지금.services.filter(x => x.owned).length;
+    const 기존 = el.querySelector('.act'); if (기존) 기존.remove();
+    const p = document.createElement('p');
+    p.className = 'act';
+    p.style.marginTop = '10px';
+    if (v.owned && 쓰는수 <= 1) {
+      p.innerHTML = '<span style="color:var(--mut);font-weight:600;font-size:.86rem">지금 쓰고 계십니다</span>';
+    } else if (v.removeScheduled) {
+      p.innerHTML = '<span style="color:var(--amber);font-weight:700;font-size:.86rem">' + 날짜(지금.periodEnd) + ' 에 빠집니다</span>';
+    } else if (v.owned) {
+      p.innerHTML = '<button class="btn btn-s" data-act="rm" data-k="' + esc(v.key) + '" style="background:#fff;color:var(--sub);border:1px solid var(--line)">빼기</button>';
+    } else {
+      p.innerHTML = '<button class="btn btn-p btn-s" data-act="add" data-k="' + esc(v.key) + '">' +
+        (v.addNow > 0 ? '더하기 · 지금 ' + won(v.addNow) + '원' : '더하기 · 지금 0원') + '</button>';
+    }
+    el.appendChild(p);
+  });
+}
+
+document.getElementById('cards').addEventListener('click', async e => {
+  const b = e.target.closest('[data-act]'); if (!b || !지금) return;
+  const k = b.dataset.k;
+  const v = 지금.services.find(x => x.key === k);
+  const 더함 = b.dataset.act === 'add';
+
+  const 물음 = 더함
+    ? v.name + ' 을(를) 더합니다.\n\n' +
+      (v.addNow > 0 ? '지금 ' + won(v.addNow) + '원이 결제됩니다.' : '지금 결제되는 금액은 없습니다.') +
+      '\n다음 달부터 월 ' + won(지금.monthlyIfAddPaid) + '원입니다.'
+    : v.name + ' 을(를) 뺍니다.\n\n' + 날짜(지금.periodEnd) + ' 부터 빠지고, 그때까지는 그대로 쓰십니다.\n' +
+      '이미 결제된 당월분은 환불되지 않습니다.';
+  if (!confirm(물음 + '\n\n진행할까요?')) return;
+
+  const 옛글 = b.textContent;
+  b.disabled = true; b.textContent = '처리 중…';
+  const r = await 부르기(더함 ? 'service_add' : 'service_remove', { app: k });
+  b.disabled = false; b.textContent = 옛글;
+  if (!r || !r.ok) { alert((r && r.error) || '바꾸지 못했습니다.'); return; }
+
+  alert(더함
+    ? (r.charged > 0 ? v.name + ' 을(를) 더했습니다. ' + won(r.charged) + '원이 결제되었습니다.'
+                     : v.name + ' 을(를) 더했습니다.')
+    : 날짜(r.from) + ' 부터 ' + v.name + ' 이(가) 빠집니다.');
+
+  const 다시 = await 부르기('services');
+  if (다시 && 다시.ok) { 지금 = 다시; 그리기(); }
 });
 </script>
 
