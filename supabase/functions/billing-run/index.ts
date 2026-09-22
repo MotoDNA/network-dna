@@ -29,7 +29,7 @@
 // 그러려면 '그때 적어 둔 값'이 아니라 '지금의 구성'으로 세야 합니다.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
-import { monthlyFor } from '../_shared/catalog.ts';
+import { monthlyFor, vatOf } from '../_shared/catalog.ts';
 
 const URL_ = Deno.env.get('SUPABASE_URL')!;
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -108,14 +108,20 @@ Deno.serve(async (req) => {
        그런 곳은 세금계산서로 받기로 되어 있습니다. */
     const 개수 = Math.max(1, Number(s.services) || 1);
     const 센값 = monthlyFor(s.tier_key as string | null, s.plan_key as string | null, 개수);
-    const 금액 = 센값 === null ? -1 : Number(센값);
-    const 한줄 = { code: s.company_id, plan: s.plan_key, tier: s.tier_key, services: 개수, amount: 금액, due: s.period_end };
+    const 공급가 = 센값 === null ? -1 : Number(센값);
+    /* 요금표는 공급가액입니다. 카드에서 빠져나가는 돈은 여기에 부가세를 더한 값입니다.
+       화면에도 '부가세 별도'라고 적어 두었으니 이렇게 받는 것이 맞습니다. */
+    const 부가세 = 공급가 > 0 ? vatOf(공급가) : 0;
+    const 금액 = 공급가 > 0 ? 공급가 + 부가세 : 공급가;
+    const 한줄 = { code: s.company_id, plan: s.plan_key, tier: s.tier_key, services: 개수,
+                  supply: 공급가, vat: 부가세, amount: 금액, due: s.period_end };
 
-    if (금액 < 0) {
+    if (공급가 < 0) {
       await admin.from('billing_charges').upsert({
         company_id: s.company_id, due_on: due.toISOString(),
         period_start: due.toISOString(), period_end: 다음끝.toISOString(),
-        amount: 0, plan_key: s.plan_key, plan_name: s.plan_name, services: 개수,
+        amount: 0, supply_amount: 0, vat_amount: 0,
+        plan_key: s.plan_key, plan_name: s.plan_name, services: 개수,
         provider: PG_PROVIDER, status: 'skipped',
         last_error: '카드로 걷을 수 없는 요금제입니다 (협의 · 세금계산서).',
       }, { onConflict: 'company_id,due_on' });
@@ -123,9 +129,10 @@ Deno.serve(async (req) => {
     }
 
     // 적어 둔 값과 다르면 구독에도 반영해 둡니다. 화면이 옛 금액을 보여 주면 안 됩니다.
-    if (Number(s.price) !== 금액) {
-      await admin.from('subscriptions').update({ price: 금액 }).eq('company_id', s.company_id);
-      console.log('[요금걷기] 금액 고쳐 적음', s.company_id, s.price, '→', 금액);
+    if (Number(s.price) !== 공급가) {
+      // subscriptions.price 는 공급가액입니다. 요금표와 같은 값을 적어 둡니다.
+      await admin.from('subscriptions').update({ price: 공급가 }).eq('company_id', s.company_id);
+      console.log('[요금걷기] 금액 고쳐 적음', s.company_id, s.price, '→', 공급가);
     }
 
     // 이미 처리한 기간인지. (company_id, due_on) 이 열쇠입니다.
@@ -144,7 +151,8 @@ Deno.serve(async (req) => {
     const 밑줄 = {
       company_id: s.company_id, due_on: due.toISOString(),
       period_start: due.toISOString(), period_end: 다음끝.toISOString(),
-      amount: 금액, plan_key: s.plan_key, plan_name: s.plan_name, services: 개수, provider: PG_PROVIDER,
+      amount: 금액, supply_amount: 공급가, vat_amount: 부가세,
+      plan_key: s.plan_key, plan_name: s.plan_name, services: 개수, provider: PG_PROVIDER,
     };
 
     // 0원(체험 중 무료 등)·협의 요금제는 걷을 것이 없습니다. 기간만 넘깁니다.
@@ -190,7 +198,7 @@ Deno.serve(async (req) => {
       }).eq('company_id', s.company_id);
       await admin.from('audit_log').insert({
         company_id: s.company_id, actor_id: null, action: 'billing_charged', target: s.plan_key,
-        detail: { amount: 금액, order_id: r.orderId, period_end: 다음끝.toISOString() },
+        detail: { amount: 금액, supply: 공급가, vat: 부가세, order_id: r.orderId, period_end: 다음끝.toISOString() },
       });
       걷음++; 결과.push({ ...한줄, 결과: '걷음' });
     } else {

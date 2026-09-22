@@ -3227,10 +3227,10 @@ function renderSub(){
   } else if(subInfo.status === 'past_due'){
     note.innerHTML = '등록하신 카드로 결제가 되지 않았습니다. 결제 수단을 확인해 주세요.';
   } else if(subInfo.status === 'trialing'){
-    note.innerHTML = '무료 기간이 끝나면 매월 <b>' + won(subInfo.price) + '원</b>(부가세 별도)이 청구됩니다. ' +
+    note.innerHTML = '무료 기간이 끝나면 매월 <b>' + 낼돈(subInfo.price) + '</b>이 청구됩니다. ' +
       '그 전에 해지하시면 요금이 발생하지 않습니다.';
   } else {
-    note.innerHTML = '매월 <b>' + won(subInfo.price) + '원</b>(부가세 별도)이 청구됩니다. ' +
+    note.innerHTML = '매월 <b>' + 낼돈(subInfo.price) + '</b>이 청구됩니다. ' +
       '해지하시면 이미 결제된 기간이 끝날 때까지 쓰시고 그 뒤로 청구되지 않습니다.';
   }
   if(!isAdmin) note.innerHTML += ' 요금제 변경과 해지는 <b>회사 관리자</b>가 합니다.';
@@ -3254,6 +3254,19 @@ function renderSub(){
   $('s-undoChange').hidden = !isAdmin || !subInfo.pending_plan_key;
   $('s-cancelSub').hidden = !isAdmin || subInfo.status === 'canceled';
   $('s-resumeSub').hidden = !isAdmin || subInfo.status !== 'canceled';
+}
+
+/* 요금표에 적힌 값은 공급가액입니다. 카드에서 실제로 빠져나가는 돈은
+   거기에 부가세를 더한 값이고요. '부가세 별도' 라고만 쓰면 얼마가
+   나가는지 손님이 스스로 셈해야 합니다. 둘 다 적습니다.
+
+   ⚠ 부가세를 붙이는 셈은 서버(pgChargeOnce)에 있습니다. 여기서 세는 것은
+     보여 주기 위한 것뿐이고, 실제로 긁는 금액은 서버가 정합니다. */
+const VAT = 0.1;
+function 낼돈(공급){
+  const n = Number(공급) || 0;
+  return won(n) + '원<span style="font-weight:600;color:var(--mut);font-size:.85rem">' +
+         ' (부가세 포함 ' + won(n + Math.round(n * VAT)) + '원)</span>';
 }
 
 /* ═════════ 쓰고 있는 서비스 ═════════
@@ -3307,8 +3320,8 @@ async function openSvcSheet(){
     return;
   }
   svcOpts = r;
-  $('svcIntro').innerHTML = '지금 <b>' + r.count + '개</b> · 월 <b>' + won(r.monthly) +
-    '원</b>(부가세 별도)' + (r.trialing ? ' — 무료 체험 중입니다.' : '.');
+  $('svcIntro').innerHTML = '지금 <b>' + r.count + '개</b> · 월 <b>' + 낼돈(r.monthly) + '</b>' +
+    (r.trialing ? ' — 무료 체험 중입니다.' : '.');
   renderSvcPick();
 }
 
@@ -3330,20 +3343,23 @@ function renderSvcPick(){
 }
 
 function svcWhatNote(v){
+  /* addNow · monthly*Paid 는 서버가 부가세까지 더해 준 '실제로 긁히는' 값입니다.
+     화면이 말한 금액과 카드에 찍히는 금액이 다르면 안 됩니다. */
   if(v.owned){
     return '<b>' + ymd(svcOpts.periodEnd) + '</b> 부터 빠집니다. ' +
-      '그때까지는 그대로 쓰시고, 그날부터 월 <b>' + won(svcOpts.monthlyIfRemove) + '원</b>이 청구됩니다. ' +
+      '그때까지는 그대로 쓰시고, 그날부터 월 <b>' + won(svcOpts.monthlyIfRemovePaid) + '원</b>' +
+      '(공급가 ' + won(svcOpts.monthlyIfRemove) + '원 + 부가세)이 청구됩니다. ' +
       '이미 결제된 당월분은 환불되지 않습니다.';
   }
   if(svcOpts.trialing){
     return '지금 바로 쓰실 수 있습니다. <b>무료 체험 중이라 지금 내실 돈은 없습니다.</b> ' +
-      '무료가 끝나면 월 <b>' + won(svcOpts.monthlyIfAdd) + '원</b>으로 청구됩니다.';
+      '무료가 끝나면 월 <b>' + won(svcOpts.monthlyIfAddPaid) + '원</b>으로 청구됩니다.';
   }
   return v.addNow > 0
     ? '지금 바로 쓰실 수 있습니다. 이번 기간 남은 날짜만큼의 차액 <b>' + won(v.addNow) + '원</b>이 결제됩니다. ' +
-      '다음 달부터는 월 <b>' + won(svcOpts.monthlyIfAdd) + '원</b>입니다.'
+      '다음 달부터는 월 <b>' + won(svcOpts.monthlyIfAddPaid) + '원</b>입니다.'
     : '지금 바로 쓰실 수 있습니다. 이번 기간에 더 낼 금액은 없습니다. ' +
-      '다음 달부터는 월 <b>' + won(svcOpts.monthlyIfAdd) + '원</b>입니다.';
+      '다음 달부터는 월 <b>' + won(svcOpts.monthlyIfAddPaid) + '원</b>입니다.';
 }
 
 $('svcCancel').addEventListener('click', ()=>closeSheetEl('svcSheet'));
@@ -3437,7 +3453,7 @@ function planPickNote(p){
       : '지금 바로 바뀝니다. 이번 기간에 더 낼 금액은 없습니다.';
   }
   return '<b>' + ymd(planOpts.periodEnd) + '</b> 부터 바뀝니다. ' +
-         '지금 내신 요금은 그대로 쓰시고, 그날부터 월 <b>' + won(p.price) + '원</b>이 청구됩니다. ' +
+         '지금 내신 요금은 그대로 쓰시고, 그날부터 월 <b>' + 낼돈(p.price) + '</b>이 청구됩니다. ' +
          '이미 결제된 당월분은 환불되지 않습니다.';
 }
 

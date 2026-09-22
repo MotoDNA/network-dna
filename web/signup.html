@@ -100,7 +100,7 @@
 </div>
 
 <script src="catalog.js"></script>
-<script src="pg.js?v=20260922g"></script>
+<script src="pg.js?v=20260922h"></script>
 <script>
 /* ═══════════════════════════════════════════════════════════
    Re:Call 회원가입
@@ -247,6 +247,13 @@ function drawVerdict(){
 }
 
 /* ═════════ 2. 요금제 ═════════ */
+/* 요금표의 값은 공급가액입니다. 카드에서 실제로 빠져나가는 돈은 여기에
+   부가세를 더한 값입니다. '부가세 별도'라고만 적어 두면 얼마가 나가는지
+   손님이 스스로 셈해야 하고, 결제 직전 화면에서 그러면 안 됩니다.
+
+   ⚠ 붙이는 셈은 Catalog.withVat 하나입니다 (서버도 같은 셈을 씁니다). */
+const 낼돈 = (공급) => won(Catalog.withVat(C, 공급)) + '원';
+
 function stepPlan(){
   const plans = Catalog.planList(C);
   return `
@@ -285,7 +292,7 @@ function drawSeats(){
       <div class="note info" style="margin-top:20px">
         <p><b>첫 ${p.trialDays}일 무료입니다.</b> 결제 수단은 지금 등록하지만
         무료 기간에는 청구되지 않고, 기간이 끝나기 전에 해지하시면 한 푼도 나가지 않습니다.</p>
-        <p>이후 매월 ${won(p.price)}원 (부가세 별도)</p>
+        <p>이후 매월 ${낼돈(p.price)} (공급가 ${won(p.price)}원 + 부가세)</p>
       </div>
       <button class="btn btn-p btn-full" style="margin-top:16px" id="next2">다음</button>`;
   } else {
@@ -298,7 +305,7 @@ function drawSeats(){
         <p class="err" id="seaterr" hidden></p>
       </div>
       <div class="note info">
-        <p><b>매월 ${won(p.price)}원</b> (부가세 별도) · 무료 기간 없음</p>
+        <p><b>매월 ${낼돈(p.price)}</b> (공급가 ${won(p.price)}원 + 부가세) · 무료 기간 없음</p>
         <p>Business 요금제는 회사 단위 정액입니다. 인원이 늘어도 한도 안에서는 같은 금액입니다.</p>
       </div>
       <button class="btn btn-p btn-full" style="margin-top:16px" id="next2">다음</button>`;
@@ -454,7 +461,7 @@ function stepPay(){
     <div class="issued">
       <div><b>요금제</b><span style="font-size:.95rem">${esc(p.name)}</span><span></span></div>
       <div><b>인원</b><span style="font-size:.95rem">${S.seats}명</span><span></span></div>
-      <div><b>월 요금</b><span style="font-size:.95rem">${won(p.price)}원 <span style="font-weight:600;color:var(--mut);font-size:.85rem">(부가세 별도)</span></span><span></span></div>
+      <div><b>월 요금</b><span style="font-size:.95rem">${낼돈(p.price)} <span style="font-weight:600;color:var(--mut);font-size:.85rem">(공급가 ${won(p.price)}원 + 부가세)</span></span><span></span></div>
       <div><b>첫 청구</b><span style="font-size:.95rem">${free ? `${p.trialDays}일 뒤` : '오늘'}</span><span></span></div>
     </div>
 

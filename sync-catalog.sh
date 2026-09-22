@@ -112,6 +112,21 @@ export function priceFor(t: any, count: number) {
   return t.base + t.addon * (count - 1);
 }
 
+/* ───── 부가가치세 ─────
+   이 요금표의 금액은 전부 **공급가액**입니다. 카드에서 실제로 빠져나가는
+   돈은 공급가액 + 부가세이고, 그 셈은 여기 하나뿐이어야 합니다.
+
+   ⚠ 예전에는 붙이는 곳이 아예 없어서 공급가액만 긁었습니다.
+     화면에는 '부가세 별도'라고 적어 두고 세금은 우리가 떠안고 있었습니다. */
+export function vatOf(supply: number) {
+  const r = Number((CATALOG as any).tax?.vatRate ?? 0.1);
+  return Math.round((Number(supply) || 0) * r);
+}
+export function withVat(supply: number) {
+  const n = Number(supply) || 0;
+  return n + vatOf(n);
+}
+
 /* 옛 요금제 이름(plans) → 새 인원 구간(tiers).
    같은 사다리에 이름만 둘입니다. 가입 화면이 아직 plans 로 고르게 돼 있어서
    다리를 놓아 둡니다. plans 를 걷어낼 때 이 함수도 함께 사라집니다. */

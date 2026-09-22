@@ -4,7 +4,12 @@
 
 export const CATALOG = {
   "_": "Re:Service 요금과 업종 판정의 단일 출처입니다. 요금표는 services × tiers 입니다. plans 는 Re:Call 하나만 팔던 때의 표로, 가입 화면과 서버가 아직 이것으로 검증하고 있어 남겨 둡니다 — 통합 결제로 옮길 때 함께 정리합니다. 홈페이지·가입 화면·서버 검증이 모두 이 파일 하나를 봅니다. 값을 고치면 sync-catalog.sh 를 돌려 서버 쪽 사본을 다시 만드세요.",
-  "revision": "2026-09-10",
+  "revision": "2026-09-22",
+  "tax": {
+    "_": "이 파일의 모든 금액은 **공급가액**입니다. 부가가치세는 별도이고, 실제로 카드에서 빠져나가는 돈은 공급가액 + 부가세입니다. 화면에 '부가세 별도'라고만 적어 두고 공급가액만 긁으면 세금을 우리가 떠안게 됩니다 — 실제로 그렇게 돌고 있었습니다(2026-09-22 고침). 붙이는 셈은 catalog.js / catalog.ts 의 withVat() 하나뿐이어야 합니다.",
+    "vatRate": 0.1,
+    "label": "부가세 별도"
+  },
   "services": {
     "_": "Re:Service 넷. 요금은 서비스마다 다르지 않습니다 — 인원 구간(tiers) 을 고르고, 그 위에 고른 서비스 개수를 곱합니다. by 는 무엇이 값을 정하는가입니다.",
     "rebind": {
@@ -422,6 +427,21 @@ export function priceFor(t: any, count: number) {
   if (!t || t.base === null) return null;
   if (!Number.isInteger(count) || count < 1) return null;
   return t.base + t.addon * (count - 1);
+}
+
+/* ───── 부가가치세 ─────
+   이 요금표의 금액은 전부 **공급가액**입니다. 카드에서 실제로 빠져나가는
+   돈은 공급가액 + 부가세이고, 그 셈은 여기 하나뿐이어야 합니다.
+
+   ⚠ 예전에는 붙이는 곳이 아예 없어서 공급가액만 긁었습니다.
+     화면에는 '부가세 별도'라고 적어 두고 세금은 우리가 떠안고 있었습니다. */
+export function vatOf(supply: number) {
+  const r = Number((CATALOG as any).tax?.vatRate ?? 0.1);
+  return Math.round((Number(supply) || 0) * r);
+}
+export function withVat(supply: number) {
+  const n = Number(supply) || 0;
+  return n + vatOf(n);
 }
 
 /* 옛 요금제 이름(plans) → 새 인원 구간(tiers).

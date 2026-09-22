@@ -100,6 +100,21 @@ const Catalog = (() => {
     return t.base + t.addon * (n - 1);
   }
 
+  /* ───── 부가가치세 ─────
+     이 요금표의 금액은 전부 **공급가액**입니다. 카드에서 실제로 빠져나가는
+     돈은 공급가액 + 부가세입니다.
+
+     ⚠ 서버(_shared/catalog.ts)의 같은 이름 함수와 **같은 셈**이어야 합니다.
+       화면이 말한 금액과 실제로 긁힌 금액이 다르면 그게 제일 나쁩니다. */
+  function vatOf(c, supply){
+    const r = Number((c && c.tax && c.tax.vatRate) != null ? c.tax.vatRate : 0.1);
+    return Math.round((Number(supply) || 0) * r);
+  }
+  function withVat(c, supply){
+    const n = Number(supply) || 0;
+    return n + vatOf(c, n);
+  }
+
   /* 업종 id → 'A' | 'B' | 'C' | null */
   function gradeOf(c, id){
     for (const g of ['A','B','C']) {
@@ -125,7 +140,7 @@ const Catalog = (() => {
   }
 
   return { load, planList, plan, planForSeats, seatsFit,
-           serviceList, tierList, tierForSeats, priceFor,
+           serviceList, tierList, tierForSeats, priceFor, vatOf, withVat,
            storeTierList, storeTierFor,
            gradeOf, industry, allIndustries };
 })();

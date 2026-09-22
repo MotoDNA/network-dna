@@ -10,7 +10,7 @@
 // ─────────────────────────────────────────────────────────────
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { mkJson } from '../_shared/cors.ts';
-import { plan, planList, tierFromPlan, monthlyFor, serviceList } from '../_shared/catalog.ts';
+import { plan, planList, tierFromPlan, monthlyFor, serviceList, vatOf } from '../_shared/catalog.ts';
 
 const URL_ = Deno.env.get('SUPABASE_URL')!;
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -82,8 +82,13 @@ async function tossCall(path: string, body: Record<string, unknown>) {
 /* 실제로 돈이 빠져나가는 유일한 자리입니다.
    orderId 는 우리가 만들고 **한 번만** 씁니다. 같은 값을 두 번 보내면 토스가
    거절하므로, 실수로 두 번 눌러도 두 번 결제되지 않습니다. */
+/* ⚠ amount 는 **공급가액**을 넘깁니다. 부가세는 여기서 한 번만 더합니다.
+      요금표가 전부 공급가액이고 화면에도 '부가세 별도'라고 적혀 있으므로,
+      실제로 긁는 돈은 공급가액 + 부가세입니다. 부르는 쪽에서 미리 더하면
+      두 번 붙을 수 있어, 더하는 자리를 여기 하나로 못 박습니다. */
 async function pgChargeOnce(billingKey: string, customerKey: string | null, amount: number, label: string, companyId: string) {
   if (amount <= 0) return { ok: true, skipped: true };
+  amount = amount + vatOf(amount);
 
   if (PG_PROVIDER === 'stub') {
     if (!billingKey.startsWith('stub_')) return { ok: false, message: '결제 수단을 확인하지 못했습니다.' };
@@ -160,11 +165,13 @@ Deno.serve(async (req) => {
 
       let amountNow = 0;
       if (!quote && !isCurrent) {
-        amountNow = endsTrial
+        const 공급 = endsTrial
           ? 월                                             // 체험 종료 → 새 기간 전액
           : direction === 'up'
             ? prorate(월 - curPrice, sub.period_start, sub.period_end)
             : 0;                                           // 하위는 지금 받지 않습니다
+        // 화면이 말하는 금액은 **실제로 긁히는 금액**이어야 합니다. 말과 카드가 다르면 안 됩니다.
+        amountNow = 공급 > 0 ? 공급 + vatOf(공급) : 0;
       }
 
       let reason: string | null = null;
@@ -189,6 +196,7 @@ Deno.serve(async (req) => {
       current: sub.plan_key,
       currentName: sub.plan_name,
       currentPrice: curPrice,
+      currentPricePaid: curPrice + vatOf(curPrice),
       services: 개수,
       periodEnd: sub.period_end,
       pending: sub.pending_plan_key
@@ -209,19 +217,21 @@ Deno.serve(async (req) => {
       services: serviceList().map((v: { key: string; name: string; note?: string }) => {
         const 가짐 = 가진것.includes(v.key);
         const 뺄예약 = Array.isArray(sub.pending_apps) && !sub.pending_apps.includes(v.key) && 가짐;
+        const 더할공급 = 가짐 || sub.status === 'trialing'
+          ? 0 : prorate(더한값 - 지금값, sub.period_start, sub.period_end);
         return {
           key: v.key, name: v.name, note: v.note ?? null,
           owned: 가짐,
-          // 더하면 이번 달에 지금 내실 돈
-          addNow: 가짐 ? null
-            : sub.status === 'trialing' ? 0
-            : prorate(더한값 - 지금값, sub.period_start, sub.period_end),
+          // 더하면 이번 달에 지금 내실 돈 (부가세 포함 — 실제로 긁히는 금액)
+          addNow: 가짐 ? null : (더할공급 > 0 ? 더할공급 + vatOf(더할공급) : 0),
           removeScheduled: 뺄예약,
         };
       }),
-      count: 개수, monthly: 지금값,
+      count: 개수, monthly: 지금값, monthlyPaid: 지금값 + vatOf(지금값),
       monthlyIfAdd: 개수 < 4 ? 더한값 : null,
+      monthlyIfAddPaid: 개수 < 4 ? 더한값 + vatOf(더한값) : null,
       monthlyIfRemove: 뺀값,
+      monthlyIfRemovePaid: 뺀값 === null ? null : 뺀값 + vatOf(뺀값),
       status: sub.status,
       periodEnd: sub.period_end,
       trialing: sub.status === 'trialing',
@@ -314,9 +324,11 @@ Deno.serve(async (req) => {
     await admin.from('audit_log').insert({
       company_id: me.company_id, actor_id: me.id,
       action: 'plan_change_applied', target: target.key,
-      detail: { from: sub.plan_key, amount, endsTrial, pg: PG_PROVIDER },
+      detail: { from: sub.plan_key, supply: amount, vat: vatOf(amount),
+                charged: amount > 0 ? amount + vatOf(amount) : 0, endsTrial, pg: PG_PROVIDER },
     });
-    return json({ ok: true, mode: 'now', charged: amount, name: target.name, endsTrial });
+    return json({ ok: true, mode: 'now', charged: amount > 0 ? amount + vatOf(amount) : 0,
+                  name: target.name, endsTrial });
   }
 
   /* ═══════ 서비스 더하기 · 빼기 ═══════
@@ -379,9 +391,12 @@ Deno.serve(async (req) => {
     await admin.from('audit_log').insert({
       company_id: me.company_id, actor_id: me.id,
       action: 'service_added', target: 고른것,
-      detail: { from: 개수, to: 새개수, charged: amount, monthly: 새달값, pg: PG_PROVIDER },
+      detail: { from: 개수, to: 새개수,
+                supply: amount, vat: vatOf(amount), charged: amount > 0 ? amount + vatOf(amount) : 0,
+                monthly: 새달값, pg: PG_PROVIDER },
     });
-    return json({ ok: true, charged: amount, services: 새개수, monthly: 새달값 });
+    return json({ ok: true, charged: amount > 0 ? amount + vatOf(amount) : 0,
+                  services: 새개수, monthly: 새달값, monthlyPaid: 새달값 + vatOf(새달값) });
   }
 
   if (action === 'service_remove') {
