@@ -107,10 +107,41 @@ const PG = (() => {
     return new Promise((ok, no) => {
       const s = document.createElement('script');
       s.src = 'https://js.tosspayments.com/v2/standard';
-      s.onload = ok;
+      s.onload = () => window.TossPayments
+        ? ok()
+        : no(new Error('결제창을 불러오지 못했습니다. 잠시 뒤 다시 해 주세요.'));
       s.onerror = () => no(new Error('결제창을 불러오지 못했습니다. 잠시 뒤 다시 해 주세요.'));
       document.head.appendChild(s);
     });
+  }
+
+  /* 토스가 던지는 오류를 사람이 읽을 수 있는 말로 바꿉니다.
+
+     그냥 두면 화면에 "Load failed" 같은 영어 한 줄만 뜹니다. 사파리가
+     통신이 실패했을 때 내는 말인데(크롬은 "Failed to fetch"), 고객은
+     이게 무슨 뜻인지 알 수 없습니다.
+
+     결제창은 한 덩어리가 아니라 조각을 더 내려받아 뜹니다. 그래서
+     광고 차단 확장·사내 방화벽·느린 회선에서 이 자리가 자주 막힙니다.
+     무엇을 해 보시라고 알려 드려야 합니다. */
+  function 옮긴말(e){
+    const code = e && e.code;
+    const raw  = (e && e.message) || String(e || '');
+
+    if (code === 'USER_CANCEL') {
+      const 취소 = new Error('카드 등록을 취소하셨습니다. 다시 하시려면 아래 단추를 눌러 주세요.');
+      취소.canceled = true;
+      return 취소;
+    }
+    if (/load failed|failed to fetch|networkerror|network error|dynamically imported/i.test(raw)) {
+      return new Error(
+        '결제창을 불러오지 못했습니다. 회선이 느리거나, 광고 차단 프로그램 ' +
+        '또는 회사 방화벽이 tosspayments.com 을 막고 있을 때 생깁니다. ' +
+        '잠시 뒤 다시 눌러 보시고, 계속 안 되면 다른 브라우저(크롬)에서 시도해 주세요.'
+      );
+    }
+    if (code) return new Error(raw + ' (' + code + ')');
+    return new Error(raw || '결제창을 여는 중 문제가 생겼습니다. 잠시 뒤 다시 시도해 주세요.');
   }
 
   const toss = {
@@ -121,13 +152,17 @@ const PG = (() => {
       const customerKey = opt.customerKey || ('c_' + rand(24));
       const payment = window.TossPayments(TOSS_CLIENT_KEY).payment({ customerKey });
       const back = location.origin + location.pathname.replace(/\.html$/, '');
-      await payment.requestBillingAuth({
-        method: 'CARD',
-        successUrl: back + '?pg=ok',
-        failUrl:    back + '?pg=fail',
-        customerEmail: opt.email,
-        customerName:  opt.customerName
-      });
+      try {
+        await payment.requestBillingAuth({
+          method: 'CARD',
+          successUrl: back + '?pg=ok',
+          failUrl:    back + '?pg=fail',
+          customerEmail: opt.email,
+          customerName:  opt.customerName
+        });
+      } catch (e) {
+        throw 옮긴말(e);
+      }
       // 여기까지 오면 화면이 이미 넘어간 뒤입니다. 돌아오지 않습니다.
       return new Promise(() => {});
     },

@@ -479,7 +479,11 @@ function wirePay(){
     S.pgError = null;
     err.hidden = true;
     btn.disabled = true;
-    btn.innerHTML = '<span class="spin"></span> 카드 확인 중…';
+    /* 토스는 결제창 조각을 더 내려받느라 십 초쯤 걸릴 때가 있습니다.
+       "카드 확인 중" 이라고 써 두면 멈춘 줄 알고 다시 누르십니다. */
+    btn.innerHTML = PG.redirects
+      ? '<span class="spin"></span> 결제창을 여는 중…'
+      : '<span class="spin"></span> 카드 확인 중…';
 
     try {
       /* 1) 결제대행사 화면에서 빌링키를 받아옵니다.
