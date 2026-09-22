@@ -135,9 +135,9 @@ const PG = (() => {
     }
     if (/load failed|failed to fetch|networkerror|network error|dynamically imported/i.test(raw)) {
       return new Error(
-        '결제창을 불러오지 못했습니다. 회선이 느리거나, 광고 차단 프로그램 ' +
-        '또는 회사 방화벽이 tosspayments.com 을 막고 있을 때 생깁니다. ' +
-        '잠시 뒤 다시 눌러 보시고, 계속 안 되면 다른 브라우저(크롬)에서 시도해 주세요.'
+        '결제창을 불러오지 못했습니다. 브라우저 확장 프로그램(광고 차단·보안 도구)이 ' +
+        'tosspayments.com 을 막는 경우가 가장 많습니다. 시크릿 창에서 다시 해 보시거나 ' +
+        '확장을 잠시 끄고 눌러 주세요. 회사 방화벽·느린 회선일 때도 같은 증상이 납니다.'
       );
     }
     if (code) return new Error(raw + ' (' + code + ')');
@@ -147,12 +147,16 @@ const PG = (() => {
   const toss = {
     async requestBillingKey(opt){
       if (!TOSS_CLIENT_KEY) throw new Error('결제 설정이 아직 끝나지 않았습니다.');
-      await loadToss();
-      // customerKey: 영문·숫자·-_=.@ 로 2~50자. 우리 쪽 식별자이고 토스가 돌려줍니다.
-      const customerKey = opt.customerKey || ('c_' + rand(24));
-      const payment = window.TossPayments(TOSS_CLIENT_KEY).payment({ customerKey });
-      const back = location.origin + location.pathname.replace(/\.html$/, '');
+
+      /* 한 줄도 밖으로 새지 않게 통째로 감쌉니다.
+         전에는 requestBillingAuth 만 감쌌는데, 토스 객체를 만드는 두 줄에서
+         터진 오류가 그대로 화면에 "Failed to fetch" 로 나왔습니다. */
       try {
+        await loadToss();
+        // customerKey: 영문·숫자·-_=.@ 로 2~50자. 우리 쪽 식별자이고 토스가 돌려줍니다.
+        const customerKey = opt.customerKey || ('c_' + rand(24));
+        const payment = window.TossPayments(TOSS_CLIENT_KEY).payment({ customerKey });
+        const back = location.origin + location.pathname.replace(/\.html$/, '');
         await payment.requestBillingAuth({
           method: 'CARD',
           successUrl: back + '?pg=ok',
