@@ -100,7 +100,7 @@
 </div>
 
 <script src="catalog.js"></script>
-<script src="pg.js?v=20260922d"></script>
+<script src="pg.js?v=20260922f"></script>
 <script>
 /* ═══════════════════════════════════════════════════════════
    Re:Call 회원가입
@@ -614,17 +614,32 @@ function resumeFromPg(){
    금액·좌석·업종 판정은 서버가 catalog 를 보고 다시 검사합니다.
    화면에서 고른 값을 그대로 믿지 않습니다. */
 async function createAccount(){
-  let res;
-  try {
-    res = await 서버부르기();
-  } catch (e) {
-    /* fetch 가 여기서 터지면 브라우저는 "Failed to fetch"(크롬) 나
-       "Load failed"(사파리) 한 마디만 합니다. 왜 막혔는지는 안 알려 줍니다.
-       카드까지 넣은 분께 영어 한 줄을 보여 드릴 수는 없습니다.
+  /* 여기는 되돌릴 수 없는 자리입니다. 카드는 이미 등록이 끝났고,
+     이 한 번의 통신만 남았습니다. 그런데 이 통신이 어쩌다 한 번씩
+     끊깁니다 — 같은 브라우저에서 곧바로 다시 하면 멀쩡히 됩니다.
 
-       그래서 우리 서버가 살아 있는지 한 번 더 찔러 보고,
-       서버 탓인지 이 브라우저 탓인지 나눠서 말씀드립니다. */
-    throw await 못닿은까닭(e);
+     한 번 실패했다고 카드까지 넣은 분을 돌려보낼 수는 없습니다.
+     세 번까지 조용히 다시 보냅니다.
+
+     두 번 가도 계정이 둘 생기지는 않습니다. 서버가 같은 메일이면
+     409 로 막습니다. 첫 번째가 사실은 도착했었다면 "이미 가입된
+     이메일입니다" 라는 분명한 답이 오지, 조용히 두 개가 생기지 않습니다. */
+  let res, 마지막오류;
+  for (let 번째 = 1; 번째 <= 3; 번째++) {
+    try {
+      res = await 서버부르기();
+      마지막오류 = null;
+      break;
+    } catch (e) {
+      마지막오류 = e;
+      if (번째 < 3) await new Promise(r => setTimeout(r, 번째 * 1200));
+    }
+  }
+  if (마지막오류) {
+    /* 세 번 다 실패했습니다. 브라우저는 "Failed to fetch"(크롬) 나
+       "Load failed"(사파리) 한 마디만 하고 왜 막혔는지는 안 알려 줍니다.
+       어디까지 닿는지 직접 재서 나눠 말씀드립니다. */
+    throw await 못닿은까닭(마지막오류);
   }
 
   const data = await res.json().catch(() => ({}));
@@ -633,24 +648,37 @@ async function createAccount(){
 }
 
 async function 못닿은까닭(e){
-  let 닿나 = false;
-  try {
-    await fetch(CFG.supabaseUrl + '/functions/v1/signup', { method: 'OPTIONS', mode: 'no-cors', cache: 'no-store' });
-    닿나 = true;
-  } catch (_) {}
+  /* ⚠ no-cors 로는 OPTIONS 를 보낼 수 없습니다. GET·HEAD·POST 만 됩니다.
+        OPTIONS 로 찔렀더니 브라우저가 그 자리에서 거절해서, 서버가 멀쩡해도
+        늘 "못 닿음"으로 나왔습니다. 진단이 진단을 못 하고 있었습니다.
 
-  if (닿나) {
-    // 서버는 살아 있는데 본 요청만 막혔습니다 — 브라우저 확장·보안 프로그램이 유력합니다.
+     세 군데를 따로 찔러 봅니다. 어디까지 가는지가 곧 원인입니다.
+       뿌리  — 회선·DNS 가 살아 있는가
+       함수  — 우리 서버 함수까지 닿는가
+       토스  — 결제대행사 쪽은 닿는가 (비교용) */
+  const 찔러 = async (u) => {
+    try { await fetch(u, { mode: 'no-cors', cache: 'no-store' }); return 1 } catch (_) { return 0 }
+  };
+  const [뿌리, 함수, 토스] = await Promise.all([
+    찔러(CFG.supabaseUrl + '/'),
+    찔러(CFG.supabaseUrl + '/functions/v1/signup'),
+    찔러('https://js.tosspayments.com/v2/standard')
+  ]);
+  const 코드 = `뿌리${뿌리}/함수${함수}/토스${토스}`;
+  const 끝말 = ` (진단 ${코드} · ${(e && e.message) || '알 수 없음'})`;
+
+  if (함수) {
+    // 서버에는 닿습니다. 본 요청만 막혔다면 사전확인(preflight)을 가로채는 쪽이 유력합니다.
     return new Error(
       '카드는 등록됐는데 저희 서버에 연결하지 못했습니다. 브라우저 확장 프로그램이나 ' +
-      '보안 프로그램이 막고 있을 수 있습니다. 아래 단추를 한 번 더 눌러 주세요. ' +
-      '계속 안 되면 010-6451-5807 로 연락 주시면 저희가 직접 만들어 드립니다. (진단 A)'
+      '백신·보안 프로그램이 막고 있을 수 있습니다. 아래 단추를 한 번 더 눌러 주세요. ' +
+      '계속 안 되면 010-6451-5807 로 연락 주시면 저희가 직접 만들어 드립니다.' + 끝말
     );
   }
   return new Error(
     '저희 서버에 연결하지 못했습니다. 인터넷 연결을 확인하시고 아래 단추를 다시 눌러 주세요. ' +
     '카드는 아직 등록 처리되지 않았으니 요금이 나가지 않습니다. ' +
-    '계속 안 되면 010-6451-5807 로 연락 주세요. (진단 B — ' + ((e && e.message) || '알 수 없음') + ')'
+    '계속 안 되면 010-6451-5807 로 연락 주세요.' + 끝말
   );
 }
 
