@@ -134,6 +134,22 @@ async function pgResolveBilling(body: Record<string, unknown>): Promise<결제�
            cardBrand: code ? (발급사[code] ?? code) : null, cardLast4: last4 };
 }
 
+/* 어디서 왜 엎어졌는지 서버 기록에 남깁니다.
+
+   손님에게는 "구독 정보를 만들지 못했습니다" 라고만 보여 드리는 것이 맞습니다.
+   하지만 우리까지 그것만 보고 있으면 원인을 찾을 길이 없습니다. 실제로
+   subscriptions 표에 service_role 권한이 없어 가입이 늘 실패했는데,
+   그 까닭이 아무 데도 남지 않아 한참을 헤맸습니다.
+
+   보는 법: supabase functions logs signup --project-ref izrtclsqhsgkuwsffifn */
+function 자국(어디: string, 오류: unknown) {
+  const e = 오류 as { message?: string; code?: string; details?: string; hint?: string } | null;
+  console.error(`[가입 실패] ${어디} —`, JSON.stringify({
+    code: e?.code ?? null, message: e?.message ?? String(오류),
+    details: e?.details ?? null, hint: e?.hint ?? null,
+  }));
+}
+
 Deno.serve(async (req) => {
   const { cors, json } = mkJson(req);
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
@@ -225,6 +241,7 @@ Deno.serve(async (req) => {
   }).select('id').single();
 
   if (e1 || !comp) {
+    자국('회사 만들기', e1);
     const dupe = e1?.code === '23505';
     return await fail(
       dupe ? '이미 가입된 이메일입니다.' : '회사를 만들지 못했습니다.',
@@ -240,6 +257,7 @@ Deno.serve(async (req) => {
     user_metadata: { company_code: code, login_id: ADMIN_ID },
   });
   if (e2 || !created?.user) {
+    자국('계정 만들기', e2);
     await undo();
     return await fail('계정을 만들지 못했습니다.', 500);
   }
@@ -263,13 +281,13 @@ Deno.serve(async (req) => {
     period_start: now.toISOString(),
     period_end: periodEnd.toISOString(),
   });
-  if (e3) { await undo2(); return await fail('구독 정보를 만들지 못했습니다.', 500) }
+  if (e3) { 자국('구독 넣기', e3); await undo2(); return await fail('구독 정보를 만들지 못했습니다.', 500) }
 
   const { error: e4 } = await admin.from('profiles').insert({
     id: created.user.id, company_id: comp.id,
     login_id: ADMIN_ID, name, role: 'admin',
   });
-  if (e4) { await undo2(); return await fail('관리자 계정을 만들지 못했습니다.', 500) }
+  if (e4) { 자국('프로필 넣기', e4); await undo2(); return await fail('관리자 계정을 만들지 못했습니다.', 500) }
 
   const { error: e5 } = await admin.from('billing_methods').insert({
     company_id: comp.id,
@@ -279,7 +297,7 @@ Deno.serve(async (req) => {
     card_brand: bill.cardBrand,
     card_last4: bill.cardLast4,
   });
-  if (e5) { await undo2(); return await fail('결제 수단을 저장하지 못했습니다.', 500) }
+  if (e5) { 자국('결제수단 넣기', e5); await undo2(); return await fail('결제 수단을 저장하지 못했습니다.', 500) }
 
   await admin.from('audit_log').insert({
     company_id: comp.id, actor_id: created.user.id,
