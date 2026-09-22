@@ -10,7 +10,7 @@
 // ─────────────────────────────────────────────────────────────
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { mkJson } from '../_shared/cors.ts';
-import { plan, planList, tierFromPlan, monthlyFor } from '../_shared/catalog.ts';
+import { plan, planList, tierFromPlan, monthlyFor, serviceList } from '../_shared/catalog.ts';
 
 const URL_ = Deno.env.get('SUPABASE_URL')!;
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -123,6 +123,11 @@ Deno.serve(async (req) => {
     .select('*').eq('company_id', me.company_id).maybeSingle();
   if (!sub) return json({ ok: false, error: '구독 정보가 없습니다.' }, 404);
 
+  /* 어느 서비스를 샀는가. 화면이 아니라 이 값이 문을 엽니다 —
+     company_for_app(app) 이 데이터베이스 정책마다 들어 있습니다. */
+  const { data: 회사 } = await admin.from('companies')
+    .select('apps').eq('id', me.company_id).maybeSingle();
+
   const { count: usedCount } = await admin.from('profiles')
     .select('id', { count: 'exact', head: true })
     .eq('company_id', me.company_id).eq('disabled', false);
@@ -133,6 +138,7 @@ Deno.serve(async (req) => {
   /* 이 회사가 쓰는 서비스 개수. 요금은 인원 구간 × 서비스 개수입니다.
      plans 에 적힌 price 는 '서비스 하나'일 때의 값이라 그대로 쓰면 안 됩니다. */
   const 개수 = Math.max(1, Number(sub.services) || 1);
+  const 가진것: string[] = Array.isArray(회사?.apps) ? (회사!.apps as string[]) : [];
   const 값 = (planKey: string) =>
     monthlyFor(tierFromPlan(planKey)?.key ?? null, planKey, 개수);
 
@@ -190,6 +196,35 @@ Deno.serve(async (req) => {
             price: sub.pending_price, from: sub.pending_from }
         : null,
       plans: list,
+    });
+  }
+
+  if (action === 'services') {
+    const 지금값 = Number(값(sub.plan_key) ?? 0);
+    const 더한값 = Number(monthlyFor(sub.tier_key, sub.plan_key, Math.min(4, 개수 + 1)) ?? 0);
+    const 뺀값   = 개수 > 1 ? Number(monthlyFor(sub.tier_key, sub.plan_key, 개수 - 1) ?? 0) : null;
+
+    return json({
+      ok: true,
+      services: serviceList().map((v: { key: string; name: string; note?: string }) => {
+        const 가짐 = 가진것.includes(v.key);
+        const 뺄예약 = Array.isArray(sub.pending_apps) && !sub.pending_apps.includes(v.key) && 가짐;
+        return {
+          key: v.key, name: v.name, note: v.note ?? null,
+          owned: 가짐,
+          // 더하면 이번 달에 지금 내실 돈
+          addNow: 가짐 ? null
+            : sub.status === 'trialing' ? 0
+            : prorate(더한값 - 지금값, sub.period_start, sub.period_end),
+          removeScheduled: 뺄예약,
+        };
+      }),
+      count: 개수, monthly: 지금값,
+      monthlyIfAdd: 개수 < 4 ? 더한값 : null,
+      monthlyIfRemove: 뺀값,
+      status: sub.status,
+      periodEnd: sub.period_end,
+      trialing: sub.status === 'trialing',
     });
   }
 
@@ -284,12 +319,109 @@ Deno.serve(async (req) => {
     return json({ ok: true, mode: 'now', charged: amount, name: target.name, endsTrial });
   }
 
+  /* ═══════ 서비스 더하기 · 빼기 ═══════
+
+     요금은 인원 구간 × 서비스 개수입니다. 그래서 서비스를 하나 더하는 것은
+     요금제를 한 칸 올리는 것과 셈이 같습니다. 규칙도 같게 둡니다 —
+     환불정책 제5조 그대로입니다.
+
+       더할 때 — 지금 바로 쓰십니다. 이번 달 남은 날짜만큼만 차액을 받습니다
+       뺄 때   — 다음 결제일에 빠집니다. 이미 낸 돈은 돌려드리지 않고,
+                 그날까지는 그대로 쓰십니다
+
+     무료 체험 중에는 더해도 받지 않습니다. 아직 한 푼도 안 내신 분께
+     추가분만 따로 받는 것은 말이 안 됩니다. 무료가 끝나면 늘어난
+     개수로 걷힙니다. */
+
+  if (action === 'service_add') {
+    const 고른것 = String(body.app ?? '');
+    const 있는가 = serviceList().some((v: { key: string }) => v.key === 고른것);
+    if (!있는가) return json({ ok: false, error: '그런 서비스가 없습니다.' }, 400);
+    if (가진것.includes(고른것)) return json({ ok: false, error: '이미 쓰고 계신 서비스입니다.' }, 409);
+    if (sub.status === 'canceled') {
+      return json({ ok: false, error: '해지 신청 중에는 더할 수 없습니다. 먼저 해지를 취소해 주세요.' }, 409);
+    }
+    if (개수 >= 4) return json({ ok: false, error: '네 가지를 모두 쓰고 계십니다.' }, 409);
+
+    const 새개수 = 개수 + 1;
+    const 지금값 = Number(값(sub.plan_key) ?? 0);
+    const 새달값 = Number(monthlyFor(sub.tier_key, sub.plan_key, 새개수) ?? 0);
+    if (!새달값) return json({ ok: false, error: '요금을 셀 수 없는 요금제입니다. 문의해 주세요.' }, 400);
+
+    /* 체험 중에는 받지 않습니다. 그 밖에는 이번 달 남은 날짜만큼만. */
+    const amount = sub.status === 'trialing'
+      ? 0
+      : prorate(새달값 - 지금값, sub.period_start, sub.period_end);
+
+    if (amount > 0) {
+      const { data: bm } = await admin.from('billing_methods')
+        .select('billing_key, customer_key').eq('company_id', me.company_id).maybeSingle();
+      if (!bm?.billing_key) return json({ ok: false, error: '등록된 결제 수단이 없습니다.' }, 402);
+
+      const pay = await pgChargeOnce(bm.billing_key, bm.customer_key, amount,
+        `Re:Service ${고른것} 추가`, me.company_id);
+      if (!pay.ok) return json({ ok: false, error: pay.message ?? '결제하지 못했습니다.' }, 402);
+    }
+
+    /* 돈을 받은 뒤에 엽니다. 순서가 바뀌면 결제가 막혔는데 서비스는 열린 상태가 됩니다.
+       apps 가 실제로 문을 여는 값입니다 — 화면이 아니라 이 값이 정합니다. */
+    const { error: eA } = await admin.from('companies')
+      .update({ apps: [...가진것, 고른것] }).eq('id', me.company_id);
+    if (eA) return json({ ok: false, error: '서비스를 열지 못했습니다. 결제는 되었으니 연락 주세요.' }, 500);
+
+    await admin.from('subscriptions').update({
+      services: 새개수, price: 새달값,
+      // 빼기로 예약해 둔 것이 있으면 지웁니다. 마음을 바꾸신 것입니다.
+      pending_services: null, pending_apps: null,
+      pending_from: sub.pending_plan_key ? sub.pending_from : null,
+    }).eq('company_id', me.company_id);
+
+    await admin.from('audit_log').insert({
+      company_id: me.company_id, actor_id: me.id,
+      action: 'service_added', target: 고른것,
+      detail: { from: 개수, to: 새개수, charged: amount, monthly: 새달값, pg: PG_PROVIDER },
+    });
+    return json({ ok: true, charged: amount, services: 새개수, monthly: 새달값 });
+  }
+
+  if (action === 'service_remove') {
+    const 고른것 = String(body.app ?? '');
+    if (!가진것.includes(고른것)) return json({ ok: false, error: '쓰고 계시지 않은 서비스입니다.' }, 409);
+    if (가진것.length <= 1) {
+      return json({ ok: false, error: '마지막 하나는 뺄 수 없습니다. 그만 쓰시려면 해지해 주세요.' }, 409);
+    }
+
+    const 남는것 = 가진것.filter((a) => a !== 고른것);
+    const 새개수 = 남는것.length;
+    const 새달값 = Number(monthlyFor(sub.tier_key, sub.plan_key, 새개수) ?? 0);
+
+    /* 지금 끊지 않습니다. 이미 이번 달 요금을 받았으므로 그날까지는 쓰십니다.
+       돌려드리는 것은 없습니다 (환불정책 제5조). */
+    const { error } = await admin.from('subscriptions').update({
+      pending_apps: 남는것,
+      pending_services: 새개수,
+      pending_price: 새달값,
+      pending_from: sub.period_end,
+    }).eq('company_id', me.company_id);
+    if (error) return json({ ok: false, error: '예약하지 못했습니다.' }, 500);
+
+    await admin.from('audit_log').insert({
+      company_id: me.company_id, actor_id: me.id,
+      action: 'service_remove_scheduled', target: 고른것,
+      detail: { at: sub.period_end, to: 새개수, monthly: 새달값 },
+    });
+    return json({ ok: true, from: sub.period_end, services: 새개수, monthly: 새달값 });
+  }
+
   /* ── 예약해 둔 변경 취소 ── */
   if (action === 'cancel_change') {
-    if (!sub.pending_plan_key) return json({ ok: false, error: '예약된 변경이 없습니다.' }, 409);
+    if (!sub.pending_plan_key && !sub.pending_apps) {
+      return json({ ok: false, error: '예약된 변경이 없습니다.' }, 409);
+    }
     const { error } = await admin.from('subscriptions').update({
-      pending_plan_key: null, pending_plan_name: null,
-      pending_price: null, pending_seat_limit: null, pending_from: null,
+      pending_plan_key: null, pending_plan_name: null, pending_tier_key: null,
+      pending_price: null, pending_seat_limit: null,
+      pending_services: null, pending_apps: null, pending_from: null,
     }).eq('company_id', me.company_id);
     if (error) return json({ ok: false, error: '되돌리지 못했습니다.' }, 500);
 
