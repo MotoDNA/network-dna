@@ -128,7 +128,10 @@ async function pgResolveBilling(body: Record<string, unknown>): Promise<결제�
   if (!d.billingKey) return { ok: false, message: '결제사가 빌링키를 주지 않았습니다.' };
 
   const 번호 = String(d.card?.number ?? '');                    // 433012******1234 처럼 가려져 옵니다
-  const last4 = /\d{4}$/.test(번호) ? 번호.slice(-4) : null;
+  /* 토스는 43301234****123* 처럼 돌려줍니다 — 맨 끝자리까지 가려져 있습니다.
+     숫자 넉 자를 요구했더니 늘 빈칸이 됐습니다. 고객이 "아, 그 카드" 하고
+     알아보시게 하는 것이 목적이니, 가림표가 섞여 있어도 끝 넉 자를 그대로 씁니다. */
+  const last4 = /\d/.test(번호.slice(-4)) ? 번호.slice(-4) : null;
   const code = String(d.card?.issuerCode ?? '');
   return { ok: true, billingKey: d.billingKey, customerKey: d.customerKey ?? customerKey,
            cardBrand: code ? (발급사[code] ?? code) : null, cardLast4: last4 };
