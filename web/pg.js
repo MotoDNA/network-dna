@@ -52,7 +52,7 @@ const PG = (() => {
   // 네이버페이 결제형은 (1) 일반 PG 가 이미 연동돼 있어야 하고
   // (2) 최소 1개월 매출이 있어야 신청됩니다. PG 를 대신하는 것이 아니라
   // 그 위에 얹는 결제수단이라, 어차피 일반 PG 를 먼저 붙여야 합니다.
-  const PROVIDER = 'stub';
+  const PROVIDER = 'toss';
 
   /* ── 스텁 ───────────────────────────────────────────────
      실제 결제창이 뜨는 것처럼 잠깐 기다렸다가 가짜 빌링키를 돌려줍니다.
@@ -88,7 +88,11 @@ const PG = (() => {
          · 부르기 전에 적어 둔 답을 sessionStorage 에 보관해야 합니다(signup.html)
          · 진짜 빌링키는 서버가 authKey 로 발급받습니다(signup 함수)
        0원 승인은 토스에 없습니다. 발급 자체가 카드 확인입니다. */
-  const TOSS_CLIENT_KEY = '';          // 승인 나면 test_ck_… 로 시험, live_ck_… 로 운영
+  /* 토스 문서에 공개된 테스트 키입니다. 진짜 결제창이 뜨고 카드 등록까지 돌지만
+     실제로 돈이 빠져나가지는 않습니다. 카드사 심사는 이 상태로 봅니다.
+     ⚠ 계약이 끝나 우리 키(live_ck_…)를 받으면 여기만 바꿉니다.
+        시크릿 키(test_sk_ / live_sk_)는 절대 여기 두지 않습니다 — 서버 환경변수에만. */
+  const TOSS_CLIENT_KEY = 'test_ck_docs_Ovk5rk1EwkEbP0W43n07xlzm';
 
   function loadToss(){
     if (window.TossPayments) return Promise.resolve();
@@ -141,6 +145,9 @@ const PG = (() => {
   return {
     provider: PROVIDER,
     isStub: PROVIDER === 'stub',
+    /* 테스트 키로 도는 중인가. 화면 맨 위에 띠를 띄워 알립니다 —
+       진짜 결제가 되는 줄 알고 카드를 넣으면 안 됩니다. */
+    isTest: PROVIDER === 'toss' && /^test_/.test(TOSS_CLIENT_KEY),
     redirects: PROVIDER === 'toss',     // 카드 등록이 다른 쪽으로 넘어갔다 돌아오는가
     requestBillingKey: opt => impl.requestBillingKey(opt),
     authorizeZero:     key => impl.authorizeZero(key)

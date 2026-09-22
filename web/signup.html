@@ -84,7 +84,7 @@
 <body>
 
 <div class="testbar" id="testbar" hidden>
-  테스트 모드 — 결제대행사가 아직 연결되지 않았습니다. 실제 결제는 일어나지 않습니다.
+  테스트 모드 — 심사용 화면입니다. 결제창은 실제로 뜨지만 요금이 청구되지 않습니다.
 </div>
 
 <nav class="nav">
@@ -128,6 +128,29 @@ const CFG = {
      2) supabase functions deploy signup
      3) 통신판매업 신고번호를 꼬리말에 기입 */
 const SIGNUP_OPEN = false;
+
+/* ── 심사용 통로 ──
+   카드사 심사는 "결제 버튼을 눌러 결제창이 뜨는 화면" 을 봅니다. 그렇다고 가입을
+   활짝 열어 두면, 결제가 아직 진짜로 돌지 않는 동안 손님이 카드를 넣습니다.
+   그래서 주소에 열쇠가 있을 때만 가입 흐름을 보여 줍니다.
+
+     https://dnalabs.kr/signup?review=tosspay2026
+
+   ⚠ 토스 카드창에 갔다 돌아올 때는 주소에 ?pg=ok 만 붙어 옵니다(열쇠가 사라집니다).
+      그래서 들어올 때 한 번 적어 두고, 돌아온 것일 때만 다시 인정합니다. */
+const REVIEW_KEY = 'tosspay2026';
+const REVIEW_SS  = 'signup.review';
+const 심사통로 = (() => {
+  const q = new URLSearchParams(location.search);
+  if (q.get('review') === REVIEW_KEY) {
+    try { sessionStorage.setItem(REVIEW_SS, '1') } catch (e) {}
+    return true;
+  }
+  if (q.get('pg')) {
+    try { return sessionStorage.getItem(REVIEW_SS) === '1' } catch (e) { return false }
+  }
+  return false;
+})();
 
 const STEPS = ['업종', '요금제', '정보', '약관', '결제수단', '완료'];
 let step = 0;
@@ -695,13 +718,13 @@ function closedPanel(){
 Catalog.load().then(c => {
   C = c;
 
-  if (!SIGNUP_OPEN) {
+  if (!SIGNUP_OPEN && !심사통로) {
     document.getElementById('steps').hidden = true;
     $('panel').innerHTML = closedPanel();
     return;
   }
 
-  if (PG.isStub) $('testbar').hidden = false;
+  if (PG.isStub || PG.isTest) $('testbar').hidden = false;
 
   /* 토스 카드창에서 돌아온 경우 — 적어 둔 답을 되살리고 이어서 갑니다 */
   if (resumeFromPg()) return;
