@@ -174,6 +174,33 @@ const PG = (() => {
     async authorizeZero(){ return { ok: true, skipped: true } }
   };
 
+  /* ── 길이 막혀 있는지 미리 보기 ──────────────────────────
+     토스 SDK 는 결제창을 띄우면서 log.tosspayments.com 과
+     event.tosspayments.com 을 부릅니다. 이름만 보면 영락없는 추적기라
+     광고 차단 프로그램이 이걸 막습니다. 그러면 결제창이 아예 안 뜹니다.
+
+     카드를 넣으려고 마음먹은 사람에게 "안 됩니다"를 보여 주는 것보다,
+     누르기 전에 미리 알려 드리는 편이 낫습니다.
+
+     mode:'no-cors' 로 부르는 것이 핵심입니다. 이렇게 하면 서버가
+     404 를 주든 CORS 를 안 열어 두든 성공으로 옵니다. 오직 통신 자체가
+     막혔을 때만 실패합니다 — 그게 우리가 알고 싶은 것입니다. */
+  async function 길막혔나(){
+    if (PROVIDER !== 'toss') return false;
+    const 길 = [
+      'https://js.tosspayments.com/v2/standard',
+      'https://log.tosspayments.com/v1/log'
+    ];
+    for (const u of 길) {
+      try {
+        await fetch(u, { mode: 'no-cors', cache: 'no-store' });
+      } catch (e) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /* ── 포트원 (계약 후 채웁니다) ── */
   const portone = {
     async requestBillingKey(){ throw new Error('포트원 연결이 아직 설정되지 않았습니다.') },
@@ -196,6 +223,8 @@ const PG = (() => {
        진짜 결제가 되는 줄 알고 카드를 넣으면 안 됩니다. */
     isTest: PROVIDER === 'toss' && /^test_/.test(TOSS_CLIENT_KEY),
     redirects: PROVIDER === 'toss',     // 카드 등록이 다른 쪽으로 넘어갔다 돌아오는가
+    /* 결제창으로 가는 길이 막혀 있는가. 화면이 미리 물어봅니다. */
+    blocked: () => 길막혔나(),
     requestBillingKey: opt => impl.requestBillingKey(opt),
     authorizeZero:     key => impl.authorizeZero(key)
   };

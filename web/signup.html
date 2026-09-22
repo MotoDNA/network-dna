@@ -100,7 +100,7 @@
 </div>
 
 <script src="catalog.js"></script>
-<script src="pg.js?v=20260922b"></script>
+<script src="pg.js?v=20260922c"></script>
 <script>
 /* ═══════════════════════════════════════════════════════════
    Re:Call 회원가입
@@ -464,6 +464,13 @@ function stepPay(){
       열쇠값만 받습니다. 카드번호 자체는 저희가 볼 수 없습니다.</p>
     </div>
 
+    <div class="note stop" id="pgblock" hidden>
+      <p><b>결제창이 열리지 않을 수 있습니다.</b>
+      이 브라우저에서 결제대행사(tosspayments.com)로 가는 길이 막혀 있습니다.
+      광고 차단 프로그램이 원인인 경우가 가장 많습니다 —
+      <b>시크릿 창에서 다시 열어 보시거나</b> 확장 프로그램을 잠시 꺼 주세요.</p>
+    </div>
+
     <button class="btn btn-p btn-full btn-lg" style="margin-top:18px" id="paybtn">
       카드 등록하고 가입 마치기
     </button>
@@ -475,6 +482,17 @@ function stepPay(){
 
 function wirePay(){
   const btn = $('paybtn'), err = $('payerr');
+
+  /* 누르기 전에 길이 막혔는지 조용히 확인합니다.
+     막혔으면 위에 안내를 띄웁니다. 단추는 막지 않습니다 — 우리 짐작이
+     틀릴 수도 있고, 되는데 못 누르게 하면 그게 더 나쁩니다. */
+  if (PG.blocked) {
+    PG.blocked().then(막힘 => {
+      const 안내 = $('pgblock');
+      if (막힘 && 안내) 안내.hidden = false;
+    }).catch(() => {});
+  }
+
   btn.onclick = async () => {
     S.pgError = null;
     err.hidden = true;
