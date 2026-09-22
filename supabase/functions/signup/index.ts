@@ -12,7 +12,7 @@
 //
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { mkJson } from '../_shared/cors.ts';
-import { CATALOG, plan, seatsFit, gradeOf } from '../_shared/catalog.ts';
+import { CATALOG, plan, seatsFit, gradeOf, tierFromPlan, monthlyFor } from '../_shared/catalog.ts';
 
 const URL_ = Deno.env.get('SUPABASE_URL')!;
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -237,8 +237,13 @@ Deno.serve(async (req) => {
   const trialEnds = trialDays ? new Date(now.getTime() + trialDays * 864e5) : null;
   const periodEnd = trialEnds ?? new Date(new Date(now).setMonth(now.getMonth() + 1));
 
+  /* ⚠ apps 를 빼먹으면 회사는 만들어지는데 아무 데도 못 들어갑니다.
+        화면이 아니라 데이터베이스가 막습니다 — company_for_app(app) 이
+        정책마다 들어 있습니다. 실제로 이걸 빼먹어서, 가입은 끝났는데
+        로그인하면 빈손인 회사가 하나 생겼습니다.
+        이 화면은 Re:Call 가입입니다. 다른 서비스는 나중에 더합니다. */
   const { data: comp, error: e1 } = await admin.from('companies').insert({
-    code, name: company,
+    code, name: company, apps: ['recall'],
     industry_id: industryId, industry_grade: grade,
     contact_name: name, contact_email: email, contact_phone: phone,
   }).select('id').single();
@@ -273,11 +278,21 @@ Deno.serve(async (req) => {
   // 구독을 프로필보다 먼저 넣습니다.
   // 좌석 제한 트리거가 subscriptions 를 보기 때문에, 순서가 바뀌면
   // 첫 관리자 계정이 "구독 없음"으로 취급됩니다.
+  /* 금액은 요금표(catalog.json)로 셉니다 — base + addon × (서비스 개수 - 1).
+     지금은 Re:Call 하나만 파니 개수는 1 이고, 그래서 값은 plans 와 같습니다.
+     그래도 굳이 요금표로 세는 이유는, 서비스를 더 파는 날 이 줄을 안 고쳐도
+     되게 하려는 것입니다. 셈이 두 군데 있으면 언젠가 어긋납니다. */
+  const 구간 = tierFromPlan(p.key);
+  const 서비스수 = 1;
+  const 월요금 = monthlyFor(구간?.key ?? null, p.key, 서비스수) ?? p.price;
+
   const { error: e3 } = await admin.from('subscriptions').insert({
     company_id: comp.id,
     plan_key: p.key,
     plan_name: p.name,          // 판 시점의 이름과 금액을 박아 둡니다
-    price: p.price,
+    tier_key: 구간?.key ?? null,
+    services: 서비스수,
+    price: 월요금,
     seat_limit: p.seatMax,
     status: trialDays ? 'trialing' : 'active',
     trial_ends_at: trialEnds?.toISOString() ?? null,

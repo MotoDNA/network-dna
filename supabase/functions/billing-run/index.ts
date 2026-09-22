@@ -24,10 +24,12 @@
 //   curl -X POST .../functions/v1/billing-run -H "x-billing-secret: <값>"
 //   ?dry=1 을 붙이면 BILLING_LIVE 가 켜져 있어도 연습만 합니다.
 //
-// ⚠ 지금은 subscriptions.price 를 그대로 걷습니다. 그 값은 '서비스 1개' 기준입니다.
-//   서비스 개수에 따른 요금(tiers)은 다음 단계에서 붙입니다.
+// 금액은 걷는 그 순간에 다시 셉니다. subscriptions.price 에 적힌 값을 믿지 않습니다.
+// 지난달에 서비스를 하나 더하셨으면 이번 달부터 그만큼 더 걷혀야 하고,
+// 그러려면 '그때 적어 둔 값'이 아니라 '지금의 구성'으로 세야 합니다.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { monthlyFor } from '../_shared/catalog.ts';
 
 const URL_ = Deno.env.get('SUPABASE_URL')!;
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -87,7 +89,7 @@ Deno.serve(async (req) => {
   await admin.rpc('apply_due_plan_changes');
 
   const { data: subs, error: e0 } = await admin.from('subscriptions')
-    .select('company_id, plan_key, plan_name, price, status, period_start, period_end, trial_ends_at')
+    .select('company_id, plan_key, plan_name, tier_key, services, price, status, period_start, period_end, trial_ends_at')
     .in('status', ['trialing', 'active', 'past_due'])
     .lte('period_end', 지금.toISOString())
     .order('period_end', { ascending: true })
@@ -101,8 +103,30 @@ Deno.serve(async (req) => {
   for (const s of subs ?? []) {
     const due = new Date(s.period_end as string);
     const 다음끝 = 한달뒤(due);
-    const 금액 = Number(s.price) || 0;
-    const 한줄 = { code: s.company_id, plan: s.plan_key, amount: 금액, due: s.period_end };
+    /* 요금표(catalog.json)로 다시 셉니다 — base + addon × (서비스 개수 - 1).
+       셈이 안 되는 경우(50명 이상 협의 요금제 등)는 카드로 걷지 않습니다.
+       그런 곳은 세금계산서로 받기로 되어 있습니다. */
+    const 개수 = Math.max(1, Number(s.services) || 1);
+    const 센값 = monthlyFor(s.tier_key as string | null, s.plan_key as string | null, 개수);
+    const 금액 = 센값 === null ? -1 : Number(센값);
+    const 한줄 = { code: s.company_id, plan: s.plan_key, tier: s.tier_key, services: 개수, amount: 금액, due: s.period_end };
+
+    if (금액 < 0) {
+      await admin.from('billing_charges').upsert({
+        company_id: s.company_id, due_on: due.toISOString(),
+        period_start: due.toISOString(), period_end: 다음끝.toISOString(),
+        amount: 0, plan_key: s.plan_key, plan_name: s.plan_name, services: 개수,
+        provider: PG_PROVIDER, status: 'skipped',
+        last_error: '카드로 걷을 수 없는 요금제입니다 (협의 · 세금계산서).',
+      }, { onConflict: 'company_id,due_on' });
+      건너뜀++; 결과.push({ ...한줄, 결과: '협의 요금제 — 카드로 걷지 않습니다' }); continue;
+    }
+
+    // 적어 둔 값과 다르면 구독에도 반영해 둡니다. 화면이 옛 금액을 보여 주면 안 됩니다.
+    if (Number(s.price) !== 금액) {
+      await admin.from('subscriptions').update({ price: 금액 }).eq('company_id', s.company_id);
+      console.log('[요금걷기] 금액 고쳐 적음', s.company_id, s.price, '→', 금액);
+    }
 
     // 이미 처리한 기간인지. (company_id, due_on) 이 열쇠입니다.
     const { data: 있던것 } = await admin.from('billing_charges')
@@ -120,7 +144,7 @@ Deno.serve(async (req) => {
     const 밑줄 = {
       company_id: s.company_id, due_on: due.toISOString(),
       period_start: due.toISOString(), period_end: 다음끝.toISOString(),
-      amount: 금액, plan_key: s.plan_key, plan_name: s.plan_name, provider: PG_PROVIDER,
+      amount: 금액, plan_key: s.plan_key, plan_name: s.plan_name, services: 개수, provider: PG_PROVIDER,
     };
 
     // 0원(체험 중 무료 등)·협의 요금제는 걷을 것이 없습니다. 기간만 넘깁니다.

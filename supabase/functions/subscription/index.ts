@@ -10,7 +10,7 @@
 // ─────────────────────────────────────────────────────────────
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { mkJson } from '../_shared/cors.ts';
-import { plan, planList } from '../_shared/catalog.ts';
+import { plan, planList, tierFromPlan, monthlyFor } from '../_shared/catalog.ts';
 
 const URL_ = Deno.env.get('SUPABASE_URL')!;
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -130,18 +130,24 @@ Deno.serve(async (req) => {
 
   /* ── 고를 수 있는 요금제와 각각의 금액 ──
      읽기만 하므로 직원도 볼 수 있습니다. 바꾸는 것은 관리자만입니다. */
+  /* 이 회사가 쓰는 서비스 개수. 요금은 인원 구간 × 서비스 개수입니다.
+     plans 에 적힌 price 는 '서비스 하나'일 때의 값이라 그대로 쓰면 안 됩니다. */
+  const 개수 = Math.max(1, Number(sub.services) || 1);
+  const 값 = (planKey: string) =>
+    monthlyFor(tierFromPlan(planKey)?.key ?? null, planKey, 개수);
+
   if (action === 'plans') {
-    const cur = plan(sub.plan_key);
-    const curPrice = Number(sub.price ?? cur?.price ?? 0);
+    const curPrice = Number(값(sub.plan_key) ?? sub.price ?? 0);
 
     const list = planList().map((p: any) => {
       const isCurrent = p.key === sub.plan_key;
       const fits = p.seatMax === null || used <= p.seatMax;
       const quote = p.per === 'quote';
+      const 월 = Number(값(p.key) ?? 0);      // 이 회사의 서비스 개수로 매긴 값
 
       let direction: 'up' | 'down' | 'same' = 'same';
-      if (!quote && p.price > curPrice) direction = 'up';
-      if (!quote && p.price < curPrice) direction = 'down';
+      if (!quote && 월 > curPrice) direction = 'up';
+      if (!quote && 월 < curPrice) direction = 'down';
 
       // 무료 체험 중에 무료 기간이 없는 요금제로 옮기면 체험이 끝납니다
       const endsTrial = sub.status === 'trialing' && !quote && !p.trialDays;
@@ -149,9 +155,9 @@ Deno.serve(async (req) => {
       let amountNow = 0;
       if (!quote && !isCurrent) {
         amountNow = endsTrial
-          ? p.price                                        // 체험 종료 → 새 기간 전액
+          ? 월                                             // 체험 종료 → 새 기간 전액
           : direction === 'up'
-            ? prorate(p.price - curPrice, sub.period_start, sub.period_end)
+            ? prorate(월 - curPrice, sub.period_start, sub.period_end)
             : 0;                                           // 하위는 지금 받지 않습니다
       }
 
@@ -161,7 +167,7 @@ Deno.serve(async (req) => {
       else if (!fits) reason = `직원이 ${used}명이라 이 요금제(${p.seatMax}명)로는 내릴 수 없습니다.`;
 
       return {
-        key: p.key, name: p.name, label: p.label, price: p.price,
+        key: p.key, name: p.name, label: p.label, price: 월,
         seatMin: p.seatMin, seatMax: p.seatMax, tagline: p.tagline,
         isCurrent, direction, endsTrial,
         allowed: !quote && !isCurrent && fits && sub.status !== 'canceled',
@@ -177,6 +183,7 @@ Deno.serve(async (req) => {
       current: sub.plan_key,
       currentName: sub.plan_name,
       currentPrice: curPrice,
+      services: 개수,
       periodEnd: sub.period_end,
       pending: sub.pending_plan_key
         ? { key: sub.pending_plan_key, name: sub.pending_plan_name,
@@ -208,9 +215,11 @@ Deno.serve(async (req) => {
       }, 409);
     }
 
-    const curPrice = Number(sub.price ?? 0);
+    const curPrice = Number(값(sub.plan_key) ?? sub.price ?? 0);
+    const 새값 = Number(값(target.key) ?? 0);
+    if (!새값) return json({ ok: false, error: '요금을 셀 수 없는 요금제입니다. 문의해 주세요.' }, 400);
     const endsTrial = sub.status === 'trialing' && !target.trialDays;
-    const isUp = target.price > curPrice;
+    const isUp = 새값 > curPrice;
     const now = new Date();
 
     /* 하위 요금제 — 지금 받는 것도 돌려주는 것도 없습니다.
@@ -219,7 +228,7 @@ Deno.serve(async (req) => {
       const { error } = await admin.from('subscriptions').update({
         pending_plan_key: target.key,
         pending_plan_name: target.name,
-        pending_price: target.price,
+        pending_price: 새값,
         pending_seat_limit: target.seatMax,
         pending_from: sub.period_end,
       }).eq('company_id', me.company_id);
@@ -236,8 +245,8 @@ Deno.serve(async (req) => {
     /* 상위 요금제 — 즉시 바꾸고 남은 기간만큼의 차액을 받습니다.
        체험 중에 유료 요금제로 옮기는 경우에는 체험이 끝나고 전액을 받습니다. */
     const amount = endsTrial
-      ? target.price
-      : prorate(target.price - curPrice, sub.period_start, sub.period_end);
+      ? 새값
+      : prorate(새값 - curPrice, sub.period_start, sub.period_end);
 
     const { data: bm } = await admin.from('billing_methods')
       .select('billing_key, customer_key').eq('company_id', me.company_id).maybeSingle();
@@ -249,7 +258,8 @@ Deno.serve(async (req) => {
     const patch: Record<string, unknown> = {
       plan_key: target.key,
       plan_name: target.name,
-      price: target.price,
+      tier_key: tierFromPlan(target.key)?.key ?? null,
+      price: 새값,
       seat_limit: target.seatMax,
       // 내려가기로 예약해 둔 것이 있으면 지웁니다. 올리기로 마음을 바꾸신 것입니다.
       pending_plan_key: null, pending_plan_name: null,

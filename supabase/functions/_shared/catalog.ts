@@ -424,6 +424,28 @@ export function priceFor(t: any, count: number) {
   return t.base + t.addon * (count - 1);
 }
 
+/* 옛 요금제 이름(plans) → 새 인원 구간(tiers).
+   같은 사다리에 이름만 둘입니다. 가입 화면이 아직 plans 로 고르게 돼 있어서
+   다리를 놓아 둡니다. plans 를 걷어낼 때 이 함수도 함께 사라집니다. */
+const 옛이름: Record<string, string> = {
+  personal: 'solo', business5: 't5', business20: 't20', business49: 't49', enterprise: 'ent',
+};
+export function tierFromPlan(planKey: string) {
+  const k = 옛이름[planKey];
+  return k ? (tierList().find((t: any) => t.key === k) || null) : null;
+}
+export function tier(key: string) {
+  return tierList().find((t: any) => t.key === key) || null;
+}
+
+/* 한 회사가 한 달에 낼 돈. **이 셈은 여기 하나뿐이어야 합니다.**
+   화면과 청구가 다른 값을 내면 그대로 결제 사고입니다.
+   tierKey 를 모르면 옛 plan_key 로도 찾아 줍니다. */
+export function monthlyFor(tierKey: string | null, planKey: string | null, services: number) {
+  const t = (tierKey && tier(tierKey)) || (planKey && tierFromPlan(planKey)) || null;
+  return priceFor(t, services);
+}
+
 /* 업종 등급. C 는 가입을 막습니다. */
 export function gradeOf(id: string): 'A' | 'B' | 'C' | null {
   for (const g of ['A', 'B', 'C'] as const) {
