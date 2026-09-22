@@ -52,7 +52,7 @@ const PG = (() => {
   // 네이버페이 결제형은 (1) 일반 PG 가 이미 연동돼 있어야 하고
   // (2) 최소 1개월 매출이 있어야 신청됩니다. PG 를 대신하는 것이 아니라
   // 그 위에 얹는 결제수단이라, 어차피 일반 PG 를 먼저 붙여야 합니다.
-  const PROVIDER = 'toss';
+  const PROVIDER = 'stub';
 
   /* ── 스텁 ───────────────────────────────────────────────
      실제 결제창이 뜨는 것처럼 잠깐 기다렸다가 가짜 빌링키를 돌려줍니다.
@@ -92,7 +92,11 @@ const PG = (() => {
      실제로 돈이 빠져나가지는 않습니다. 카드사 심사는 이 상태로 봅니다.
      ⚠ 계약이 끝나 우리 키(live_ck_…)를 받으면 여기만 바꿉니다.
         시크릿 키(test_sk_ / live_sk_)는 절대 여기 두지 않습니다 — 서버 환경변수에만. */
-  const TOSS_CLIENT_KEY = 'test_ck_docs_Ovk5rk1EwkEbP0W43n07xlzm';
+  const TOSS_CLIENT_KEY = '';
+  /* ⚠ 문서에 돌아다니는 공개 테스트 키를 넣어 봤더니 토스가 거절했습니다.
+        401 UNAUTHORIZED_KEY — "인증되지 않은 시크릿 키 혹은 클라이언트 키 입니다."
+     클라이언트 키는 우리 상점(MID)에 묶여 있어서, 개발자센터에서 우리 것을 받아야 합니다.
+     받으면 위 한 줄만 채우고 PROVIDER 를 'toss' 로 바꾸면 끝입니다. */
 
   function loadToss(){
     if (window.TossPayments) return Promise.resolve();
