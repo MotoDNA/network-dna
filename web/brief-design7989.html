@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>디자인7989 자료 요청서</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@600&display=swap">
+<style>
+:root{
+  --ground:#e9e7e3; --paper:#fff; --paper2:#faf9f8;
+  --ink:#1a1a19; --ink2:#5c5a57; --ink3:#8f8c88;
+  --line:#e2dfdb; --line2:#cfcbc6;
+  --seal:#a8372a; --sealBg:#fbeeec; --sealLine:#e8c6c0;
+  --ok:#2c6b4f; --okBg:#e9f2ed;
+  --field:#fff; --fieldLine:#c9c5bf; --focus:#a8372a;
+  --sans:'IBM Plex Sans KR',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --serif:'Noto Serif KR',serif;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+img{max-width:100%;height:auto}
+body{background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.72;
+     margin:0;padding-block:26px 0;-webkit-font-smoothing:antialiased;letter-spacing:-.012em}
+.sheet{background:var(--paper);max-width:760px;margin:0 auto;border:1px solid var(--line)}
+
+.cover{padding:46px 40px 34px;border-bottom:2px solid var(--ink)}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--seal);margin:0 0 14px}
+h1{font-family:var(--serif);font-weight:600;font-size:30px;line-height:1.32;margin:0 0 14px;letter-spacing:-.03em;text-wrap:balance}
+.lede{color:var(--ink2);margin:0;font-size:15px}
+.callout{margin:22px 0 0;background:var(--sealBg);border:1px solid var(--sealLine);padding:15px 18px;
+         color:var(--seal);font-size:14.5px;line-height:1.7}
+.callout b{font-weight:600}
+
+.sechd{font-family:var(--mono);font-size:11px;letter-spacing:.13em;color:var(--ink3);
+       padding:26px 40px 0}
+.item{display:grid;grid-template-columns:34px 1fr;gap:14px;padding:22px 40px 26px;border-top:1px solid var(--line)}
+.num{font-family:var(--mono);font-size:12px;color:var(--ink3);padding-top:5px}
+.q{font-size:16.5px;font-weight:600;line-height:1.5;margin:0 0 6px;letter-spacing:-.025em}
+.why{color:var(--ink2);font-size:13.5px;line-height:1.72;margin:0 0 12px}
+.why code{font-family:var(--mono);font-size:12.5px;background:var(--paper2);border:1px solid var(--line);padding:1px 5px}
+.quote{border-left:2px solid var(--line2);padding:3px 0 3px 13px;margin:0 0 12px;
+       color:var(--ink2);font-size:13.5px;line-height:1.75}
+
+input[type=text],input[type=number],textarea{width:100%;font:inherit;font-size:14.5px;color:var(--ink);
+  background:var(--field);border:1px solid var(--fieldLine);border-radius:2px;padding:10px 12px;resize:vertical;display:block}
+textarea{line-height:1.7}
+input::placeholder,textarea::placeholder{color:var(--ink3)}
+:is(input,textarea):focus-visible{outline:2px solid var(--focus);outline-offset:1px;border-color:var(--focus)}
+.numin{display:flex;align-items:center;gap:9px}
+.numin input{width:110px}
+.numin .unit{font-size:14px;color:var(--ink2)}
+.opts{display:flex;flex-wrap:wrap;gap:7px}
+.opts label{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--fieldLine);border-radius:2px;
+  padding:8px 14px;font-size:14px;cursor:pointer;background:var(--field);line-height:1.4}
+.opts label:hover{border-color:var(--ink3)}
+.opts input{accent-color:var(--seal);margin:0;flex:none}
+.opts input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.opts label:has(input:checked){border-color:var(--seal);background:var(--sealBg);color:var(--seal);font-weight:500}
+
+.files{padding:30px 40px 34px;border-top:2px solid var(--ink);background:var(--paper2)}
+.files h2{font-family:var(--serif);font-weight:600;font-size:19px;margin:0 0 8px;letter-spacing:-.025em}
+.files>p{color:var(--ink2);font-size:14px;margin:0 0 16px}
+.files ul{list-style:none;padding:0;margin:0 0 18px;border-top:1px solid var(--line)}
+.files li{padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.files li .d{color:var(--ink3);font-size:13px}
+.up{border:1px solid var(--ink);background:var(--paper);padding:20px 22px;display:flex;flex-wrap:wrap;align-items:center;gap:16px}
+.up .txt{flex:1 1 220px;min-width:0}
+.up .t{font-size:15px;font-weight:600;margin:0 0 4px}
+.up .n{font-size:13px;color:var(--ink2);margin:0;line-height:1.65}
+.up .n b{color:var(--ink);font-weight:600}
+.upbtn{flex:none;display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:var(--paper);
+  text-decoration:none;font-size:14px;font-weight:600;padding:12px 20px;border:1px solid var(--ink);border-radius:2px}
+.upbtn:hover{opacity:.87}
+.upbtn:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+.bar{position:sticky;bottom:0;background:var(--paper);border-top:2px solid var(--ink);
+     display:flex;align-items:center;gap:16px;padding:13px 40px;flex-wrap:wrap}
+.prog{flex:1;min-width:170px}
+.progtxt{font-size:12.5px;color:var(--ink2);display:flex;justify-content:space-between;gap:10px;
+         margin-bottom:6px;font-variant-numeric:tabular-nums}
+.progtxt b{color:var(--ink);font-weight:600}
+.track{height:5px;background:var(--line);border-radius:3px;overflow:hidden}
+.fill{height:100%;width:0;background:var(--seal);transition:width .3s ease;border-radius:3px}
+.fill.done{background:var(--ok)}
+button{font:inherit;font-size:14px;font-weight:600;cursor:pointer;border-radius:2px;padding:11px 20px;
+       background:var(--ink);color:var(--paper);border:1px solid var(--ink);white-space:nowrap}
+button:hover{opacity:.87}
+button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+button.ghost{background:transparent;color:var(--ink)}
+.bar.is-busy button{opacity:.55;pointer-events:none}
+.miss{background:var(--sealBg);border:1px solid var(--sealLine);color:var(--seal);padding:11px 15px;
+      font-size:13.5px;margin:0;flex:1 1 100%;order:-1}
+
+.out{max-width:760px;margin:0 auto}
+.outhd{background:var(--okBg);color:var(--ok);font-size:13.5px;padding:11px 40px;border:1px solid var(--line);border-top:0}
+.out textarea{border-radius:0;border-top:0;min-height:230px;font-family:var(--mono);font-size:12.5px;line-height:1.7}
+
+.done{max-width:760px;margin:0 auto;background:var(--paper);border:1px solid var(--line);
+      border-top:2px solid var(--ok);padding:54px 40px 58px;text-align:center}
+.done__mark{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--ok);margin:0 0 16px}
+.done h2{font-family:var(--serif);font-weight:600;font-size:25px;margin:0 0 12px;letter-spacing:-.03em}
+.done__t{color:var(--ink2);font-size:14.5px;margin:0 0 26px;line-height:1.75}
+.done__t a{color:var(--seal)}
+
+.foot{max-width:760px;margin:0 auto;padding:20px 40px 36px;font-size:12px;color:var(--ink3);line-height:1.85}
+.foot a{color:var(--seal)}
+.foot b{color:var(--ink2);font-weight:600}
+.foot__n{display:inline-block;margin-top:6px}
+
+@media (max-width:640px){
+  body{padding-block:0}
+  .sheet{border-left:0;border-right:0}
+  .cover{padding:32px 20px 26px}
+  h1{font-size:24px}
+  .sechd{padding:22px 20px 0}
+  .item{grid-template-columns:1fr;gap:0;padding:20px 20px 24px}
+  .num{padding:0 0 5px}
+  .q{font-size:15.5px}
+  .files,.bar,.foot,.outhd,.done{padding-left:20px;padding-right:20px}
+  .done{padding-top:42px;padding-bottom:46px;border-left:0;border-right:0}
+  .up{flex-direction:column;align-items:stretch}
+  .upbtn{justify-content:center}
+  .bar button{flex:1}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<form class="sheet" id="brief" novalidate>
+
+  <header class="cover">
+    <p class="eyebrow">주식회사 디자인7989 · 홈페이지 제작</p>
+    <h1>홈페이지 제작을 위해<br>여덟 가지만 여쭙겠습니다</h1>
+    <p class="lede">아시는 것만 적어주셔도 괜찮습니다. 모르거나 아직 정하지 않으신 항목은 비워두시고 넘어가세요. 적어두신 내용은 자동으로 저장되니 나눠서 작성하셔도 됩니다.</p>
+    <p class="callout"><b>로고 원본과 실적 사진</b>만 주셔도 1차 시안을 보여드릴 수 있습니다.</p>
+  </header>
+
+  <p class="sechd">브랜드와 회사</p>
+
+  <div class="item">
+    <div class="num">01</div>
+    <div>
+      <p class="q">로고와 브랜드 컬러</p>
+      <p class="why">지난번 제작하신 로고의 원본 파일(<code>.ai</code> 또는 <code>.svg</code>)이 있으면 가장 좋습니다. 색상 값이나 디자인 가이드를 함께 받으셨다면 같이 주세요. 파일은 맨 아래에 올리시면 됩니다.</p>
+      <textarea id="q1" rows="2" placeholder="보유하신 파일 형식, 색상 등"></textarea>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="num">02</div>
+    <div>
+      <p class="q">대표님 인쇄 업계 경력</p>
+      <p class="why">회사 소개 글에 “인쇄 현장에서 ○○년”으로 들어갑니다. 문 연 지 얼마 안 된 회사에서 가장 강한 신뢰 근거라 꼭 여쭙습니다.</p>
+      <div class="numin"><input type="number" id="q2" data-unit="년" min="0" placeholder="20"><span class="unit">년</span></div>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="num">03</div>
+    <div>
+      <p class="q">홈페이지에 넣을 연락처</p>
+      <p class="why">이메일과 영업시간입니다. 대표번호는 031-949-7989로 넣어두겠습니다. 견적 문의도 알려주신 이메일로 받습니다.</p>
+      <textarea id="q3" rows="2" placeholder="이메일 / 영업시간"></textarea>
+    </div>
+  </div>
+
+  <p class="sechd">인쇄</p>
+
+  <div class="item">
+    <div class="num">04</div>
+    <div>
+      <p class="q">홈페이지에 게재했으면 하는 보유 설비와 사양</p>
+      <p class="why">인쇄물을 발주하는 담당자가 홈페이지에서 가장 먼저 찾아보는 정보입니다. 아시는 만큼 편하게 적어주시면 저희가 표로 정리하겠습니다.</p>
+      <p class="quote">인쇄 장비 · 제본 방식 · 후가공 · 판형 · 자주 쓰는 용지</p>
+      <textarea id="q4" rows="5" placeholder="자유롭게 적어주세요"></textarea>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="num">05</div>
+    <div>
+      <p class="q">수량과 납기</p>
+      <p class="why">여기 적어주신 내용은 홈페이지에 그대로 약속으로 나갑니다. 넉넉하게 잡아주셔도 되고, 아직 정하지 않으셨으면 비워두셔도 됩니다.</p>
+      <p class="quote">최소 주문 수량 · 견적 회신까지 걸리는 시간 · 교정 확정 후 인쇄 기간</p>
+      <textarea id="q5" rows="4" placeholder="예: 디지털 100부부터 / 견적 1영업일 / 인쇄 5영업일"></textarea>
+    </div>
+  </div>
+
+  <p class="sechd">실적</p>
+
+  <div class="item">
+    <div class="num">06</div>
+    <div>
+      <p class="q">실적과 사진</p>
+      <p class="why">홈페이지에서 가장 설득력 있는 부분입니다. 세 건 정도면 충분합니다. 거래처명을 밝히기 어려우시면 “○○ 출판사 단행본”처럼 적어주셔도 됩니다. 작업 현장 사진이 있으면 함께 주세요. 사진은 맨 아래에 올리시면 됩니다.</p>
+      <textarea id="q6" rows="4" placeholder="작업물 이름, 어디까지 하셨는지(디자인/인쇄), 사양 등"></textarea>
+    </div>
+  </div>
+
+  <p class="sechd">마무리</p>
+
+  <div class="item">
+    <div class="num">07</div>
+    <div>
+      <p class="q">도메인 설정</p>
+      <p class="why">design7989.com 이 이미 가비아에 등록되어 있습니다. 홈페이지를 연결하려면 설정을 한 번 바꿔야 하는데, 안내해 드릴 수도 있고 저희가 대신 처리해 드릴 수도 있습니다.</p>
+      <div class="opts">
+        <label><input type="radio" name="q7" id="q7a" value="직접 하겠습니다"><span>직접 하겠습니다</span></label>
+        <label><input type="radio" name="q7" id="q7b" value="도와주세요"><span>도와주세요</span></label>
+        <label><input type="radio" name="q7" id="q7c" value="통화로 논의"><span>통화로 논의</span></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="num">08</div>
+    <div>
+      <p class="q">더 하실 말씀</p>
+      <p class="why">참고했으면 하는 다른 홈페이지, 꼭 넣고 싶은 내용, 피하고 싶은 느낌 — 무엇이든 좋습니다.</p>
+      <textarea id="q8" rows="3" placeholder="없으시면 비워두셔도 됩니다"></textarea>
+    </div>
+  </div>
+
+  <div class="files">
+    <h2>파일 보내주실 곳</h2>
+    <p>아래 파일은 이 페이지에서 바로 올릴 수 없습니다. 드라이브 폴더에 올려주시거나 메일로 보내주세요.</p>
+    <ul>
+      <li>로고 원본 <span class="d">— .ai 또는 .svg</span></li>
+      <li>실적 · 작업 현장 사진 <span class="d">— 스마트폰으로 찍으신 것도 괜찮습니다</span></li>
+    </ul>
+    <div class="up">
+      <div class="txt">
+        <p class="t">파일 올리는 곳</p>
+        <p class="n">구글 계정 로그인이 필요합니다. 계정이 없거나 번거로우시면 <b>hello@dnalabs.kr</b> 로 메일에 첨부해 보내주셔도 됩니다.</p>
+      </div>
+      <a class="upbtn" href="https://drive.google.com/drive/folders/1cLOsgOdOik2PBgxXmMdQT7LEckHlsiEz" target="_blank" rel="noopener noreferrer">드라이브에 올리기 &rarr;</a>
+    </div>
+  </div>
+
+  <div class="bar">
+    <div class="prog">
+      <div class="progtxt"><span>작성하신 항목</span><span><b id="pn">0</b> / <span id="pt">8</span></span></div>
+      <div class="track"><div class="fill" id="pf"></div></div>
+    </div>
+    <button type="submit" id="send">제출하기</button>
+    <button type="button" class="ghost" id="reset">비우기</button>
+  </div>
+</form>
+
+<div class="out" id="out" hidden>
+  <p class="outhd" id="outhd"></p>
+  <textarea id="outtxt" readonly></textarea>
+</div>
+
+<div class="done" id="done" hidden>
+  <p class="done__mark">접수 완료</p>
+  <h2>보내주셔서 감사합니다</h2>
+  <p class="done__t">내용 확인하고 곧 연락드리겠습니다.<br>
+     빠뜨린 게 있으시면 <a href="mailto:hello@dnalabs.kr">hello@dnalabs.kr</a> 로 알려주세요.</p>
+  <a class="upbtn" href="https://drive.google.com/drive/folders/1cLOsgOdOik2PBgxXmMdQT7LEckHlsiEz" target="_blank" rel="noopener noreferrer">파일 올리러 가기 &rarr;</a>
+</div>
+
+<p class="foot">
+  <b>디엔에이랩스 (DNA Labs)</b> &middot; 대표 최환준 &middot; 사업자등록번호 119-37-01707<br>
+  경기도 파주시 문발로 140, 301-D57호 &middot; 010-6451-5807<br>
+  문의 <a href="mailto:hello@dnalabs.kr">hello@dnalabs.kr</a> &middot;
+  <a href="https://dnalabs.kr/privacy" target="_blank" rel="noopener noreferrer">개인정보 처리방침</a><br>
+  <span class="foot__n">제출하기 전까지는 작성하신 내용이 이 브라우저에만 저장됩니다. 창을 닫으셨다가 다시 열어도 그대로 남아 있습니다.</span>
+</p>
+
+<script>
+(function(){
+  var CFG = {
+    slug:     'design7989',
+    mailto:   'hello@dnalabs.kr',
+    /* Supabase 접수함(public.briefs).
+       anon 키는 공개용입니다 — 이 표는 RLS 로 insert 만 열려 있고
+       읽기 정책이 없어서 이 키로는 아무것도 꺼내 갈 수 없습니다. */
+    endpoint: 'https://izrtclsqhsgkuwsffifn.supabase.co/rest/v1/briefs',
+    headers:  {
+      'apikey':        'sb_publishable_G5wx-YdgwUU630x1vKmZmQ_15BgxvEX',
+      'Authorization': 'Bearer sb_publishable_G5wx-YdgwUU630x1vKmZmQ_15BgxvEX',
+      'Prefer':        'return=minimal'
+    }
+  };
+
+  var KEY   = 'd7989-brief-v2';
+  var form  = document.getElementById('brief');
+  var items = Array.prototype.slice.call(document.querySelectorAll('.item'));
+
+  function answer(it){
+    var out = [];
+    it.querySelectorAll('input,textarea').forEach(function(el){
+      if(el.type === 'checkbox' || el.type === 'radio'){ if(el.checked) out.push(el.value); }
+      else if(el.value.trim()){ out.push(el.value.trim() + (el.dataset.unit || '')); }
+    });
+    return out.join(', ');
+  }
+  function label(it){ return it.querySelector('.q').textContent.trim(); }
+
+  /* ── 진행률 ── 막는 장치가 아니라, 어디까지 쓰셨는지 보여주기만 합니다 */
+  var pn = document.getElementById('pn'), pf = document.getElementById('pf');
+  document.getElementById('pt').textContent = items.length;
+
+  function progress(){
+    var n = items.filter(function(it){ return answer(it) !== ''; }).length;
+    pn.textContent = n;
+    pf.style.width = (n / items.length * 100) + '%';
+    pf.classList.toggle('done', n === items.length);
+  }
+
+  /* ── 임시 저장 ── */
+  function save(){
+    var d = {};
+    document.querySelectorAll('input[id],textarea[id]').forEach(function(el){
+      d[el.id] = (el.type === 'checkbox' || el.type === 'radio') ? el.checked : el.value;
+    });
+    try{ localStorage.setItem(KEY, JSON.stringify(d)); }catch(e){}
+  }
+  function load(){
+    var d;
+    try{ d = JSON.parse(localStorage.getItem(KEY) || '{}'); }catch(e){ return; }
+    Object.keys(d).forEach(function(id){
+      var el = document.getElementById(id);
+      if(!el) return;
+      if(el.type === 'checkbox' || el.type === 'radio') el.checked = !!d[id];
+      else el.value = d[id];
+    });
+  }
+  load(); progress();
+  document.addEventListener('input',  function(){ save(); progress(); });
+  document.addEventListener('change', function(){ save(); progress(); });
+
+  function payload(){
+    return {
+      slug: CFG.slug,
+      answers: items.map(function(it){
+        return { num: it.querySelector('.num').textContent.trim(), question: label(it), answer: answer(it) };
+      }),
+      files: ['로고 원본', '실적 · 작업 현장 사진'],
+      user_agent: navigator.userAgent
+    };
+  }
+
+  function asText(){
+    var lines = ['디자인7989 홈페이지 — 자료 회신', ''];
+    items.forEach(function(it){
+      lines.push(it.querySelector('.num').textContent.trim() + '. ' + label(it));
+      lines.push('   ' + (answer(it) || '(미기재)'));
+    });
+    lines.push('', '회신: ' + CFG.mailto, '작성일 ' + new Date().toLocaleDateString('ko-KR'));
+    return lines.join('\n');
+  }
+
+  var out = document.getElementById('out'), outtxt = document.getElementById('outtxt'),
+      outhd = document.getElementById('outhd'), done = document.getElementById('done'),
+      bar = document.querySelector('.bar'), send = document.getElementById('send');
+
+  function showText(msg){
+    outhd.textContent = msg; outtxt.value = asText(); out.hidden = false;
+    outtxt.focus(); outtxt.select();
+    out.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }
+
+  var missBox = null;
+  function warn(msg){
+    if(!missBox){ missBox = document.createElement('p'); missBox.className = 'miss'; bar.prepend(missBox); }
+    missBox.textContent = msg;
+  }
+
+  form.addEventListener('submit', function(ev){
+    ev.preventDefault();
+
+    /* 필수 항목은 두지 않습니다. 다만 아무것도 없는 제출은 서로에게
+       의미가 없어서, 한 칸이라도 채우셨는지만 확인합니다. */
+    if(items.every(function(it){ return answer(it) === ''; })){
+      warn('한 항목이라도 적어주신 뒤 보내주세요.');
+      items[0].querySelector('textarea, input').focus();
+      return;
+    }
+    if(missBox){ missBox.remove(); missBox = null; }
+
+    bar.classList.add('is-busy'); send.textContent = '보내는 중…';
+
+    var hdrs = { 'Content-Type': 'application/json' };
+    Object.keys(CFG.headers).forEach(function(k){ hdrs[k] = CFG.headers[k]; });
+
+    fetch(CFG.endpoint, { method:'POST', headers:hdrs, body:JSON.stringify(payload()) })
+      .then(function(r){
+        /* 응답 본문까지 봅니다. 예전에 쓰던 메일 중계 서비스가 실패해도
+           HTTP 200 을 주는 바람에, 접수되지 않은 제출을 완료로 알린 적이
+           있습니다. */
+        return r.text().then(function(t){
+          var j = {}; try{ j = JSON.parse(t); }catch(e){}
+          if(!r.ok || String(j.success) === 'false') throw new Error(j.message || ('HTTP ' + r.status));
+        });
+      })
+      .then(function(){
+        try{ localStorage.removeItem(KEY); }catch(e){}
+        form.hidden = true; out.hidden = true; done.hidden = false;
+        done.scrollIntoView({ behavior:'smooth', block:'start' });
+      })
+      .catch(function(){
+        showText('전송이 되지 않았습니다. 아래 내용을 복사해 ' + CFG.mailto + ' 로 보내주시면 동일하게 처리됩니다.');
+      })
+      .finally(function(){
+        bar.classList.remove('is-busy'); send.textContent = '제출하기';
+      });
+  });
+
+  document.getElementById('reset').addEventListener('click', function(){
+    if(!confirm('작성하신 내용을 모두 지웁니다. 계속할까요?')) return;
+    document.querySelectorAll('input[id],textarea[id]').forEach(function(el){
+      if(el.type === 'checkbox' || el.type === 'radio') el.checked = false; else el.value = '';
+    });
+    try{ localStorage.removeItem(KEY); }catch(e){}
+    out.hidden = true; if(missBox){ missBox.remove(); missBox = null; } progress();
+  });
+})();
+</script>
+</body>
+</html>
