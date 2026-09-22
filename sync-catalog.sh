@@ -137,8 +137,16 @@ export function tierFromPlan(planKey: string) {
   const k = 옛이름[planKey];
   return k ? (tierList().find((t: any) => t.key === k) || null) : null;
 }
+/* 구간 하나 찾기.
+
+   ⚠ 인원 구간(tiers)과 점포 구간(storeTiers) **둘 다** 봅니다.
+     Re:Store 는 인원이 아니라 점포 수로 줄을 고르는데, 금액 사다리는
+     같은 것을 씁니다. 여기서 tiers 만 보면 점포로 계약한 회사의 요금이
+     조용히 0 이 되거나 엉뚱한 줄로 떨어집니다. */
 export function tier(key: string) {
-  return tierList().find((t: any) => t.key === key) || null;
+  return tierList().find((t: any) => t.key === key)
+      || storeTierList().find((t: any) => t.key === key)
+      || null;
 }
 
 /* 한 회사가 한 달에 낼 돈. **이 셈은 여기 하나뿐이어야 합니다.**
