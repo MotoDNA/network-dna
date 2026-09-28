@@ -4,27 +4,63 @@
 
 export const CATALOG = {
   "_": "Re:Service 요금과 업종 판정의 단일 출처입니다. 요금표는 services × tiers 입니다. plans 는 Re:Call 하나만 팔던 때의 표로, 가입 화면과 서버가 아직 이것으로 검증하고 있어 남겨 둡니다 — 통합 결제로 옮길 때 함께 정리합니다. 홈페이지·가입 화면·서버 검증이 모두 이 파일 하나를 봅니다. 값을 고치면 sync-catalog.sh 를 돌려 서버 쪽 사본을 다시 만드세요.",
-  "revision": "2026-09-22b",
+  "revision": "2026-09-28",
   "tax": {
     "_": "이 파일의 모든 금액은 **공급가액**입니다. 부가가치세는 별도이고, 실제로 카드에서 빠져나가는 돈은 공급가액 + 부가세입니다. 화면에 '부가세 별도'라고만 적어 두고 공급가액만 긁으면 세금을 우리가 떠안게 됩니다 — 실제로 그렇게 돌고 있었습니다(2026-09-22 고침). 붙이는 셈은 catalog.js / catalog.ts 의 withVat() 하나뿐이어야 합니다.",
     "vatRate": 0.1,
     "label": "부가세 별도"
   },
   "services": {
-    "_": "Re:Service 넷. 요금은 서비스마다 다르지 않습니다 — 인원 구간(tiers) 을 고르고, 그 위에 고른 서비스 개수를 곱합니다. by 는 무엇이 값을 정하는가입니다. path 는 그 서비스로 **들어가는 문**입니다 — 안 산 회사가 누르면 앱이 되돌려보냅니다. intro 는 사지 않은 분도 볼 수 있는 소개 화면입니다. 둘을 섞으면 '화면 열어 보기'를 눌렀는데 쫓겨납니다.",
+    "_": "Re:Service 넷. 요금은 서비스마다 다르지 않습니다 — 인원 구간(tiers) 을 고르고, 그 위에 고른 서비스 개수를 곱합니다. by 는 무엇이 값을 정하는가입니다. path 는 그 서비스로 **들어가는 문**입니다 — 안 산 회사가 누르면 앱이 되돌려보냅니다. intro 는 사지 않은 분도 볼 수 있는 소개 화면입니다. 둘을 섞으면 '화면 열어 보기'를 눌렀는데 쫓겨납니다. price 는 층(level)별 '혼자 쓸 때의 값(base)'과 '얹을 때의 값(addon)'입니다. 한 회사의 월 요금은 base 하나 + 나머지 addon 들이고, **가장 싸지는 조합**으로 셉니다 — 어느 것을 base 로 잡느냐로 금액이 달라지므로 고객에게 유리한 쪽을 우리가 고릅니다. restore 의 L1 이 null 인 것은 일부러입니다. 점포가 있으면 이미 혼자가 아닙니다.",
     "rebind": {
       "name": "Re:Bind",
       "label": "제조 공정과 거래명세서",
       "by": "seats",
       "path": "/bind",
-      "intro": "services.html#sv-rebind"
+      "intro": "services.html#sv-rebind",
+      "price": {
+        "L1": {
+          "base": 19000,
+          "addon": 9000
+        },
+        "L2": {
+          "base": 49000,
+          "addon": 19000
+        },
+        "L3": {
+          "base": 99000,
+          "addon": 39000
+        },
+        "L4": {
+          "base": 249000,
+          "addon": 99000
+        }
+      }
     },
     "recall": {
       "name": "Re:Call",
       "label": "고객관리",
       "by": "seats",
       "path": "/call",
-      "intro": "recall.html"
+      "intro": "recall.html",
+      "price": {
+        "L1": {
+          "base": 19000,
+          "addon": 9000
+        },
+        "L2": {
+          "base": 49000,
+          "addon": 19000
+        },
+        "L3": {
+          "base": 99000,
+          "addon": 39000
+        },
+        "L4": {
+          "base": 249000,
+          "addon": 99000
+        }
+      }
     },
     "restore": {
       "name": "Re:Store",
@@ -32,14 +68,47 @@ export const CATALOG = {
       "by": "stores",
       "path": "/store",
       "note": "쓰는 인원이 아니라 점포 수로 요금 줄을 고릅니다.",
-      "intro": "services.html#sv-restore"
+      "intro": "services.html#sv-restore",
+      "price": {
+        "L1": null,
+        "L2": {
+          "base": 59000,
+          "addon": 23000
+        },
+        "L3": {
+          "base": 119000,
+          "addon": 47000
+        },
+        "L4": {
+          "base": 299000,
+          "addon": 119000
+        }
+      }
     },
     "reos": {
       "name": "Re:O-S",
       "label": "제작 외주관리",
       "by": "seats",
       "path": "/os",
-      "intro": "services.html#sv-reos"
+      "intro": "services.html#sv-reos",
+      "price": {
+        "L1": {
+          "base": 25000,
+          "addon": 12000
+        },
+        "L2": {
+          "base": 64000,
+          "addon": 25000
+        },
+        "L3": {
+          "base": 129000,
+          "addon": 51000
+        },
+        "L4": {
+          "base": 324000,
+          "addon": 129000
+        }
+      }
     }
   },
   "storeTiers": {
@@ -51,7 +120,8 @@ export const CATALOG = {
       "storeMax": 10,
       "base": 49000,
       "addon": 19000,
-      "trialDays": 0
+      "trialDays": 0,
+      "level": "L2"
     },
     "s30": {
       "name": "30개까지",
@@ -60,7 +130,8 @@ export const CATALOG = {
       "storeMax": 30,
       "base": 99000,
       "addon": 39000,
-      "trialDays": 0
+      "trialDays": 0,
+      "level": "L3"
     },
     "s50": {
       "name": "50개까지",
@@ -69,7 +140,8 @@ export const CATALOG = {
       "storeMax": 50,
       "base": 249000,
       "addon": 99000,
-      "trialDays": 0
+      "trialDays": 0,
+      "level": "L4"
     },
     "sOver": {
       "name": "50개 초과",
@@ -78,11 +150,12 @@ export const CATALOG = {
       "storeMax": null,
       "base": null,
       "addon": null,
-      "trialDays": 0
+      "trialDays": 0,
+      "level": "ent"
     }
   },
   "tiers": {
-    "_": "base 는 서비스 하나를 쓸 때의 월 요금, addon 은 서비스를 하나 더할 때마다 붙는 월 요금입니다. 원(KRW) · 부가세 별도. n개를 쓰면 base + addon × (n-1) 입니다. seatMin/seatMax 는 포함(inclusive)이고 구간끼리 겹치지 않습니다. base 가 null 이면 협의입니다.",
+    "_": "base 는 서비스 하나를 쓸 때의 월 요금, addon 은 서비스를 하나 더할 때마다 붙는 월 요금입니다. 원(KRW) · 부가세 별도. n개를 쓰면 base + addon × (n-1) 입니다. seatMin/seatMax 는 포함(inclusive)이고 구간끼리 겹치지 않습니다. base 가 null 이면 협의입니다. 이제 base/addon 은 **기준 사다리**일 뿐이고, 실제로 받는 값은 services[].price 에 층(level)별로 있습니다. 이 줄의 숫자는 Re:Bind·Re:Call 값과 같습니다.",
     "solo": {
       "name": "1명",
       "label": "혼자 쓰실 때",
@@ -90,7 +163,8 @@ export const CATALOG = {
       "seatMax": 1,
       "base": 19000,
       "addon": 9000,
-      "trialDays": 30
+      "trialDays": 30,
+      "level": "L1"
     },
     "t5": {
       "name": "5명까지",
@@ -99,7 +173,8 @@ export const CATALOG = {
       "seatMax": 5,
       "base": 49000,
       "addon": 19000,
-      "trialDays": 0
+      "trialDays": 0,
+      "level": "L2"
     },
     "t20": {
       "name": "20명까지",
@@ -108,7 +183,8 @@ export const CATALOG = {
       "seatMax": 20,
       "base": 99000,
       "addon": 39000,
-      "trialDays": 0
+      "trialDays": 0,
+      "level": "L3"
     },
     "t49": {
       "name": "49명까지",
@@ -117,7 +193,8 @@ export const CATALOG = {
       "seatMax": 49,
       "base": 249000,
       "addon": 99000,
-      "trialDays": 0
+      "trialDays": 0,
+      "level": "L4"
     },
     "ent": {
       "name": "50명 이상",
@@ -126,7 +203,8 @@ export const CATALOG = {
       "seatMax": null,
       "base": null,
       "addon": null,
-      "trialDays": 0
+      "trialDays": 0,
+      "level": "ent"
     }
   },
   "plans": {
@@ -355,6 +433,10 @@ export const CATALOG = {
     ],
     "principle": "가르는 기준은 업종 이름이 아니라 거기 담기는 정보입니다. 회사 담당자의 업무용 연락처를 관리하면 안전합니다. 법이 외부 반출을 금지한 정보 — 금융거래, 진료, 의뢰인 사건 — 를 담는 순간 제품의 품질과 무관하게 위법이 됩니다.",
     "refusalNote": "무료로 드려도 마찬가지입니다. 돈을 받지 않아도 저희가 개인정보 처리 수탁자가 되고, 사고가 나면 위험이 회사가 아니라 담당자 개인에게 갑니다. 그래서 가입을 막습니다."
+  },
+  "maxSupply": {
+    "_": "어떤 조합도 이 공급가액을 넘지 않습니다. 토스페이먼츠 계약 심사에 '단건 결제기준 상품 금액 최고가'로 546,000원(부가세 포함 600,600원)을 신고했기 때문입니다. 서비스별 단가를 나누면서 이론상 최고가가 596,000원이 됐는데, 아직 있지도 않은 '49명 × 네 개' 고객을 위해 심사 중인 계약의 숫자를 바꿀 일이 아닙니다. 상한을 올리려면 토스에 정정 회신을 먼저 보내고 이 값을 고치세요.",
+    "amount": 546000
   }
 } as const;
 
@@ -470,12 +552,48 @@ export function tier(key: string) {
       || null;
 }
 
-/* 한 회사가 한 달에 낼 돈. **이 셈은 여기 하나뿐이어야 합니다.**
-   화면과 청구가 다른 값을 내면 그대로 결제 사고입니다.
-   tierKey 를 모르면 옛 plan_key 로도 찾아 줍니다. */
-export function monthlyFor(tierKey: string | null, planKey: string | null, services: number) {
+/* 그 구간이 사다리의 몇 층인가. 인원 구간과 점포 구간이 같은 층을 씁니다. */
+export function levelOf(tierKey: string | null, planKey: string | null) {
   const t = (tierKey && tier(tierKey)) || (planKey && tierFromPlan(planKey)) || null;
-  return priceFor(t, services);
+  return t ? ((t as any).level ?? null) : null;
+}
+
+/* ───── 한 회사가 한 달에 낼 돈 ─────
+   **이 셈은 여기 하나뿐이어야 합니다.** 화면과 청구가 다른 값을 내면
+   그대로 결제 사고입니다.
+
+   기본료는 하나만 붙고 나머지는 추가 단가로 붙습니다. 그런데 어느 것을
+   기본료로 잡느냐로 금액이 달라집니다 — 기본료가 추가 단가보다 비싸므로,
+   '기본료 − 추가 단가' 가 가장 작은 것을 기본료로 잡을 때 제일 쌉니다.
+   **고객에게 유리한 쪽을 우리가 골라 줍니다.** 고르는 순서에 따라 값이
+   달라지면 그건 고객이 알 수 없는 규칙입니다.
+
+   마지막으로 상한(maxSupply)을 씌웁니다. 왜 씌우는지는 catalog.json 에. */
+export function monthlyForApps(tierKey: string | null, planKey: string | null, apps: string[]) {
+  const lv = levelOf(tierKey, planKey);
+  if (!lv || lv === 'ent') return null;
+
+  const 목록 = (apps ?? []).filter((a, i, arr) => a && arr.indexOf(a) === i);
+  if (!목록.length) return null;
+
+  let 합 = 0, 가장작은차 = null as number | null;
+  for (const a of 목록) {
+    const p = ((CATALOG.services as any)[a]?.price ?? {})[lv];
+    if (!p) return null;                       // 그 층에 값이 없는 서비스 (Re:Store 의 1명 줄)
+    합 += p.addon;
+    const 차 = p.base - p.addon;
+    if (가장작은차 === null || 차 < 가장작은차) 가장작은차 = 차;
+  }
+  const 값 = 합 + (가장작은차 ?? 0);
+  const 상한 = Number((CATALOG as any).maxSupply?.amount ?? 0);
+  return 상한 > 0 ? Math.min(값, 상한) : 값;
+}
+
+/* 옛 이름. 개수만 알던 때에 쓰던 것으로, 서비스가 무엇인지 모르면
+   Re:Bind 기준으로 셉니다. 새 코드는 monthlyForApps 를 쓰세요. */
+export function monthlyFor(tierKey: string | null, planKey: string | null, services: number) {
+  const n = Math.max(1, Number(services) || 1);
+  return monthlyForApps(tierKey, planKey, Array(n).fill(0).map((_, i) => ['rebind','recall','restore','reos'][i]));
 }
 
 /* 업종 등급. C 는 가입을 막습니다. */

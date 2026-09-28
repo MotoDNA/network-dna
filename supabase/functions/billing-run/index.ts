@@ -29,7 +29,7 @@
 // 그러려면 '그때 적어 둔 값'이 아니라 '지금의 구성'으로 세야 합니다.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
-import { monthlyFor, vatOf } from '../_shared/catalog.ts';
+import { monthlyForApps, vatOf } from '../_shared/catalog.ts';
 
 const URL_ = Deno.env.get('SUPABASE_URL')!;
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -89,13 +89,23 @@ Deno.serve(async (req) => {
   await admin.rpc('apply_due_plan_changes');
 
   const { data: subs, error: e0 } = await admin.from('subscriptions')
-    .select('company_id, plan_key, plan_name, tier_key, services, price, status, period_start, period_end, trial_ends_at')
+    .select('company_id, plan_key, plan_name, tier_key, services, price, price_locked_until, status, period_start, period_end, trial_ends_at')
     .in('status', ['trialing', 'active', 'past_due'])
     .lte('period_end', 지금.toISOString())
     .order('period_end', { ascending: true })
     .limit(MAX_PER_RUN);
 
   if (e0) { console.error('[요금걷기] 구독 읽기 실패', e0.message); return json({ ok: false, error: e0.message }, 500) }
+
+  /* 요금이 '어떤 서비스를 쓰는가'로 정해집니다. 개수만으로는 셀 수 없습니다 —
+     Re:O-S 하나와 Re:Bind 하나는 값이 다릅니다. 진짜 목록은 companies.apps 입니다. */
+  const 아이디들 = (subs ?? []).map((x) => x.company_id as string);
+  const { data: 회사들 } = 아이디들.length
+    ? await admin.from('companies').select('id, apps').in('id', 아이디들)
+    : { data: [] as { id: string; apps: string[] | null }[] };
+  const 앱목록 = new Map<string, string[]>(
+    (회사들 ?? []).map((c) => [c.id as string, Array.isArray(c.apps) ? c.apps as string[] : []]),
+  );
 
   const 결과: Record<string, unknown>[] = [];
   let 걷음 = 0, 실패 = 0, 건너뜀 = 0, 적어둠 = 0;
@@ -106,14 +116,30 @@ Deno.serve(async (req) => {
     /* 요금표(catalog.json)로 다시 셉니다 — base + addon × (서비스 개수 - 1).
        셈이 안 되는 경우(50명 이상 협의 요금제 등)는 카드로 걷지 않습니다.
        그런 곳은 세금계산서로 받기로 되어 있습니다. */
-    const 개수 = Math.max(1, Number(s.services) || 1);
-    const 센값 = monthlyFor(s.tier_key as string | null, s.plan_key as string | null, 개수);
+    const 쓰는것 = 앱목록.get(s.company_id as string) ?? [];
+    const 개수 = Math.max(1, 쓰는것.length || Number(s.services) || 1);
+
+    /* 값을 잠가 둔 회사인가.
+
+       요금표를 올리면 이 일꾼은 그 순간부터 새 값으로 걷습니다. 그런데
+       이용약관 제9조는 "변경된 요금은 공지 후 30일이 지난 다음 결제일부터"
+       라고 못 박아 두었습니다. 그래서 인상 고지를 한 회사는 30일 동안
+       적어 둔 값을 그대로 걷고, 날짜가 지나면 저절로 새 값으로 넘어갑니다.
+
+       내려가는 경우에는 잠그지 않습니다 — 싸지는 것을 미루는 것은
+       고객에게 손해입니다. 그래서 잠겨 있어도 새로 센 값이 더 싸면
+       그쪽을 씁니다. */
+    const 잠김 = s.price_locked_until && new Date(s.price_locked_until as string) > 지금;
+    const 센것 = monthlyForApps(s.tier_key as string | null, s.plan_key as string | null, 쓰는것);
+    const 센값 = (잠김 && 센것 !== null && Number(센것) > Number(s.price))
+      ? Number(s.price)
+      : 센것;
     const 공급가 = 센값 === null ? -1 : Number(센값);
     /* 요금표는 공급가액입니다. 카드에서 빠져나가는 돈은 여기에 부가세를 더한 값입니다.
        화면에도 '부가세 별도'라고 적어 두었으니 이렇게 받는 것이 맞습니다. */
     const 부가세 = 공급가 > 0 ? vatOf(공급가) : 0;
     const 금액 = 공급가 > 0 ? 공급가 + 부가세 : 공급가;
-    const 한줄 = { code: s.company_id, plan: s.plan_key, tier: s.tier_key, services: 개수,
+    const 한줄 = { code: s.company_id, plan: s.plan_key, tier: s.tier_key, apps: 쓰는것.join('+'), services: 개수, 잠김: !!잠김,
                   supply: 공급가, vat: 부가세, amount: 금액, due: s.period_end };
 
     if (공급가 < 0) {
@@ -125,11 +151,14 @@ Deno.serve(async (req) => {
         provider: PG_PROVIDER, status: 'skipped',
         last_error: '카드로 걷을 수 없는 요금제입니다 (협의 · 세금계산서).',
       }, { onConflict: 'company_id,due_on' });
-      건너뜀++; 결과.push({ ...한줄, 결과: '협의 요금제 — 카드로 걷지 않습니다' }); continue;
+      건너뜀++; 결과.push({ ...한줄, 결과: '요금을 셀 수 없습니다 (협의 요금제이거나, 그 구간에 없는 서비스)' }); continue;
     }
 
     // 적어 둔 값과 다르면 구독에도 반영해 둡니다. 화면이 옛 금액을 보여 주면 안 됩니다.
-    if (Number(s.price) !== 공급가) {
+    if (Number(s.services) !== 개수) {
+      await admin.from('subscriptions').update({ services: 개수 }).eq('company_id', s.company_id);
+    }
+    if (Number(s.price) !== 공급가 && !잠김) {
       // subscriptions.price 는 공급가액입니다. 요금표와 같은 값을 적어 둡니다.
       await admin.from('subscriptions').update({ price: 공급가 }).eq('company_id', s.company_id);
       console.log('[요금걷기] 금액 고쳐 적음', s.company_id, s.price, '→', 공급가);

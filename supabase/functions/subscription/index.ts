@@ -10,7 +10,7 @@
 // ─────────────────────────────────────────────────────────────
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { mkJson } from '../_shared/cors.ts';
-import { plan, planList, tierFromPlan, monthlyFor, serviceList, vatOf } from '../_shared/catalog.ts';
+import { plan, planList, tierFromPlan, monthlyForApps, serviceList, vatOf } from '../_shared/catalog.ts';
 
 const URL_ = Deno.env.get('SUPABASE_URL')!;
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -169,13 +169,18 @@ Deno.serve(async (req) => {
      읽기만 하므로 직원도 볼 수 있습니다. 바꾸는 것은 관리자만입니다. */
   /* 이 회사가 쓰는 서비스 개수. 요금은 인원 구간 × 서비스 개수입니다.
      plans 에 적힌 price 는 '서비스 하나'일 때의 값이라 그대로 쓰면 안 됩니다. */
-  const 개수 = Math.max(1, Number(sub.services) || 1);
   const 가진것: string[] = Array.isArray(회사?.apps) ? (회사!.apps as string[]) : [];
-  const 값 = (planKey: string) =>
-    monthlyFor(tierFromPlan(planKey)?.key ?? null, planKey, 개수);
+  const 개수 = Math.max(1, 가진것.length || Number(sub.services) || 1);
+
+  /* 요금은 '어느 구간인가' × '무엇을 쓰는가' 로 정해집니다.
+     서비스마다 값이 달라서 개수만으로는 셀 수 없습니다. */
+  const 값 = (planKey: string, 목록?: string[]) =>
+    monthlyForApps(tierFromPlan(planKey)?.key ?? null, planKey, 목록 ?? 가진것);
+  const 지금구간 = (sub.tier_key as string | null) ?? tierFromPlan(sub.plan_key)?.key ?? null;
+  const 값2 = (목록: string[]) => monthlyForApps(지금구간, sub.plan_key, 목록);
 
   if (action === 'plans') {
-    const curPrice = Number(값(sub.plan_key) ?? sub.price ?? 0);
+    const curPrice = Number(값2(가진것) ?? sub.price ?? 0);
 
     const list = planList().map((p: any) => {
       const isCurrent = p.key === sub.plan_key;
@@ -235,30 +240,38 @@ Deno.serve(async (req) => {
   }
 
   if (action === 'services') {
-    const 지금값 = Number(값(sub.plan_key) ?? 0);
-    const 더한값 = Number(monthlyFor(sub.tier_key, sub.plan_key, Math.min(4, 개수 + 1)) ?? 0);
-    const 뺀값   = 개수 > 1 ? Number(monthlyFor(sub.tier_key, sub.plan_key, 개수 - 1) ?? 0) : null;
+    const 지금값 = Number(값2(가진것) ?? 0);
 
     return json({
       ok: true,
       services: serviceList().map((v: { key: string; name: string; note?: string }) => {
         const 가짐 = 가진것.includes(v.key);
         const 뺄예약 = Array.isArray(sub.pending_apps) && !sub.pending_apps.includes(v.key) && 가짐;
-        const 더할공급 = 가짐 || sub.status === 'trialing'
-          ? 0 : prorate(더한값 - 지금값, sub.period_start, sub.period_end);
+
+        /* 이 하나를 더하면(또는 빼면) 월 얼마가 되는가. 조합마다 다르므로
+           개수를 세지 않고 **실제 목록**으로 셉니다. */
+        const 더하면 = 가짐 ? null : 값2([...가진것, v.key]);
+        const 빼면   = 가짐 && 가진것.length > 1 ? 값2(가진것.filter((a) => a !== v.key)) : null;
+
+        const 더할공급 = (가짐 || sub.status === 'trialing' || 더하면 === null)
+          ? 0 : prorate(Number(더하면) - 지금값, sub.period_start, sub.period_end);
+
         return {
           key: v.key, name: v.name, note: v.note ?? null,
           owned: 가짐,
           // 더하면 이번 달에 지금 내실 돈 (부가세 포함 — 실제로 긁히는 금액)
           addNow: 가짐 ? null : (더할공급 > 0 ? 더할공급 + vatOf(더할공급) : 0),
+          // 이 서비스를 더했을 때 / 뺐을 때의 월 요금
+          monthlyIf: 더하면 === null ? null : Number(더하면),
+          monthlyIfPaid: 더하면 === null ? null : Number(더하면) + vatOf(Number(더하면)),
+          monthlyIfRemoveThis: 빼면 === null ? null : Number(빼면),
+          monthlyIfRemoveThisPaid: 빼면 === null ? null : Number(빼면) + vatOf(Number(빼면)),
+          // 이 구간에서는 팔지 않는 서비스 (Re:Store 는 1명 줄이 없습니다)
+          unavailable: !가짐 && 더하면 === null,
           removeScheduled: 뺄예약,
         };
       }),
       count: 개수, monthly: 지금값, monthlyPaid: 지금값 + vatOf(지금값),
-      monthlyIfAdd: 개수 < 4 ? 더한값 : null,
-      monthlyIfAddPaid: 개수 < 4 ? 더한값 + vatOf(더한값) : null,
-      monthlyIfRemove: 뺀값,
-      monthlyIfRemovePaid: 뺀값 === null ? null : 뺀값 + vatOf(뺀값),
       status: sub.status,
       periodEnd: sub.period_end,
       trialing: sub.status === 'trialing',
@@ -287,7 +300,7 @@ Deno.serve(async (req) => {
       }, 409);
     }
 
-    const curPrice = Number(값(sub.plan_key) ?? sub.price ?? 0);
+    const curPrice = Number(값2(가진것) ?? sub.price ?? 0);
     const 새값 = Number(값(target.key) ?? 0);
     if (!새값) return json({ ok: false, error: '요금을 셀 수 없는 요금제입니다. 문의해 주세요.' }, 400);
     const endsTrial = sub.status === 'trialing' && !target.trialDays;
@@ -382,10 +395,21 @@ Deno.serve(async (req) => {
     }
     if (개수 >= 4) return json({ ok: false, error: '네 가지를 모두 쓰고 계십니다.' }, 409);
 
-    const 새개수 = 개수 + 1;
-    const 지금값 = Number(값(sub.plan_key) ?? 0);
-    const 새달값 = Number(monthlyFor(sub.tier_key, sub.plan_key, 새개수) ?? 0);
-    if (!새달값) return json({ ok: false, error: '요금을 셀 수 없는 요금제입니다. 문의해 주세요.' }, 400);
+    const 새목록 = [...가진것, 고른것];
+    const 새개수 = 새목록.length;
+    const 지금값 = Number(값2(가진것) ?? 0);
+    const 센것 = 값2(새목록);
+    if (센것 === null) {
+      /* 그 구간에서는 팔지 않는 조합입니다. Re:Store 는 1명 줄이 없습니다 —
+         점포가 있으면 이미 혼자가 아니기 때문입니다. 무엇을 하시면 되는지 말씀드립니다. */
+      return json({
+        ok: false,
+        error: 고른것 === 'restore'
+          ? 'Re:Store 는 1명 요금제에서는 쓰실 수 없습니다. 요금제를 5명까지로 올리신 뒤 더해 주세요.'
+          : '지금 요금제에서는 이 서비스를 더할 수 없습니다. 문의해 주세요.',
+      }, 409);
+    }
+    const 새달값 = Number(센것);
 
     /* 체험 중에는 받지 않습니다. 그 밖에는 이번 달 남은 날짜만큼만. */
     const amount = sub.status === 'trialing'
@@ -435,7 +459,7 @@ Deno.serve(async (req) => {
 
     const 남는것 = 가진것.filter((a) => a !== 고른것);
     const 새개수 = 남는것.length;
-    const 새달값 = Number(monthlyFor(sub.tier_key, sub.plan_key, 새개수) ?? 0);
+    const 새달값 = Number(값2(남는것) ?? 0);
 
     /* 지금 끊지 않습니다. 이미 이번 달 요금을 받았으므로 그날까지는 쓰십니다.
        돌려드리는 것은 없습니다 (환불정책 제5조). */

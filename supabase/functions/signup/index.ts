@@ -12,7 +12,7 @@
 //
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { mkJson } from '../_shared/cors.ts';
-import { CATALOG, plan, seatsFit, gradeOf, tierFromPlan, monthlyFor } from '../_shared/catalog.ts';
+import { CATALOG, plan, seatsFit, gradeOf, tierFromPlan, monthlyForApps } from '../_shared/catalog.ts';
 
 const URL_ = Deno.env.get('SUPABASE_URL')!;
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -283,8 +283,9 @@ Deno.serve(async (req) => {
      그래도 굳이 요금표로 세는 이유는, 서비스를 더 파는 날 이 줄을 안 고쳐도
      되게 하려는 것입니다. 셈이 두 군데 있으면 언젠가 어긋납니다. */
   const 구간 = tierFromPlan(p.key);
-  const 서비스수 = 1;
-  const 월요금 = monthlyFor(구간?.key ?? null, p.key, 서비스수) ?? p.price;
+  const 산것 = ['recall'];                    // 이 화면은 Re:Call 가입입니다
+  const 서비스수 = 산것.length;
+  const 월요금 = monthlyForApps(구간?.key ?? null, p.key, 산것) ?? p.price;
 
   const { error: e3 } = await admin.from('subscriptions').insert({
     company_id: comp.id,

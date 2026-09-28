@@ -546,3 +546,9 @@ span[data-todo]{
   background:#FFF4DF;color:#8A5300;font-weight:700;
   padding:1px 6px;border-radius:5px;
 }
+
+/* 서비스별 단가표 — 칸 하나에 '혼자 쓸 때'와 '더 얹을 때'를 함께 적습니다.
+   두 표로 나누면 눈이 위아래로 오가야 해서 비교가 어렵습니다. */
+.ptab.svcprice td{line-height:1.35}
+.ptab.svcprice td .addon{display:block;font-size:.78rem;font-weight:700;color:var(--blue);margin-top:2px}
+.ptab.svcprice td .none{color:var(--dim);font-weight:600}

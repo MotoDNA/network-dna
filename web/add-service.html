@@ -364,6 +364,9 @@ function 그리기(){
       p.innerHTML = '<span style="color:var(--mut);font-weight:600;font-size:.86rem">지금 쓰고 계십니다</span>';
     } else if (v.removeScheduled) {
       p.innerHTML = '<span style="color:var(--amber);font-weight:700;font-size:.86rem">' + 날짜(지금.periodEnd) + ' 에 빠집니다</span>';
+    } else if (v.unavailable) {
+      // 지금 구간에는 없는 서비스입니다. Re:Store 는 1명 줄이 없습니다.
+      p.innerHTML = '<span style="color:var(--mut);font-weight:600;font-size:.86rem">지금 요금제에서는 쓰실 수 없습니다</span>';
     } else if (v.owned) {
       p.innerHTML = '<button class="btn btn-s" data-act="rm" data-k="' + esc(v.key) + '" style="background:#fff;color:var(--sub);border:1px solid var(--line)">빼기</button>';
     } else {
@@ -380,11 +383,14 @@ document.getElementById('cards').addEventListener('click', async e => {
   const v = 지금.services.find(x => x.key === k);
   const 더함 = b.dataset.act === 'add';
 
+  /* 금액은 서버가 **이 조합으로** 세어 준 값입니다. 서비스마다 값이 다르므로
+     개수로 셈하면 안 됩니다. */
   const 물음 = 더함
     ? v.name + ' 을(를) 더합니다.\n\n' +
       (v.addNow > 0 ? '지금 ' + won(v.addNow) + '원이 결제됩니다.' : '지금 결제되는 금액은 없습니다.') +
-      '\n다음 달부터 월 ' + won(지금.monthlyIfAddPaid) + '원입니다.'
+      '\n다음 달부터 월 ' + won(v.monthlyIfPaid) + '원입니다.'
     : v.name + ' 을(를) 뺍니다.\n\n' + 날짜(지금.periodEnd) + ' 부터 빠지고, 그때까지는 그대로 쓰십니다.\n' +
+      '그날부터 월 ' + won(v.monthlyIfRemoveThisPaid) + '원입니다.\n' +
       '이미 결제된 당월분은 환불되지 않습니다.';
   if (!confirm(물음 + '\n\n진행할까요?')) return;
 

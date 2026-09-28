@@ -100,6 +100,44 @@ const Catalog = (() => {
     return t.base + t.addon * (n - 1);
   }
 
+  /* 그 구간이 사다리의 몇 층인가. 인원 구간과 점포 구간이 같은 층을 씁니다. */
+  function levelOf(t){ return t ? (t.level || null) : null }
+
+  /* 서비스 하나의 그 층 단가. 없으면 null (Re:Store 의 1명 줄). */
+  function rateOf(c, key, level){
+    const p = ((c.services || {})[key] || {}).price || {};
+    return p[level] || null;
+  }
+
+  /* ───── 한 회사가 한 달에 낼 돈 ─────
+     ⚠ 서버(_shared/catalog.ts)의 monthlyForApps 와 **같은 셈**이어야 합니다.
+       화면이 말한 금액과 실제로 긁힌 금액이 다르면 그게 제일 나쁩니다.
+
+     기본료는 하나만 붙고 나머지는 추가 단가로 붙습니다. 어느 것을 기본료로
+     잡느냐로 금액이 달라지므로 **가장 싸지는 쪽**을 우리가 골라 줍니다. */
+  function monthlyForApps(c, tierKeyOrTier, apps){
+    const t = typeof tierKeyOrTier === 'string'
+      ? (tierList(c).find(x => x.key === tierKeyOrTier) || storeTierList(c).find(x => x.key === tierKeyOrTier) || null)
+      : tierKeyOrTier;
+    const lv = levelOf(t);
+    if (!lv || lv === 'ent') return null;
+
+    const 목록 = (apps || []).filter((a, i, arr) => a && arr.indexOf(a) === i);
+    if (!목록.length) return null;
+
+    let 합 = 0, 작은차 = null;
+    for (const a of 목록) {
+      const r = rateOf(c, a, lv);
+      if (!r) return null;
+      합 += r.addon;
+      const 차 = r.base - r.addon;
+      if (작은차 === null || 차 < 작은차) 작은차 = 차;
+    }
+    const 값 = 합 + (작은차 || 0);
+    const 상한 = Number((c.maxSupply || {}).amount || 0);
+    return 상한 > 0 ? Math.min(값, 상한) : 값;
+  }
+
   /* ───── 부가가치세 ─────
      이 요금표의 금액은 전부 **공급가액**입니다. 카드에서 실제로 빠져나가는
      돈은 공급가액 + 부가세입니다.
@@ -141,6 +179,7 @@ const Catalog = (() => {
 
   return { load, planList, plan, planForSeats, seatsFit,
            serviceList, tierList, tierForSeats, priceFor, vatOf, withVat,
+           levelOf, rateOf, monthlyForApps,
            storeTierList, storeTierFor,
            gradeOf, industry, allIndustries };
 })();

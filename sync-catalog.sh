@@ -149,12 +149,48 @@ export function tier(key: string) {
       || null;
 }
 
-/* 한 회사가 한 달에 낼 돈. **이 셈은 여기 하나뿐이어야 합니다.**
-   화면과 청구가 다른 값을 내면 그대로 결제 사고입니다.
-   tierKey 를 모르면 옛 plan_key 로도 찾아 줍니다. */
-export function monthlyFor(tierKey: string | null, planKey: string | null, services: number) {
+/* 그 구간이 사다리의 몇 층인가. 인원 구간과 점포 구간이 같은 층을 씁니다. */
+export function levelOf(tierKey: string | null, planKey: string | null) {
   const t = (tierKey && tier(tierKey)) || (planKey && tierFromPlan(planKey)) || null;
-  return priceFor(t, services);
+  return t ? ((t as any).level ?? null) : null;
+}
+
+/* ───── 한 회사가 한 달에 낼 돈 ─────
+   **이 셈은 여기 하나뿐이어야 합니다.** 화면과 청구가 다른 값을 내면
+   그대로 결제 사고입니다.
+
+   기본료는 하나만 붙고 나머지는 추가 단가로 붙습니다. 그런데 어느 것을
+   기본료로 잡느냐로 금액이 달라집니다 — 기본료가 추가 단가보다 비싸므로,
+   '기본료 − 추가 단가' 가 가장 작은 것을 기본료로 잡을 때 제일 쌉니다.
+   **고객에게 유리한 쪽을 우리가 골라 줍니다.** 고르는 순서에 따라 값이
+   달라지면 그건 고객이 알 수 없는 규칙입니다.
+
+   마지막으로 상한(maxSupply)을 씌웁니다. 왜 씌우는지는 catalog.json 에. */
+export function monthlyForApps(tierKey: string | null, planKey: string | null, apps: string[]) {
+  const lv = levelOf(tierKey, planKey);
+  if (!lv || lv === 'ent') return null;
+
+  const 목록 = (apps ?? []).filter((a, i, arr) => a && arr.indexOf(a) === i);
+  if (!목록.length) return null;
+
+  let 합 = 0, 가장작은차 = null as number | null;
+  for (const a of 목록) {
+    const p = ((CATALOG.services as any)[a]?.price ?? {})[lv];
+    if (!p) return null;                       // 그 층에 값이 없는 서비스 (Re:Store 의 1명 줄)
+    합 += p.addon;
+    const 차 = p.base - p.addon;
+    if (가장작은차 === null || 차 < 가장작은차) 가장작은차 = 차;
+  }
+  const 값 = 합 + (가장작은차 ?? 0);
+  const 상한 = Number((CATALOG as any).maxSupply?.amount ?? 0);
+  return 상한 > 0 ? Math.min(값, 상한) : 값;
+}
+
+/* 옛 이름. 개수만 알던 때에 쓰던 것으로, 서비스가 무엇인지 모르면
+   Re:Bind 기준으로 셉니다. 새 코드는 monthlyForApps 를 쓰세요. */
+export function monthlyFor(tierKey: string | null, planKey: string | null, services: number) {
+  const n = Math.max(1, Number(services) || 1);
+  return monthlyForApps(tierKey, planKey, Array(n).fill(0).map((_, i) => ['rebind','recall','restore','reos'][i]));
 }
 
 /* 업종 등급. C 는 가입을 막습니다. */

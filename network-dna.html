@@ -3330,8 +3330,10 @@ function renderSvcPick(){
   $('svcPick').innerHTML = svcOpts.services.map(v=>{
     const on = svcPickKey === v.key;
     // 마지막 하나는 뺄 수 없습니다. 그만 쓰시려면 해지입니다.
-    const dis = v.removeScheduled || (v.owned && 쓰는수 <= 1);
+    // 지금 구간에 없는 서비스도 못 누릅니다 (Re:Store 는 1명 줄이 없습니다).
+    const dis = v.removeScheduled || v.unavailable || (v.owned && 쓰는수 <= 1);
     const 꼬리 = v.removeScheduled ? '빼기로 예약됨'
+      : v.unavailable ? '지금 요금제에서는 쓰실 수 없습니다'
       : v.owned ? (쓰는수 <= 1 ? '마지막 하나는 뺄 수 없습니다' : '누르면 뺍니다')
       : (v.addNow > 0 ? '더하면 지금 ' + won(v.addNow) + '원' : '더해도 지금 낼 돈 없음');
     return '<button class="grow' + (on ? ' on' : '') + '" data-s="' + esc(v.key) + '"' +
@@ -3343,23 +3345,23 @@ function renderSvcPick(){
 }
 
 function svcWhatNote(v){
-  /* addNow · monthly*Paid 는 서버가 부가세까지 더해 준 '실제로 긁히는' 값입니다.
-     화면이 말한 금액과 카드에 찍히는 금액이 다르면 안 됩니다. */
+  /* addNow · monthlyIf*Paid 는 서버가 **이 조합으로** 세어 부가세까지 더해 준
+     '실제로 긁히는' 값입니다. 서비스마다 값이 다르므로 개수로 셈하면 안 됩니다. */
   if(v.owned){
     return '<b>' + ymd(svcOpts.periodEnd) + '</b> 부터 빠집니다. ' +
-      '그때까지는 그대로 쓰시고, 그날부터 월 <b>' + won(svcOpts.monthlyIfRemovePaid) + '원</b>' +
-      '(공급가 ' + won(svcOpts.monthlyIfRemove) + '원 + 부가세)이 청구됩니다. ' +
+      '그때까지는 그대로 쓰시고, 그날부터 월 <b>' + won(v.monthlyIfRemoveThisPaid) + '원</b>' +
+      '(공급가 ' + won(v.monthlyIfRemoveThis) + '원 + 부가세)이 청구됩니다. ' +
       '이미 결제된 당월분은 환불되지 않습니다.';
   }
   if(svcOpts.trialing){
     return '지금 바로 쓰실 수 있습니다. <b>무료 체험 중이라 지금 내실 돈은 없습니다.</b> ' +
-      '무료가 끝나면 월 <b>' + won(svcOpts.monthlyIfAddPaid) + '원</b>으로 청구됩니다.';
+      '무료가 끝나면 월 <b>' + won(v.monthlyIfPaid) + '원</b>으로 청구됩니다.';
   }
   return v.addNow > 0
     ? '지금 바로 쓰실 수 있습니다. 이번 기간 남은 날짜만큼의 차액 <b>' + won(v.addNow) + '원</b>이 결제됩니다. ' +
-      '다음 달부터는 월 <b>' + won(svcOpts.monthlyIfAddPaid) + '원</b>입니다.'
+      '다음 달부터는 월 <b>' + won(v.monthlyIfPaid) + '원</b>입니다.'
     : '지금 바로 쓰실 수 있습니다. 이번 기간에 더 낼 금액은 없습니다. ' +
-      '다음 달부터는 월 <b>' + won(svcOpts.monthlyIfAddPaid) + '원</b>입니다.';
+      '다음 달부터는 월 <b>' + won(v.monthlyIfPaid) + '원</b>입니다.';
 }
 
 $('svcCancel').addEventListener('click', ()=>closeSheetEl('svcSheet'));
