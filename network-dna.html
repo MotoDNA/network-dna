@@ -3225,7 +3225,8 @@ function renderSub(){
     note.innerHTML = '<b>' + ymd(subInfo.period_end) + '</b> 까지 그대로 쓰실 수 있고, 그 뒤로는 청구되지 않습니다. ' +
       '그 전에 마음이 바뀌시면 아래에서 되돌릴 수 있습니다.';
   } else if(subInfo.status === 'past_due'){
-    note.innerHTML = '등록하신 카드로 결제가 되지 않았습니다. 결제 수단을 확인해 주세요.';
+    note.innerHTML = '이번 달 요금이 결제되지 않았습니다. 카드를 등록하거나 바꿔 주시면 다음 날 새벽에 다시 결제합니다. ' +
+      '<a href="https://dnalabs.kr/add-service#mine" style="color:var(--blue);font-weight:700">결제 카드 보기 →</a>';
   } else if(subInfo.status === 'trialing'){
     note.innerHTML = '무료 기간이 끝나면 매월 <b>' + 낼돈(subInfo.price) + '</b>이 청구됩니다. ' +
       '그 전에 해지하시면 요금이 발생하지 않습니다.';

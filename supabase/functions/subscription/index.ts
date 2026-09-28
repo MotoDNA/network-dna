@@ -107,6 +107,50 @@ async function pgChargeOnce(billingKey: string, customerKey: string | null, amou
   return { ok: true, paymentKey: d.paymentKey, orderId, approvedAt: d.approvedAt };
 }
 
+/* 토스 카드 발급사 코드 → 이름. signup 함수와 같은 표입니다.
+   고객이 "아, 그 카드" 하고 알아보시게 하려는 것뿐이라 결제에는 안 쓰입니다. */
+const 발급사: Record<string, string> = {
+  '3K':'기업BC', '46':'광주', '71':'롯데', '30':'산업', '31':'BC', '51':'삼성', '38':'새마을',
+  '41':'신한', '62':'신협', '36':'씨티', '33':'우리', '37':'우체국', '39':'저축', '35':'전북',
+  '42':'제주', '15':'카카오뱅크', '3A':'케이뱅크', '24':'토스뱅크', '21':'하나', '61':'현대',
+  '11':'국민', '91':'농협', '34':'수협',
+};
+
+/* ── 이미 쓰고 계신 회사의 카드 등록 · 바꾸기 ──
+
+   가입 화면에서만 카드를 받았습니다. 그래서 구독 표보다 먼저 생긴 회사들
+   (ACTIVA·BKT·9DORO)은 카드를 넣을 곳이 아예 없었고, 요금 걷는 일꾼을
+   켜는 순간 전부 '결제 수단 없음'으로 밀릴 참이었습니다.
+
+   화면은 토스 카드창에 다녀온 authKey 만 들고 옵니다. 빌링키는 여기서
+   시크릿 키로 발급받습니다 — 브라우저는 빌링키를 끝내 보지 못합니다.
+   어느 회사의 카드인지는 화면이 보낸 값이 아니라 **로그인한 사람**으로 정합니다.
+   남의 회사 이름으로 카드를 걸 길이 없습니다. */
+async function 카드받기(body: Record<string, unknown>) {
+  if (PG_PROVIDER === 'stub') {
+    const k = String(body.billingKey ?? '');
+    if (!k.startsWith('stub_')) return { ok: false as const, message: '결제 수단 확인에 실패했습니다.' };
+    return { ok: true as const, billingKey: k, customerKey: String(body.customerKey ?? '') || null,
+             cardBrand: '테스트카드', cardLast4: '0000' };
+  }
+  if (!PG_SECRET) return { ok: false as const, message: '결제 설정이 완료되지 않았습니다.' };
+  const authKey = String(body.authKey ?? ''), customerKey = String(body.customerKey ?? '');
+  if (!authKey || !customerKey) return { ok: false as const, message: '카드 등록 결과를 받지 못했습니다. 다시 해 주세요.' };
+  if (!/^[A-Za-z0-9\-_=.@]{2,50}$/.test(customerKey)) return { ok: false as const, message: '고객 식별자가 올바르지 않습니다.' };
+
+  const r = await tossCall('/v1/billing/authorizations/issue', { authKey, customerKey });
+  if (!r.ok) return { ok: false as const, message: '카드를 등록하지 못했습니다: ' + r.message };
+  const d = r.data as { billingKey?: string; customerKey?: string; card?: { number?: string; issuerCode?: string } };
+  if (!d.billingKey) return { ok: false as const, message: '결제사가 빌링키를 주지 않았습니다.' };
+
+  // 토스는 43301234****123* 처럼 끝자리까지 가려서 줍니다. 가림표가 섞여도 끝 넉 자를 씁니다.
+  const 번호 = String(d.card?.number ?? '');
+  const code = String(d.card?.issuerCode ?? '');
+  return { ok: true as const, billingKey: d.billingKey, customerKey: d.customerKey ?? customerKey,
+           cardBrand: code ? (발급사[code] ?? code) : null,
+           cardLast4: /\d/.test(번호.slice(-4)) ? 번호.slice(-4) : null };
+}
+
 Deno.serve(async (req) => {
   const { cors, json } = mkJson(req);
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
@@ -132,6 +176,17 @@ Deno.serve(async (req) => {
   const { data: 회사 } = await admin.from('companies')
     .select('apps').eq('id', me.company_id).maybeSingle();
 
+  /* 등록된 카드와 밀린 결제. 읽기만 하므로 직원도 봅니다.
+     ⚠ 빌링키는 절대 내보내지 않습니다 — 카드사 이름과 끝 넉 자만. */
+  const { data: 카드 } = await admin.from('billing_methods')
+    .select('card_brand, card_last4, updated_at').eq('company_id', me.company_id).maybeSingle();
+  const 카드정보 = 카드 ? { brand: 카드.card_brand, last4: 카드.card_last4, since: 카드.updated_at } : null;
+  const { data: 밀린것 } = await admin.from('billing_charges')
+    .select('amount, due_on, tries, last_error').eq('company_id', me.company_id).eq('status', 'failed')
+    .order('due_on', { ascending: false }).limit(1).maybeSingle();
+  const 밀림 = 밀린것 ? { amount: 밀린것.amount, dueOn: 밀린것.due_on, tries: 밀린것.tries, reason: 밀린것.last_error } : null;
+  const 관리자 = me.role === 'admin';
+
   /* 구독 표가 생기기 전에 만들어진 회사들이 있습니다(ACTIVA·BKT·9DORO…).
      쓰고는 계신데 요금제가 붙어 있지 않습니다.
 
@@ -155,6 +210,7 @@ Deno.serve(async (req) => {
         monthlyIfAdd: null, monthlyIfAddPaid: null,
         monthlyIfRemove: null, monthlyIfRemovePaid: null,
         status: null, periodEnd: null, trialing: false,
+        card: 카드정보, owed: null, isAdmin: 관리자,
       });
     }
     return json({ ok: false, error: '이 회사에는 아직 요금제가 연결돼 있지 않습니다. 010-6451-5807 로 알려 주시면 연결해 드립니다.' }, 404);
@@ -275,6 +331,7 @@ Deno.serve(async (req) => {
       status: sub.status,
       periodEnd: sub.period_end,
       trialing: sub.status === 'trialing',
+      card: 카드정보, owed: 밀림, isAdmin: 관리자,
     });
   }
 
@@ -282,6 +339,47 @@ Deno.serve(async (req) => {
   // 돈이 걸린 일이라 직원이 회사 요금제를 바꾸거나 해지하면 안 됩니다.
   if (me.role !== 'admin') {
     return json({ ok: false, error: '구독은 회사 관리자만 바꿀 수 있습니다.' }, 403);
+  }
+
+  /* ── 카드 등록 · 바꾸기 ──
+     카드는 회사에 하나입니다(billing_methods 의 열쇠가 company_id).
+     바꾸면 옛 빌링키는 덮어써져 다시 쓰이지 않습니다. */
+  if (action === 'card_register') {
+    const c = await 카드받기(body);
+    if (!c.ok) return json({ ok: false, error: c.message }, 400);
+
+    const { error: e1 } = await admin.from('billing_methods').upsert({
+      company_id: me.company_id, provider: PG_PROVIDER,
+      billing_key: c.billingKey, customer_key: c.customerKey,
+      card_brand: c.cardBrand, card_last4: c.cardLast4,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'company_id' });
+    if (e1) {
+      console.error('[카드] 저장 실패', me.company_id, e1.code, e1.message);
+      return json({ ok: false, error: '카드는 확인됐는데 저장하지 못했습니다. 010-6451-5807 로 알려 주세요.' }, 500);
+    }
+
+    /* 밀린 결제가 있으면 다음 차례(매일 새벽 4시)에 새 카드로 다시 해 봅니다.
+       재시도 한도를 이미 다 쓴 경우에도 한 번은 더 하게 둡니다 — 카드를 바꾼 것은
+       '다시 해 달라'는 뜻입니다. 여기서 바로 긁지 않는 것은, 걷는 셈을
+       일꾼 한 곳에만 두어야 두 번 긁히는 일이 없기 때문입니다. */
+    const { data: 실패들 } = await admin.from('billing_charges')
+      .select('id, tries').eq('company_id', me.company_id).eq('status', 'failed');
+    for (const f of 실패들 ?? []) {
+      await admin.from('billing_charges').update({
+        next_try_at: new Date().toISOString(),
+        tries: Math.min(Number(f.tries ?? 0), 3),
+      }).eq('id', f.id);
+    }
+
+    await admin.from('audit_log').insert({
+      company_id: me.company_id, actor_id: me.id,
+      action: 카드 ? 'card_replaced' : 'card_registered', target: 'card',
+      detail: { brand: c.cardBrand, last4: c.cardLast4 },     // 빌링키는 기록에도 남기지 않습니다
+    });
+
+    return json({ ok: true, card: { brand: c.cardBrand, last4: c.cardLast4 },
+                  retry: (실패들 ?? []).length > 0 });
   }
 
   /* ── 요금제 변경 ── */

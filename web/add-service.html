@@ -181,6 +181,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="catalog.js"></script>
+<script src="pg.js?v=20260928a"></script>
 <script>
 /* 어느 서비스를 누르고 오셨는지는 주소의 ?want= 로 옵니다.
    ⚠ 회사 코드는 주소에 싣지 않습니다 — 주소는 기록에 남고 링크로 새어 나갑니다.
@@ -291,6 +292,7 @@ async function 내요금(c){
     return;
   }
 
+  await 카드돌아옴();
   const r = await 부르기('services');
   if (!r || !r.ok) {
     안내.hidden = false;
@@ -299,6 +301,7 @@ async function 내요금(c){
   }
   지금 = r;
   그리기();
+  if (카드알림) document.getElementById('mine').scrollIntoView({ block: 'start' });
   /* 로그인해 계신 분은 위에서 바로 더하실 수 있습니다.
      "결제 화면이 닫혀 있습니다" 를 그대로 두면 눌러 놓고도 안 되는 줄 아십니다. */
   const 닫힘 = document.getElementById('closedNote');
@@ -344,6 +347,7 @@ function 그리기(){
           (지금.trialing
             ? '<p style="color:var(--mut);font-size:.88rem;margin-top:6px">무료 체험 중입니다 — ' + 날짜(지금.periodEnd) + ' 까지</p>'
             : '<p style="color:var(--mut);font-size:.88rem;margin-top:6px">다음 결제 ' + 날짜(지금.periodEnd) + '</p>')) +
+      카드칸() +
     '</div>';
 
   /* 카드마다 실제로 누를 수 있는 단추를 답니다.
@@ -375,6 +379,97 @@ function 그리기(){
     }
     el.appendChild(p);
   });
+}
+
+/* ═══ 결제 카드 ═══════════════════════════════════════════════
+   카드를 받는 곳이 가입 화면뿐이었습니다. 그래서 먼저 쓰기 시작한 회사들은
+   카드를 넣을 데가 없었고, 결제일이 오면 '결제 수단 없음'으로 밀릴 참이었습니다.
+
+   카드번호는 여기서 받지 않습니다. 토스 카드창에 다녀오면 authKey 만 들고
+   돌아오고, 빌링키는 서버가 발급받습니다. 이 화면은 카드사 이름과
+   끝 넉 자만 봅니다. */
+const 카드이름 = c => (c.brand || '카드') + (c.last4 ? ' · 끝자리 ' + c.last4 : '');
+let 카드알림 = '';     // 카드창에서 돌아온 직후 한 번 보여 줄 말
+
+function 카드칸(){
+  if (지금.noSub) return '';
+  const c = 지금.card, o = 지금.owed;
+  let h = '<div id="cardbox" style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">' +
+          '<p style="font-weight:700;margin:0 0 6px">결제 카드</p>';
+  if (카드알림) h += 카드알림;
+  if (o) {
+    h += '<div class="note stop" style="margin:8px 0 10px"><p><b>' + won(o.amount) + '원</b>이 결제되지 않았습니다' +
+         (o.dueOn ? ' (' + 날짜(o.dueOn) + ' 결제분)' : '') + '.</p>' +
+         (o.reason ? '<p style="font-size:.86rem">까닭: ' + esc(o.reason) + '</p>' : '') +
+         (c ? '<p style="font-size:.86rem">카드를 바꾸시면 다음 날 새벽에 다시 결제합니다.</p>' : '') + '</div>';
+  }
+  if (c) {
+    h += '<p style="margin:0">' + esc(카드이름(c)) +
+         '<span style="color:var(--mut);font-size:.85rem"> · ' + 날짜(c.since) + ' 등록</span></p>';
+  } else {
+    h += '<p style="margin:0;color:var(--red);font-weight:700">등록된 카드가 없습니다.</p>' +
+         '<p style="color:var(--mut);font-size:.88rem;margin-top:4px">' +
+         (지금.trialing ? '무료 기간이 끝나는 ' : '다음 결제일 ') + 날짜(지금.periodEnd) +
+         ' 전에 등록해 주세요. 카드가 없으면 그날 결제가 되지 않습니다.</p>';
+  }
+  if (지금.isAdmin) {
+    h += '<p style="margin-top:12px"><button class="btn ' + (c ? '' : 'btn-p ') + 'btn-s" id="cardBtn"' +
+         (c ? ' style="background:#fff;color:var(--sub);border:1px solid var(--line)"' : '') + '>' +
+         (c ? '카드 바꾸기' : '카드 등록하기') + '</button></p>' +
+         '<p style="color:var(--mut);font-size:.8rem;margin-top:8px">' +
+         '카드번호는 토스페이먼츠 창에서 직접 넣으십니다. 저희는 카드번호를 받지도, 보관하지도 않습니다.' +
+         (typeof PG !== 'undefined' && PG.isTest ? ' <b style="color:var(--amber)">지금은 시험 모드라 실제로 결제되지 않습니다.</b>' : '') +
+         '</p>';
+  } else {
+    h += '<p style="color:var(--mut);font-size:.86rem;margin-top:8px">카드는 회사 관리자가 등록합니다.</p>';
+  }
+  return h + '</div>';
+}
+
+document.getElementById('mine').addEventListener('click', async e => {
+  const b = e.target.closest('#cardBtn'); if (!b) return;
+  /* pg.js 는 const PG 로 선언해 window 에 붙지 않습니다. typeof 로 물어야 합니다. */
+  if (typeof PG === 'undefined') { alert('결제창을 불러오지 못했습니다. 새로고침 뒤 다시 해 주세요.'); return; }
+  b.disabled = true; b.textContent = '카드창을 여는 중…';
+  /* 돌아왔을 때 "우리가 보낸 사람이 맞나" 를 맞춰 보려고 적어 둡니다.
+     다른 탭·다른 사람이 만든 주소를 들고 와도 짝이 안 맞으면 쓰지 않습니다. */
+  const 열쇠 = 'c_' + [...crypto.getRandomValues(new Uint8Array(24))]
+    .map(x => 'abcdefghijklmnopqrstuvwxyz0123456789'[x % 36]).join('');
+  try { sessionStorage.setItem('card-ck', 열쇠) } catch {}
+  try {
+    await PG.requestBillingKey({ customerKey: 열쇠 });   // 화면이 토스로 넘어갑니다
+  } catch (err) {
+    b.disabled = false; b.textContent = 지금.card ? '카드 바꾸기' : '카드 등록하기';
+    카드알림 = '<div class="note ' + (err.canceled ? 'info' : 'stop') + '" style="margin:8px 0"><p>' + esc(err.message) + '</p></div>';
+    그리기();
+  }
+});
+
+/* 토스 카드창에서 돌아왔을 때.
+   authKey 는 한 번만 쓰는 값이지만 주소창·방문 기록에 남기지 않으려고 곧바로 지웁니다. */
+async function 카드돌아옴(){
+  const 결과 = qs.get('pg');
+  if (!결과) return;
+  const authKey = qs.get('authKey'), ck = qs.get('customerKey');
+  const 토스말 = (qs.get('message') || '').slice(0, 200);
+  history.replaceState(null, '', location.pathname + (want ? '?want=' + want : '') + '#mine');
+  let 보낸것 = null; try { 보낸것 = sessionStorage.getItem('card-ck'); sessionStorage.removeItem('card-ck') } catch {}
+
+  if (결과 !== 'ok') {
+    카드알림 = '<div class="note stop" style="margin:8px 0"><p>카드를 등록하지 못했습니다.' +
+               (토스말 ? ' ' + esc(토스말) : '') + '</p></div>';
+    return;
+  }
+  if (!authKey || !ck || ck !== 보낸것) {
+    카드알림 = '<div class="note stop" style="margin:8px 0"><p>카드창에서 돌아온 정보가 맞지 않습니다. ' +
+               '다시 한 번 눌러 주세요.</p></div>';
+    return;
+  }
+  const r = await 부르기('card_register', { authKey, customerKey: ck });
+  카드알림 = (r && r.ok)
+    ? '<div class="note info" style="margin:8px 0"><p><b>' + esc(카드이름(r.card)) + '</b> 카드를 등록했습니다.' +
+      (r.retry ? ' 밀린 결제는 내일 새벽에 이 카드로 다시 합니다.' : '') + '</p></div>'
+    : '<div class="note stop" style="margin:8px 0"><p>' + esc((r && r.error) || '카드를 등록하지 못했습니다.') + '</p></div>';
 }
 
 document.getElementById('cards').addEventListener('click', async e => {
