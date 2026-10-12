@@ -3,7 +3,11 @@
 // 손으로 그린 그림을 내면 화면이 바뀌는 순간 거짓말이 됩니다.
 // 운영 중인 dnalabs.kr 을 그대로 띄워 찍습니다.
 //
-//   1 메인  2 요금 안내  3 요금제 선택  4 정보 입력  5 토스 결제창  6 가입 완료
+//   1 메인  1b 사업자 정보(홈페이지 하단)  2 요금 안내  3 요금제 선택  4 정보 입력
+//   4b 결제 직전 화면 하단  5 토스 결제창  6 가입 완료
+//
+// 1b · 4b 는 토스 심사팀이 "홈페이지 하단 정보가 보이는 화면"을 따로 달라고 해서
+// 더했습니다(2026-10). 결제 화면에도 같은 사업자 정보가 있음을 함께 보입니다.
 //
 // 6번은 실제 카드 등록을 마쳐야 나오는 화면입니다. 여기서는 우리 화면을
 // 그대로 그리되 회사코드·비밀번호는 **예시**를 넣습니다.
@@ -67,6 +71,20 @@ async function 찍기(sid, 이름) {
   console.log('  ✓', 이름);
 }
 
+/* 한 요소만 잘라 찍습니다. 꼬리처럼 화면 아래에 있는 것도 스크롤 없이 찍힙니다. */
+async function 부분찍기(sid, 이름, 고르개, 위여백 = 0) {
+  const r = await 시키기(sid, `(() => { const el = document.querySelector(${JSON.stringify(고르개)});
+    if (!el) return null; const b = el.getBoundingClientRect();
+    return { x: 0, y: b.top + scrollY - ${위여백}, w: document.documentElement.clientWidth, h: b.height + ${위여백} }; })()`);
+  if (!r) throw new Error('못 찾았습니다: ' + 고르개);
+  const { data } = await 보내기('Page.captureScreenshot', {
+    format: 'png', captureBeyondViewport: true,
+    clip: { x: r.x, y: r.y, width: r.w, height: r.h, scale: 1 },
+  }, sid);
+  await fs.writeFile(`${OUT}/${이름}.png`, Buffer.from(data, 'base64'));
+  console.log('  ✓', 이름);
+}
+
 const { targetId, sessionId: sid } = await 새창();
 
 console.log('결제 경로를 찍습니다');
@@ -74,6 +92,9 @@ console.log('결제 경로를 찍습니다');
 // 1 · 메인
 await 가기(sid, 문 + '/');
 await 찍기(sid, '1-메인');
+
+// 1b · 사업자 정보 — 홈페이지 맨 아래 꼬리
+await 부분찍기(sid, '1b-사업자정보', 'footer');
 
 // 2 · 요금 안내
 await 가기(sid, 문 + '/reservice');
@@ -101,6 +122,13 @@ await 찍기(sid, '4-정보입력');
 // 5 · 토스 결제창 — 진짜로 띄웁니다
 await 시키기(sid, `S.agreed = {tos:true, privacy:true, billing:true, market:true, oversea:true}; go(4); 'ok'`);
 await 잠깐(700);
+
+// 4b · 결제 직전 화면의 아래쪽 — 결제 단추 바로 밑에 같은 사업자 정보
+await 시키기(sid, `window.scrollTo(0, document.body.scrollHeight); 'ok'`);
+await 잠깐(600);
+await 찍기(sid, '4b-결제화면하단');
+await 시키기(sid, `window.scrollTo(0, 0); 'ok'`);
+await 잠깐(300);
 await 시키기(sid, `document.getElementById('paybtn').click(); 'ok'`);
 console.log('  … 토스 결제창을 기다립니다 (20초)');
 await 잠깐(20000);
