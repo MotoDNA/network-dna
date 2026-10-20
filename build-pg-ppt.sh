@@ -20,4 +20,4 @@ node shoot-pg.mjs 9777 "$SHOTDIR"
 # python-pptx 는 시스템 파이썬에 못 넣습니다(PEP 668). 딸린 자리를 하나 만들어 씁니다.
 [ -d "$WORK/venv" ] || python3 -m venv "$WORK/venv"
 "$WORK/venv/bin/pip" install --quiet python-pptx
-SHOTS="$SHOTDIR" OUT="$PWD/토스페이먼츠_결제경로.pptx" "$WORK/venv/bin/python" make-pg-ppt.py
+SHOTS="$SHOTDIR" OUT="$PWD/토스페이먼츠_결제경로.pptx" PDF_OUT="$PWD/토스페이먼츠_결제경로.pdf" "$WORK/venv/bin/python" make-pg-ppt.py
