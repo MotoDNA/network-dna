@@ -92,8 +92,15 @@ const PG = (() => {
      실제로 돈이 빠져나가지는 않습니다. 카드사 심사는 이 상태로 봅니다.
      ⚠ 계약이 끝나 우리 키(live_ck_…)를 받으면 여기만 바꿉니다.
         시크릿 키(test_sk_ / live_sk_)는 절대 여기 두지 않습니다 — 서버 환경변수에만. */
-  const TOSS_CLIENT_KEY = 'test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq';
-  /* 위 키는 토스 자동결제 문서에 공개된 '문서 테스트 키'입니다.
+  const TOSS_CLIENT_KEY = 'test_ck_DLJOpm5Qrl1gD62G2vLd8PNdxbWn';   // 우리 상점 테스트 키 (2026-10-25)
+  /* ⚠ 2026-10: 예전에 쓰던 '문서 테스트 키'(test_ck_D5Ge…)가 UNAUTHORIZED_KEY 로 막혔습니다.
+       카드창이 아무에게도 안 뜨고 "알 수 없는 에러(UNKNOWN)" 만 났습니다.
+       지금은 토스 개발자센터의 **우리 상점** API 개별 연동 키(테스트)를 씁니다.
+       짝이 되는 시크릿 키도 우리 상점 것이어야 합니다(PG_SECRET_KEY).
+       위젯 키(test_gck_…)는 NOT_SUPPORTED_WIDGET_KEY 로 거절됩니다 — 시험해 봤습니다.
+
+     아래는 예전 메모입니다.
+     위 키는 토스 자동결제 문서에 공개된 '문서 테스트 키'였습니다.
      https://docs.tosspayments.com/guides/billing/integration
 
      ⚠ 키에는 종류가 있습니다. 처음에 위젯용 키(test_ck_docs_…)를 넣었더니
