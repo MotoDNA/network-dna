@@ -33,5 +33,8 @@ node shoot-pg.mjs 9777 "$SHOTDIR"
 # python-pptx 는 시스템 파이썬에 못 넣습니다(PEP 668). 딸린 자리를 하나 만들어 씁니다.
 [ -d "$WORK/venv" ] || python3 -m venv "$WORK/venv"
 "$WORK/venv/bin/pip" install --quiet python-pptx
-SHOTS="$SHOTDIR" OUT="$PWD/토스페이먼츠_결제경로.pptx" "$WORK/venv/bin/python" make-pg-ppt.py
+# Dock 높이를 macOS 에 묻습니다 — 캡처 맨 아래의 Dock 을 잘라 내려고(권한 필요 없음)
+SCREEN_H_PT="$(osascript -l JavaScript -e 'ObjC.import("AppKit"); $.NSScreen.mainScreen.frame.size.height' 2>/dev/null || echo 0)"
+DOCK_PT="$(osascript -l JavaScript -e 'ObjC.import("AppKit"); $.NSScreen.mainScreen.visibleFrame.origin.y' 2>/dev/null || echo 0)"
+SCREEN_H_PT="$SCREEN_H_PT" DOCK_PT="$DOCK_PT" SHOTS="$SHOTDIR" OUT="$PWD/토스페이먼츠_결제경로.pptx" "$WORK/venv/bin/python" make-pg-ppt.py
 open -R "$PWD/토스페이먼츠_결제경로.pptx" 2>/dev/null || true

@@ -65,6 +65,22 @@ else:
    '모든 화면은 운영 중인 사이트를 실제 크롬 창으로 열어 주소창과 PC 시각이 함께 보이도록 찍었습니다.',
    12, RGBColor(0x9F, 0xB3, 0xCC))
 
+# 맨 아래 Dock(작업표시줄)은 잘라 냅니다 — 보기에 어수선하고 심사에 필요 없습니다.
+# 맨 위 막대(시계)는 남깁니다. 토스 가이드가 PC 시각이 보이게 하라고 합니다.
+# DOCK_PT = 화면 아래에서 Dock 이 차지하는 높이(포인트), SCREEN_H_PT = 화면 높이(포인트).
+# 둘 다 build-pg-ppt.sh 가 macOS 에 물어 넘겨 줍니다. 없으면 자르지 않습니다.
+덜어낼 = float(os.environ.get('DOCK_PT') or 0)
+화면높이 = float(os.environ.get('SCREEN_H_PT') or 0)
+def 아래자르기(길):
+    if not (덜어낼 > 0 and 화면높이 > 0): return 길
+    그림 = Image.open(길)
+    배율 = 그림.height / 화면높이
+    끝 = int(round((화면높이 - 덜어낼) * 배율))
+    if not (0 < 끝 < 그림.height): return 길
+    새길 = 길[:-4] + '-잘림.png'
+    그림.crop((0, 0, 그림.width, 끝)).save(새길)
+    return 새길
+
 for 쪽 in 장:
     s = p.slides.add_slide(빈장)
     글(s.shapes.add_textbox(Inches(0.5), Inches(0.25), Inches(8.5), Inches(0.5)),
@@ -74,7 +90,7 @@ for 쪽 in 장:
     글(s.shapes.add_textbox(Inches(0.5), Inches(0.78), Inches(12.33), Inches(0.5)),
        쪽['설명'], 12, 흐림)
 
-    길 = os.path.join(기본, 쪽['파일'] + '.png')
+    길 = 아래자르기(os.path.join(기본, 쪽['파일'] + '.png'))
     iw, ih = Image.open(길).size
     칸w, 칸h = Inches(12.33), Inches(5.95)
     배 = min(칸w / iw, 칸h / ih)
