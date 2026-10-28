@@ -783,6 +783,14 @@ nav.tabs button:active{opacity:.6}
   #gate .box.wide .gside ul{margin-bottom:0}
   #gate .box.wide .gside h2{font-size:1.2rem}
 }
+
+/* 로그인 화면의 DNA Labs 는 홈페이지 링크입니다 — 글자 모양은 그대로 둡니다 */
+#gate a.mark{text-decoration:none;color:inherit;-webkit-tap-highlight-color:transparent}
+#gate a.mark:active{opacity:.6}
+
+/* 위쪽 로고 = 이 앱의 첫 화면으로. Re:Bind·Re:Store 와 같은 규칙입니다. */
+button.brand{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button.brand:active{opacity:.55}
 </style>
 </head>
 <body>
@@ -790,7 +798,8 @@ nav.tabs button:active{opacity:.6}
 <div id="gate" hidden>
   <div class="box wide">
    <div class="gleft">
-    <div class="mark"><i class="logo" role="img" aria-label="DNA Labs"></i><span>DNA <b>Labs</b></span></div>
+    <!-- 로그인 화면의 DNA Labs 는 회사 홈페이지로 갑니다. 네 앱이 같습니다. -->
+    <a class="mark" href="https://dnalabs.kr/" title="DNA Labs 홈페이지로"><i class="logo" role="img" aria-label="DNA Labs"></i><span>DNA <b>Labs</b></span></a>
 
     <!-- 어느 서비스로 들어갈지. 누르면 고르기만 하고 넘어가지는 않습니다 —
          비밀번호를 엉뚱한 앱에 치는 일이 없어야 합니다.
@@ -889,10 +898,10 @@ nav.tabs button:active{opacity:.6}
 
 <div class="appbar" id="appbar">
   <div class="in">
-    <div class="brand">
+    <button class="brand" id="homeBtn" type="button" aria-label="처음 화면으로">
       <i class="logo" role="img" aria-label="DNA Labs"></i>
       <span class="wordmark">Re<em>:</em>Call</span>
-    </div>
+    </button>
     <div class="sp"></div>
     <div class="svcsw" id="svcSw" hidden>
         <button class="svcsw-b" id="svcSwB" type="button" aria-haspopup="true" aria-expanded="false" aria-label="서비스 바꾸기">
@@ -5184,6 +5193,14 @@ function go(p){
   window.scrollTo(0,0);
 }
 $('t-list').addEventListener('click',()=>go('list'));
+/* 위쪽 로고 — 열린 창과 고객 상세를 닫고 고객 목록 맨 위로.
+   Re:Bind·Re:Store 의 로고와 같은 규칙입니다. 네 앱에서 로고가 하는 일이 같아야 합니다. */
+$('homeBtn').addEventListener('click',()=>{
+  try{ closeAllSheets() }catch(e){}
+  try{ if(!$('privacyPage').hidden) closePrivacy() }catch(e){}
+  if(curUid) closeDetail();
+  go('list');
+});
 $('t-new').addEventListener('click',()=>go('new'));
 $('t-team').addEventListener('click',()=>go('team'));
 $('t-set').addEventListener('click',()=>go('set'));

@@ -552,3 +552,6 @@ span[data-todo]{
 .ptab.svcprice td{line-height:1.35}
 .ptab.svcprice td .addon{display:block;font-size:.78rem;font-weight:700;color:var(--blue);margin-top:2px}
 .ptab.svcprice td .none{color:var(--dim);font-weight:600}
+
+/* 지금 보고 있는 쪽의 메뉴는 진하게 */
+.navlinks a[aria-current]{color:var(--ink)}
