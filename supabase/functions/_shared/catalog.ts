@@ -4,7 +4,7 @@
 
 export const CATALOG = {
   "_": "Re:Service 요금과 업종 판정의 단일 출처입니다. 요금표는 services × tiers 입니다. plans 는 Re:Call 하나만 팔던 때의 표로, 가입 화면과 서버가 아직 이것으로 검증하고 있어 남겨 둡니다 — 통합 결제로 옮길 때 함께 정리합니다. 홈페이지·가입 화면·서버 검증이 모두 이 파일 하나를 봅니다. 값을 고치면 sync-catalog.sh 를 돌려 서버 쪽 사본을 다시 만드세요.",
-  "revision": "2026-09-28",
+  "revision": "2026-11-06",
   "tax": {
     "_": "이 파일의 모든 금액은 **공급가액**입니다. 부가가치세는 별도이고, 실제로 카드에서 빠져나가는 돈은 공급가액 + 부가세입니다. 화면에 '부가세 별도'라고만 적어 두고 공급가액만 긁으면 세금을 우리가 떠안게 됩니다 — 실제로 그렇게 돌고 있었습니다(2026-09-22 고침). 붙이는 셈은 catalog.js / catalog.ts 의 withVat() 하나뿐이어야 합니다.",
     "vatRate": 0.1,
@@ -120,7 +120,7 @@ export const CATALOG = {
       "storeMax": 10,
       "base": 49000,
       "addon": 19000,
-      "trialDays": 0,
+      "trialDays": 30,
       "level": "L2"
     },
     "s30": {
@@ -130,7 +130,7 @@ export const CATALOG = {
       "storeMax": 30,
       "base": 99000,
       "addon": 39000,
-      "trialDays": 0,
+      "trialDays": 30,
       "level": "L3"
     },
     "s50": {
@@ -140,7 +140,7 @@ export const CATALOG = {
       "storeMax": 50,
       "base": 249000,
       "addon": 99000,
-      "trialDays": 0,
+      "trialDays": 30,
       "level": "L4"
     },
     "sOver": {
@@ -173,7 +173,7 @@ export const CATALOG = {
       "seatMax": 5,
       "base": 49000,
       "addon": 19000,
-      "trialDays": 0,
+      "trialDays": 30,
       "level": "L2"
     },
     "t20": {
@@ -183,7 +183,7 @@ export const CATALOG = {
       "seatMax": 20,
       "base": 99000,
       "addon": 39000,
-      "trialDays": 0,
+      "trialDays": 30,
       "level": "L3"
     },
     "t49": {
@@ -193,7 +193,7 @@ export const CATALOG = {
       "seatMax": 49,
       "base": 249000,
       "addon": 99000,
-      "trialDays": 0,
+      "trialDays": 30,
       "level": "L4"
     },
     "ent": {
@@ -236,7 +236,7 @@ export const CATALOG = {
       "per": "company",
       "seatMin": 1,
       "seatMax": 5,
-      "trialDays": 0,
+      "trialDays": 30,
       "cardDailyLimit": 75,
       "cardMonthlyLimit": 600,
       "tagline": "팀이 막 생겼을 때",
@@ -256,7 +256,7 @@ export const CATALOG = {
       "per": "company",
       "seatMin": 6,
       "seatMax": 20,
-      "trialDays": 0,
+      "trialDays": 30,
       "cardDailyLimit": 75,
       "cardMonthlyLimit": 1250,
       "tagline": "영업팀이 굴러가기 시작할 때",
@@ -274,7 +274,7 @@ export const CATALOG = {
       "per": "company",
       "seatMin": 21,
       "seatMax": 49,
-      "trialDays": 0,
+      "trialDays": 30,
       "cardDailyLimit": 100,
       "cardMonthlyLimit": 3000,
       "tagline": "부서가 나뉘어 있을 때",

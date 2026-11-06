@@ -255,6 +255,8 @@ Deno.serve(async (req) => {
       if (!quote && !isCurrent) {
         const 공급 = endsTrial
           ? 월                                             // 체험 종료 → 새 기간 전액
+          : sub.status === 'trialing'
+            ? 0                                            // 무료 기간에는 올려도 걷지 않습니다
           : direction === 'up'
             ? prorate(월 - curPrice, sub.period_start, sub.period_end)
             : 0;                                           // 하위는 지금 받지 않습니다
@@ -427,9 +429,13 @@ Deno.serve(async (req) => {
 
     /* 상위 요금제 — 즉시 바꾸고 남은 기간만큼의 차액을 받습니다.
        체험 중에 유료 요금제로 옮기는 경우에는 체험이 끝나고 전액을 받습니다. */
+    /* 2026-11: 모든 요금제가 첫 달 무료가 되었습니다. 무료 기간에 올리면 요금제만 바꾸고
+       걷지 않습니다. 첫 결제는 무료 기간이 끝나는 날 새 요금으로 일꾼이 걷습니다. */
     const amount = endsTrial
       ? 새값
-      : prorate(새값 - curPrice, sub.period_start, sub.period_end);
+      : sub.status === 'trialing'
+        ? 0
+        : prorate(새값 - curPrice, sub.period_start, sub.period_end);
 
     const { data: bm } = await admin.from('billing_methods')
       .select('billing_key, customer_key').eq('company_id', me.company_id).maybeSingle();
