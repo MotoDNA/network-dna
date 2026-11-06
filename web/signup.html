@@ -372,7 +372,7 @@ function stepInfo(){
 
     <div class="field">
       <label for="f-company">${solo ? '상호 또는 활동명' : '회사 이름'}</label>
-      <input class="inp" id="f-company" value="${esc(S.company)}" placeholder="${solo ? '예: 최환준 컨설팅' : '예: 액티바코리아'}" autocomplete="organization">
+      <input class="inp" id="f-company" value="${esc(S.company)}" placeholder="예: 디엔에이랩스" autocomplete="organization">
     </div>
     <div class="field">
       <label for="f-name">담당자 이름</label>
@@ -380,12 +380,12 @@ function stepInfo(){
     </div>
     <div class="field">
       <label for="f-email">이메일</label>
-      <input class="inp" id="f-email" type="email" value="${esc(S.email)}" placeholder="예: hello@company.co.kr" autocomplete="email">
+      <input class="inp" id="f-email" type="email" value="${esc(S.email)}" placeholder="예: hello@dnalabs.kr" autocomplete="email">
       <p class="hint">청구서와 서비스 안내를 보내는 주소입니다.</p>
     </div>
     <div class="field">
       <label for="f-phone">연락처</label>
-      <input class="inp" id="f-phone" type="tel" inputmode="tel" value="${esc(S.phone)}" placeholder="예: 010-1234-5678" autocomplete="tel">
+      <input class="inp" id="f-phone" type="tel" inputmode="tel" value="${esc(S.phone)}" placeholder="예: 010-6451-5807" autocomplete="tel">
     </div>
     <p class="err" id="inferr" hidden></p>
     <button class="btn btn-p btn-full" style="margin-top:8px" id="next3">다음</button>`;
