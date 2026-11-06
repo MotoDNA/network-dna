@@ -321,6 +321,14 @@ Catalog.load().then(c => {
   for (const g of ['A', 'B', 'C']) {
     document.getElementById('ind' + g).innerHTML = ind[g].map(i => row(g, i)).join('');
   }
+
+  /* 브라우저는 #pricing 자리를 목록을 그리기 전에 잡습니다. 그 뒤 업종 목록이 3,000px 쯤
+     늘어나 요금표를 밀어내서, 「요금제」로 들어온 분이 업종 목록 한가운데 떨어졌습니다.
+     다 그린 뒤 그 자리로 다시 갑니다. */
+  if (location.hash) {
+    const 자리 = document.getElementById(location.hash.slice(1));
+    if (자리) 자리.scrollIntoView({ behavior: 'instant', block: 'start' });
+  }
 });
 
 function esc(s){
