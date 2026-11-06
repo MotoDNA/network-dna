@@ -92,7 +92,11 @@ const PG = (() => {
      실제로 돈이 빠져나가지는 않습니다. 카드사 심사는 이 상태로 봅니다.
      ⚠ 계약이 끝나 우리 키(live_ck_…)를 받으면 여기만 바꿉니다.
         시크릿 키(test_sk_ / live_sk_)는 절대 여기 두지 않습니다 — 서버 환경변수에만. */
-  const TOSS_CLIENT_KEY = 'test_ck_DLJOpm5Qrl1gD62G2vLd8PNdxbWn';   // 우리 상점 테스트 키 (2026-10-25)
+  const TOSS_CLIENT_KEY = 'live_ck_LkKEypNArWpNNAEKjK1A8lmeaxYG';   // 라이브 — 상점 bill_dnalavlu8 (2026-11-06)
+  /* ⚠ 키는 상점아이디(MID)마다 다릅니다. 반드시 bill_dnalavlu8 의 「API 개별 연동 키」를 씁니다.
+       다른 상점의 라이브 키(live_ck_vZnj…)를 넣으면 계약이 멀쩡해도
+       「자동 결제(빌링) 계약이 안 되어 있습니다」 로 카드창이 안 열립니다(2026-10 겪었습니다).
+       이 키와 서버의 PG_SECRET_KEY 는 같은 상점·같은 환경(라이브)의 짝이어야 합니다. */
   /* ⚠ 2026-10: 예전에 쓰던 '문서 테스트 키'(test_ck_D5Ge…)가 UNAUTHORIZED_KEY 로 막혔습니다.
        카드창이 아무에게도 안 뜨고 "알 수 없는 에러(UNKNOWN)" 만 났습니다.
        지금은 토스 개발자센터의 **우리 상점** API 개별 연동 키(테스트)를 씁니다.
