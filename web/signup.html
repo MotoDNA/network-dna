@@ -675,7 +675,14 @@ async function createAccount(){
   }
 
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.message || `가입 처리에 실패했습니다 (${res.status})`);
+  if (!res.ok) {
+    /* 서버까지 닿아서 받은 실패입니다. authKey 는 토스가 한 번만 받아 주므로, 들고 있다가
+       다시 보내면 「존재하지 않는 정보」 만 납니다. 버려서 다음 누름에 카드창을 새로 엽니다.
+       (통신이 끊긴 경우는 위에서 걸러집니다 — 그때는 카드를 다시 넣지 않게 들고 있습니다) */
+    S.authKey = null;
+    try { sessionStorage.removeItem('signup.S') } catch (e) {}
+    throw new Error(data.message || `가입 처리에 실패했습니다 (${res.status})`);
+  }
   return data;
 }
 
