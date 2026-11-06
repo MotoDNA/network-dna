@@ -329,7 +329,9 @@ function drawSeats(){
         <p class="err" id="seaterr" hidden></p>
       </div>
       <div class="note info">
-        <p><b>매월 ${낼돈(p.price)}</b> (공급가 ${won(p.price)}원 + 부가세) · 무료 기간 없음</p>
+        <p><b>첫 ${p.trialDays}일 무료입니다.</b> 결제 수단은 지금 등록하지만 무료 기간에는 청구되지 않고,
+        기간이 끝나기 전에 해지하시면 한 푼도 나가지 않습니다.</p>
+        <p>이후 <b>매월 ${낼돈(p.price)}</b> (공급가 ${won(p.price)}원 + 부가세)</p>
         <p>Business 요금제는 회사 단위 정액입니다. 인원이 늘어도 한도 안에서는 같은 금액입니다.</p>
       </div>
       <button class="btn btn-p btn-full" style="margin-top:16px" id="next2">다음</button>`;
