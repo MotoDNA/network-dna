@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Re:Call 회원가입</title>
+<title>Re:Service 가입 — DNA Labs</title>
 <link rel="canonical" href="https://dnalabs.kr/signup">
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
@@ -35,6 +35,17 @@
   .indpick .nm{font-size:.92rem;font-weight:600;flex:1}
 
   /* 요금제 고르기 */
+  .svcpick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 22px}
+  .svcpick button{text-align:left;background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:12px 14px;font:inherit;color:inherit;cursor:pointer;display:flex;gap:10px;align-items:flex-start}
+  .svcpick button:hover{border-color:var(--dim)}
+  .svcpick button.sel{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue)}
+  .svcpick .tick{flex:none;width:18px;height:18px;margin-top:2px;border-radius:5px;border:1.5px solid var(--dim);
+    display:grid;place-items:center;color:#fff;font-size:12px;font-weight:800;line-height:1}
+  .svcpick button.sel .tick{background:var(--blue);border-color:var(--blue)}
+  .svcpick b{display:block;font-size:.92rem}
+  .svcpick small{display:block;font-size:.76rem;color:var(--mut);margin-top:2px;line-height:1.35}
+  .pr .no{font-size:.78rem;font-weight:600;color:var(--mut)}
   .planpick{display:grid;gap:10px}
   .planpick button{
     display:block;text-align:left;border:1px solid var(--line);
@@ -90,7 +101,7 @@
 <nav class="nav">
   <div class="wrap">
     <a href="index.html" class="logo">DNA <b>Labs</b></a>
-    <div class="navlinks"><a href="recall.html">Re:Call 소개</a></div>
+    <div class="navlinks"><a href="services.html">서비스 소개</a></div>
   </div>
 </nav>
 
@@ -183,6 +194,7 @@ const S = {                         // 모아 둔 답
   industryId: null, grade: null, conditionOk: false,
   planKey: null, seats: null,
   company: '', name: '', email: '', phone: '',
+  apps: ['recall'],                  // 가입하며 고른 서비스 (2026-11)
   agreed: {}, billingKey: null, result: null
 };
 
@@ -209,7 +221,7 @@ function stepIndustry(){
   return `
     <h2>어떤 일을 하시나요</h2>
     <p class="sub">
-      업종에 따라 Re:Call 을 쓰실 수 있는지가 갈립니다.
+      업종에 따라 Re:Service 를 쓰실 수 있는지가 갈립니다.
       가장 가까운 것 하나를 골라 주세요.
     </p>
     <div class="indpick" id="indpick">
@@ -220,7 +232,7 @@ function stepIndustry(){
         </button>`).join('')}
     </div>
     <p class="hint">
-      목록에 없는 업종이면 <a href="mailto:hello@dnalabs.kr?subject=Re:Call 업종 문의" style="color:var(--blue);font-weight:600">문의해 주세요</a>.
+      목록에 없는 업종이면 <a href="mailto:hello@dnalabs.kr?subject=Re:Service 업종 문의" style="color:var(--blue);font-weight:600">문의해 주세요</a>.
       쓰실 수 있는지 확인해 드립니다.
     </p>
     <div id="verdict"></div>`;
@@ -235,7 +247,7 @@ function drawVerdict(){
   if (i.grade === 'C') {
     box.innerHTML = `
       <div class="note stop" style="margin-top:22px">
-        <p><b>${esc(i.name)}</b> 은 Re:Call 을 쓰실 수 없습니다.</p>
+        <p><b>${esc(i.name)}</b> 은 Re:Service 를 쓰실 수 없습니다.</p>
         <p>${esc(i.why)}</p>
         ${i.law ? `<p style="font-size:.82rem;opacity:.85">근거 · ${esc(i.law)}</p>` : ''}
         <p>${esc(C.industries.refusalNote)}</p>
@@ -253,7 +265,7 @@ function drawVerdict(){
       </div>
       <div class="agree" style="margin-top:14px">
         <label><input type="checkbox" id="condok" ${S.conditionOk ? 'checked' : ''}>
-          <span>위 조건을 확인했고, 해당 정보를 Re:Call 에 넣지 않겠습니다.</span></label>
+          <span>위 조건을 확인했고, 해당 정보를 Re:Service 에 넣지 않겠습니다.</span></label>
       </div>
       <button class="btn btn-p btn-full" style="margin-top:16px" id="next1" ${S.conditionOk ? '' : 'disabled'}>다음</button>`;
     $('condok').onchange = e => { S.conditionOk = e.target.checked; drawVerdict() };
@@ -278,29 +290,47 @@ function drawVerdict(){
    ⚠ 붙이는 셈은 Catalog.withVat 하나입니다 (서버도 같은 셈을 씁니다). */
 const 낼돈 = (공급) => won(Catalog.withVat(C, 공급)) + '원';
 
+/* 금액은 「어느 구간인가 × 무엇을 고르셨나」 로 정해집니다. 서버와 같은 셈입니다
+   (Catalog.monthlyForApps ↔ _shared/catalog.ts). 요금제의 price 는 Re:Call 하나일 때의
+   값이라 그대로 쓰면 다른 서비스를 고른 분께 틀린 금액을 보여 드리게 됩니다.
+   null 이면 그 구간에서 팔지 않는 조합입니다 (Re:Store 의 1명 줄). */
+const 구간이름 = { personal: 'solo', business5: 't5', business20: 't20', business49: 't49' };
+const 월요금 = (p) => {
+  const k = 구간이름[p.key];
+  return k ? Catalog.monthlyForApps(C, k, S.apps) : null;
+};
+
 function stepPlan(){
   const plans = Catalog.planList(C);
   return `
     <a class="back" id="back">← 업종 다시 고르기</a>
-    <h2>몇 분이 쓰시나요</h2>
+    <h2>무엇을, 몇 분이 쓰시나요</h2>
     <p class="sub">
-      혼자 쓰시면 Personal, 회사에서 여럿이 쓰시면 Business 입니다.
-      나중에 인원이 늘면 상위 요금제로 바꾸실 수 있습니다.
+      쓰실 서비스를 고르고 인원을 고르시면 월 요금이 정해집니다.
+      서비스와 인원은 가입 뒤에도 바꾸실 수 있습니다.
     </p>
+    <div class="svcpick" id="svcpick">
+      ${Catalog.serviceList(C).map(v => `
+        <button type="button" data-app="${v.key}" class="${S.apps.includes(v.key) ? 'sel' : ''}" aria-pressed="${S.apps.includes(v.key)}">
+          <span class="tick">${S.apps.includes(v.key) ? '✓' : ''}</span>
+          <span><b>${esc(v.name)}</b><small>${esc(v.label)}</small></span>
+        </button>`).join('')}
+    </div>
+    <p class="err" id="svcerr" hidden>서비스를 하나 이상 골라 주세요.</p>
     <div class="planpick" id="planpick">
       ${plans.map(p => `
         <button data-key="${p.key}" class="${S.planKey === p.key ? 'sel' : ''}"
-                ${p.per === 'quote' ? 'disabled' : ''}>
+                ${p.per === 'quote' || (S.apps.length && 월요금(p) === null) ? 'disabled' : ''}>
           <div class="top">
             <span class="nm">${esc(p.name)}</span>
             <span class="lb">${esc(p.label)}</span>
-            <span class="pr">${p.price === null ? '별도 협의' : won(p.price) + '원'}</span>
+            <span class="pr">${p.per === 'quote' ? '별도 협의' : !S.apps.length ? '—' : 월요금(p) === null ? '<span class="no">이 조합은 없습니다</span>' : won(월요금(p)) + '원'}</span>
           </div>
           <p class="bl">${esc(p.tagline)}${p.trialDays ? ` · 첫 ${p.trialDays}일 무료` : ''}</p>
         </button>`).join('')}
     </div>
     <p class="hint">
-      50명 이상은 <a href="mailto:hello@dnalabs.kr?subject=Re:Call 도입 문의 (50명 이상)" style="color:var(--blue);font-weight:600">따로 문의</a>해 주세요.
+      50명 이상은 <a href="mailto:hello@dnalabs.kr?subject=Re:Service 도입 문의 (50명 이상)" style="color:var(--blue);font-weight:600">따로 문의</a>해 주세요.
     </p>
     <div id="seatbox"></div>`;
 }
@@ -316,7 +346,7 @@ function drawSeats(){
       <div class="note info" style="margin-top:20px">
         <p><b>첫 ${p.trialDays}일 무료입니다.</b> 결제 수단은 지금 등록하지만
         무료 기간에는 청구되지 않고, 기간이 끝나기 전에 해지하시면 한 푼도 나가지 않습니다.</p>
-        <p>이후 매월 ${낼돈(p.price)} (공급가 ${won(p.price)}원 + 부가세)</p>
+        <p>이후 매월 ${낼돈(월요금(p))} (공급가 ${won(월요금(p))}원 + 부가세)</p>
       </div>
       <button class="btn btn-p btn-full" style="margin-top:16px" id="next2">다음</button>`;
   } else {
@@ -331,8 +361,9 @@ function drawSeats(){
       <div class="note info">
         <p><b>첫 ${p.trialDays}일 무료입니다.</b> 결제 수단은 지금 등록하지만 무료 기간에는 청구되지 않고,
         기간이 끝나기 전에 해지하시면 한 푼도 나가지 않습니다.</p>
-        <p>이후 <b>매월 ${낼돈(p.price)}</b> (공급가 ${won(p.price)}원 + 부가세)</p>
+        <p>이후 <b>매월 ${낼돈(월요금(p))}</b> (공급가 ${won(월요금(p))}원 + 부가세)</p>
         <p>Business 요금제는 회사 단위 정액입니다. 인원이 늘어도 한도 안에서는 같은 금액입니다.</p>
+        ${S.apps.includes('restore') ? '<p>Re:Store 를 쓰시면 점포 수로도 고릅니다. 점포 10곳까지 Business 5, 30곳까지 Business 20, 50곳까지 Business 49 입니다.</p>' : ''}
       </div>
       <button class="btn btn-p btn-full" style="margin-top:16px" id="next2">다음</button>`;
 
@@ -340,6 +371,7 @@ function drawSeats(){
   }
 
   $('next2').onclick = () => {
+    if (!S.apps.length) { $('svcerr').hidden = false; return }
     if (p.key !== 'personal') {
       const err = $('seaterr');
       if (!Catalog.seatsFit(p, S.seats)) {
@@ -347,7 +379,7 @@ function drawSeats(){
         err.textContent = !S.seats
           ? '직원 수를 넣어 주세요.'
           : better
-            ? `${S.seats}명은 ${better.name} (${won(better.price)}원) 에 해당합니다. 그쪽을 골라 주세요.`
+            ? `${S.seats}명은 ${better.name} 에 해당합니다. 그쪽을 골라 주세요.`
             : `${S.seats}명은 별도 협의가 필요합니다. 문의해 주세요.`;
         err.hidden = false;
         $('seats').classList.add('bad');
@@ -485,9 +517,10 @@ function stepPay(){
     </p>
 
     <div class="issued">
+      <div><b>서비스</b><span style="font-size:.95rem">${esc(Catalog.serviceList(C).filter(v => S.apps.includes(v.key)).map(v => v.name).join(' · '))}</span><span></span></div>
       <div><b>요금제</b><span style="font-size:.95rem">${esc(p.name)}</span><span></span></div>
       <div><b>인원</b><span style="font-size:.95rem">${S.seats}명</span><span></span></div>
-      <div><b>월 요금</b><span style="font-size:.95rem">${낼돈(p.price)} <span style="font-weight:600;color:var(--mut);font-size:.85rem">(공급가 ${won(p.price)}원 + 부가세)</span></span><span></span></div>
+      <div><b>월 요금</b><span style="font-size:.95rem">${낼돈(월요금(p))} <span style="font-weight:600;color:var(--mut);font-size:.85rem">(공급가 ${won(월요금(p))}원 + 부가세)</span></span><span></span></div>
       <div><b>첫 청구</b><span style="font-size:.95rem">${free ? `${p.trialDays}일 뒤` : '오늘'}</span><span></span></div>
     </div>
 
@@ -752,6 +785,7 @@ function 서버부르기(단순){
     body: JSON.stringify({
       industryId: S.industryId,
       planKey: S.planKey,
+      apps: S.apps,
       seats: S.seats,
       company: S.company,
       name: S.name,
@@ -764,6 +798,12 @@ function 서버부르기(단순){
     })
   });
 }
+
+/* 가입을 마치고 처음 여는 서비스. 고르신 것 중 첫째입니다. */
+const 첫문 = () => {
+  const v = Catalog.serviceList(C).filter(x => S.apps.includes(x.key));
+  return v[0] || { path: '/reservice', name: 'Re:Service' };
+};
 
 /* ═════════ 6. 완료 ═════════ */
 function stepDone(){
@@ -795,7 +835,7 @@ function stepDone(){
         그 전에 해지하시면 요금이 청구되지 않습니다.</p>
       </div>` : ''}
 
-    <a href="https://recall.dnalabs.kr" class="btn btn-p btn-full btn-lg" style="margin-top:18px">Re:Call 열기</a>
+    <a href="${첫문().path}" class="btn btn-p btn-full btn-lg" style="margin-top:18px">${esc(첫문().name)} 열기</a>
     <p class="hint" style="margin-top:12px">
       화면을 닫기 전에 위 세 가지를 꼭 옮겨 적어 두세요.
     </p>`;
@@ -840,6 +880,17 @@ function wireIndustry(){
 
 function wirePlan(){
   wireBack(0);
+  $('svcpick').onclick = e => {
+    const b = e.target.closest('button[data-app]');
+    if (!b) return;
+    const a = b.dataset.app;
+    S.apps = S.apps.includes(a) ? S.apps.filter(x => x !== a) : [...S.apps, a];
+    /* 고른 조합에 없는 요금제를 들고 있으면 풉니다 (Re:Store 를 고르면 1명 줄이 없습니다) */
+    if (S.planKey && S.apps.length && 월요금(Catalog.plan(C, S.planKey)) === null) { S.planKey = null; S.seats = null }
+    const y = window.scrollY;
+    render();
+    window.scrollTo(0, y);
+  };
   $('planpick').onclick = e => {
     const b = e.target.closest('button[data-key]');
     if (!b) return;
@@ -888,6 +939,10 @@ Catalog.load().then(c => {
   /* 요금제 페이지에서 넘어온 경우 그것을 미리 골라 둡니다 */
   const want = new URLSearchParams(location.search).get('plan');
   if (want && Catalog.plan(C, want)) S.planKey = want;
+
+  /* 서비스 소개에서 넘어오면 그 서비스를 골라 둡니다 (?service=restore) */
+  const 고른서비스 = new URLSearchParams(location.search).get('service');
+  if (고른서비스 && Catalog.serviceList(C).some(v => v.key === 고른서비스)) S.apps = [고른서비스];
 
   render();
 }).catch(e => {

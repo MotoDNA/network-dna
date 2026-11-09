@@ -188,7 +188,7 @@ Deno.serve(async (req) => {
   const grade = gradeOf(industryId);
   if (!grade) return await fail('업종을 다시 골라 주세요.');
   if (grade === 'C') {
-    return await fail('선택하신 업종은 Re:Call 을 쓰실 수 없습니다. 법이 그 정보의 외부 반출을 막고 있습니다.', 403);
+    return await fail('선택하신 업종은 Re:Service 를 쓰실 수 없습니다. 법이 그 정보의 외부 반출을 막고 있습니다.', 403);
   }
 
   // ── 2. 요금제와 인원 ──
@@ -197,6 +197,19 @@ Deno.serve(async (req) => {
   if (p.per === 'quote') return await fail('50명 이상은 따로 문의해 주세요.');
   if (!seatsFit(p, seats)) {
     return await fail(`${p.name} 는 ${p.seatMin}명부터 ${p.seatMax}명까지입니다.`);
+  }
+
+  /* ── 2-2. 고른 서비스 ──
+     화면이 보낸 목록을 요금표에 있는 것만 남겨 다시 셉니다. 없으면 Re:Call 입니다(옛 화면).
+     그 구간에서 팔지 않는 조합(Re:Store 의 1명 줄)은 여기서 막습니다 — 카드를 받기 전에요. */
+  const 아는서비스 = Object.keys(CATALOG.services).filter((k) => k !== '_');
+  const 보낸목록 = Array.isArray(b.apps) ? (b.apps as unknown[]).map(String) : ['recall'];
+  const 산것 = [...new Set(보낸목록)].filter((a) => 아는서비스.includes(a));
+  if (!산것.length) return await fail('쓰실 서비스를 하나 이상 골라 주세요.');
+  const 구간 = tierFromPlan(p.key);
+  const 월요금 = monthlyForApps(구간?.key ?? null, p.key, 산것);
+  if (월요금 === null) {
+    return await fail(`${p.name} 요금제에서는 고르신 서비스를 함께 쓰실 수 없습니다. 인원 구간을 올려 주세요.`);
   }
 
   // ── 3. 적어 주신 것 ──
@@ -241,9 +254,9 @@ Deno.serve(async (req) => {
         화면이 아니라 데이터베이스가 막습니다 — company_for_app(app) 이
         정책마다 들어 있습니다. 실제로 이걸 빼먹어서, 가입은 끝났는데
         로그인하면 빈손인 회사가 하나 생겼습니다.
-        이 화면은 Re:Call 가입입니다. 다른 서비스는 나중에 더합니다. */
+        고르신 서비스만 엽니다. 다른 서비스는 나중에 더하실 수 있습니다. */
   const { data: comp, error: e1 } = await admin.from('companies').insert({
-    code, name: company, apps: ['recall'],
+    code, name: company, apps: 산것,
     industry_id: industryId, industry_grade: grade,
     contact_name: name, contact_email: email, contact_phone: phone,
   }).select('id').single();
@@ -278,14 +291,8 @@ Deno.serve(async (req) => {
   // 구독을 프로필보다 먼저 넣습니다.
   // 좌석 제한 트리거가 subscriptions 를 보기 때문에, 순서가 바뀌면
   // 첫 관리자 계정이 "구독 없음"으로 취급됩니다.
-  /* 금액은 요금표(catalog.json)로 셉니다 — base + addon × (서비스 개수 - 1).
-     지금은 Re:Call 하나만 파니 개수는 1 이고, 그래서 값은 plans 와 같습니다.
-     그래도 굳이 요금표로 세는 이유는, 서비스를 더 파는 날 이 줄을 안 고쳐도
-     되게 하려는 것입니다. 셈이 두 군데 있으면 언젠가 어긋납니다. */
-  const 구간 = tierFromPlan(p.key);
-  const 산것 = ['recall'];                    // 이 화면은 Re:Call 가입입니다
+  /* 금액은 요금표(catalog.json)로 위에서 이미 셌습니다. 셈이 두 군데 있으면 언젠가 어긋납니다. */
   const 서비스수 = 산것.length;
-  const 월요금 = monthlyForApps(구간?.key ?? null, p.key, 산것) ?? p.price;
 
   const { error: e3 } = await admin.from('subscriptions').insert({
     company_id: comp.id,
