@@ -213,7 +213,7 @@ Deno.serve(async (req) => {
         card: 카드정보, owed: null, isAdmin: 관리자,
       });
     }
-    return json({ ok: false, error: '이 회사에는 아직 요금제가 연결돼 있지 않습니다. 010-6451-5807 로 알려 주시면 연결해 드립니다.' }, 404);
+    return json({ ok: false, error: '이 회사에는 아직 요금제가 연결돼 있지 않습니다. 010-4642-3477 로 알려 주시면 연결해 드립니다.' }, 404);
   }
 
   const { count: usedCount } = await admin.from('profiles')
@@ -358,7 +358,7 @@ Deno.serve(async (req) => {
     }, { onConflict: 'company_id' });
     if (e1) {
       console.error('[카드] 저장 실패', me.company_id, e1.code, e1.message);
-      return json({ ok: false, error: '카드는 확인됐는데 저장하지 못했습니다. 010-6451-5807 로 알려 주세요.' }, 500);
+      return json({ ok: false, error: '카드는 확인됐는데 저장하지 못했습니다. 010-4642-3477 로 알려 주세요.' }, 500);
     }
 
     /* 밀린 결제가 있으면 다음 차례(매일 새벽 4시)에 새 카드로 다시 해 봅니다.

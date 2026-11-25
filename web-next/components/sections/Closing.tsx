@@ -18,7 +18,7 @@ export default function Closing() {
         <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2">
           <AskButton />
           <WordShiftButton href="mailto:hello@dnalabs.kr?subject=프로젝트 문의">hello@dnalabs.kr</WordShiftButton>
-          <WordShiftButton href="tel:010-6451-5807">010-6451-5807</WordShiftButton>{/* 교체: 대표번호 확인 (5807 / 4807) */}
+          <WordShiftButton href="tel:010-4642-3477">010-4642-3477</WordShiftButton>
         </div>
         <div className="mt-20 flex flex-wrap items-end justify-between gap-6 border-t border-white/10 pt-8">
           <Logo className="h-7 text-white" />

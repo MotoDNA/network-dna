@@ -43,7 +43,7 @@ export function ContactPanelProvider({ children }: { children: React.ReactNode }
         <div ref={panel} role="dialog" aria-modal="true" aria-label="문의하기" data-lenis-prevent className={`absolute right-0 top-0 h-full w-full max-w-[34rem] overflow-y-auto overscroll-contain bg-paper p-6 text-ink shadow-2xl transition-transform duration-500 ease-out md:p-10 ${shown ? "translate-x-0" : "translate-x-full"}`} {...(shown ? {} : { inert: true })}>
           <div className="mb-8 flex items-center justify-between"><p className="label text-ink3">문의하기</p><button type="button" onClick={close} className="label min-h-[44px] px-2 text-ink">닫기 ✕</button></div>
           {state === "done" ? (
-            <div><h2 className="mb-3 text-[28px] font-extrabold">보냈습니다</h2><p className="leading-[1.7] text-ink2">영업일 기준 하루 안에 답을 드립니다. 급하시면 010-6451-5807 로 전화 주세요.</p></div>
+            <div><h2 className="mb-3 text-[28px] font-extrabold">보냈습니다</h2><p className="leading-[1.7] text-ink2">영업일 기준 하루 안에 답을 드립니다. 급하시면 010-4642-3477 로 전화 주세요.</p></div>
           ) : (
             <form onSubmit={submit} noValidate className="space-y-4">
               <h2 className="text-[28px] font-extrabold leading-tight tracking-[-0.02em]">만들고 싶은 것을<br />알려 주세요</h2>
