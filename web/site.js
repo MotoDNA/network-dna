@@ -76,7 +76,7 @@
         form.innerHTML =
           '<div class="done"><h3>보냈습니다</h3>' +
           '<p>영업일 기준 하루 안에 답을 드립니다.<br>' +
-          '급하시면 <b>010-6451-5807</b> 로 전화 주세요.</p></div>';
+          '급하시면 <b>010-4642-3477</b> 로 전화 주세요.</p></div>';
       }).catch(function (err) {
         말.className = 'msg bad';
         말.textContent = err.message || '보내지 못했습니다. hello@dnalabs.kr 로 보내 주세요.';
