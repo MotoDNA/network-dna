@@ -3,56 +3,206 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DNA Labs — 리뉴얼 작업 중입니다</title>
-<meta name="description" content="디엔에이랩스 홈페이지를 새로 만들고 있습니다. 문의는 hello@dnalabs.kr 또는 010-4642-3477 로 연락 주세요.">
-<meta property="og:title" content="DNA Labs — 리뉴얼 작업 중입니다">
-<meta property="og:description" content="홈페이지를 새로 만들고 있습니다. 문의는 메일이나 전화로 연락 주세요.">
+<title>디엔에이랩스 — 웹사이트 · 앱 · 기업용 웹서비스 개발</title>
+<meta name="description" content="디엔에이랩스는 웹사이트, 앱, 기업용 웹서비스를 기획하고 만듭니다. 업체의 입장과 업황을 먼저 파악하고, 최상의 작업 결과물을 만듭니다.">
+<meta property="og:title" content="디엔에이랩스 — 웹사이트 · 앱 · 기업용 웹서비스 개발">
+<meta property="og:description" content="업체의 입장과 업황을 먼저 파악하고, 최상의 작업 결과물을 만듭니다.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://dnalabs.kr/og-dnalabs.png">
+<meta property="og:url" content="https://dnalabs.kr/">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<style>
-@font-face{font-family:"Pretendard Variable";src:url("fonts/PretendardVariable.woff2") format("woff2-variations");font-weight:45 920;font-display:swap}
-*{box-sizing:border-box}
-html,body{height:100%}
-body{margin:0;background:#0B0D10;color:#F2F4F6;font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;word-break:keep-all;overflow-wrap:break-word;-webkit-font-smoothing:antialiased}
-.page{min-height:100%;display:flex;flex-direction:column;justify-content:space-between;padding:28px 20px;max-width:1200px;margin:0 auto}
-@media(min-width:768px){.page{padding:40px 48px}}
-.logo{width:168px;height:auto;display:block}
-.d{fill:#F2F4F6}
-.d.g{fill:#3182F6;animation:blink 1.8s ease-in-out infinite;animation-delay:calc(var(--i)*40ms)}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
-.state{display:inline-flex;align-items:center;gap:10px;font-size:14px;letter-spacing:.14em;color:#8B95A1;margin:0 0 22px}
-.state i{width:8px;height:8px;border-radius:50%;background:#3182F6;animation:blink 1.8s ease-in-out infinite}
-h1{margin:0;font-size:clamp(36px,7vw,84px);font-weight:800;line-height:1.12;letter-spacing:-.02em}
-.lead{margin:26px 0 0;max-width:520px;font-size:clamp(16px,1.6vw,19px);line-height:1.7;color:#B0B8C1}
-.links{display:flex;flex-wrap:wrap;gap:12px 28px;margin-top:40px}
-.links a{color:#F2F4F6;text-decoration:none;font-size:18px;font-weight:600;padding:12px 0;border-bottom:1px solid #4E5968;transition:border-color .2s,color .2s}
-.links a:hover,.links a:focus-visible{border-color:#3182F6;color:#fff}
-.links a span{display:block;font-size:13px;font-weight:500;color:#8B95A1;letter-spacing:.08em;margin-bottom:4px}
-footer{display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between;font-size:13px;line-height:1.7;color:#8B95A1}
-footer a{color:#B0B8C1;text-underline-offset:3px}
-main{padding:64px 0}
-@media(prefers-reduced-motion:reduce){.d.g,.state i{animation:none}}
-</style>
+<link rel="stylesheet" href="home.css">
 </head>
 <body>
-<div class="page">
-<header><svg class="logo" role="img" aria-label="DNA LABS" viewBox="-2 -2 586 100"><circle cx="6" cy="6" r="5.2" class="d" style="--i:0"/><circle cx="20" cy="6" r="5.2" class="d" style="--i:1"/><circle cx="34" cy="6" r="5.2" class="d" style="--i:2"/><circle cx="48" cy="6" r="5.2" class="d" style="--i:3"/><circle cx="6" cy="20" r="5.2" class="d" style="--i:4"/><circle cx="62" cy="20" r="5.2" class="d" style="--i:5"/><circle cx="6" cy="34" r="5.2" class="d" style="--i:6"/><circle cx="62" cy="34" r="5.2" class="d" style="--i:7"/><circle cx="6" cy="48" r="5.2" class="d" style="--i:8"/><circle cx="62" cy="48" r="5.2" class="d" style="--i:9"/><circle cx="6" cy="62" r="5.2" class="d" style="--i:10"/><circle cx="62" cy="62" r="5.2" class="d" style="--i:11"/><circle cx="6" cy="76" r="5.2" class="d" style="--i:12"/><circle cx="62" cy="76" r="5.2" class="d" style="--i:13"/><circle cx="6" cy="90" r="5.2" class="d" style="--i:14"/><circle cx="20" cy="90" r="5.2" class="d" style="--i:15"/><circle cx="34" cy="90" r="5.2" class="d" style="--i:16"/><circle cx="48" cy="90" r="5.2" class="d" style="--i:17"/><circle cx="92" cy="6" r="5.2" class="d" style="--i:18"/><circle cx="148" cy="6" r="5.2" class="d" style="--i:19"/><circle cx="92" cy="20" r="5.2" class="d" style="--i:20"/><circle cx="106" cy="20" r="5.2" class="d g" style="--i:21"/><circle cx="148" cy="20" r="5.2" class="d" style="--i:22"/><circle cx="92" cy="34" r="5.2" class="d" style="--i:23"/><circle cx="120" cy="34" r="5.2" class="d g" style="--i:24"/><circle cx="148" cy="34" r="5.2" class="d" style="--i:25"/><circle cx="92" cy="48" r="5.2" class="d" style="--i:26"/><circle cx="134" cy="48" r="5.2" class="d g" style="--i:27"/><circle cx="148" cy="48" r="5.2" class="d" style="--i:28"/><circle cx="92" cy="62" r="5.2" class="d" style="--i:29"/><circle cx="148" cy="62" r="5.2" class="d" style="--i:30"/><circle cx="92" cy="76" r="5.2" class="d" style="--i:31"/><circle cx="148" cy="76" r="5.2" class="d" style="--i:32"/><circle cx="92" cy="90" r="5.2" class="d" style="--i:33"/><circle cx="148" cy="90" r="5.2" class="d" style="--i:34"/><circle cx="192" cy="6" r="5.2" class="d" style="--i:35"/><circle cx="206" cy="6" r="5.2" class="d" style="--i:36"/><circle cx="220" cy="6" r="5.2" class="d" style="--i:37"/><circle cx="178" cy="20" r="5.2" class="d" style="--i:38"/><circle cx="234" cy="20" r="5.2" class="d" style="--i:39"/><circle cx="178" cy="34" r="5.2" class="d" style="--i:40"/><circle cx="234" cy="34" r="5.2" class="d" style="--i:41"/><circle cx="178" cy="48" r="5.2" class="d" style="--i:42"/><circle cx="192" cy="48" r="5.2" class="d" style="--i:43"/><circle cx="206" cy="48" r="5.2" class="d" style="--i:44"/><circle cx="220" cy="48" r="5.2" class="d" style="--i:45"/><circle cx="234" cy="48" r="5.2" class="d" style="--i:46"/><circle cx="178" cy="62" r="5.2" class="d" style="--i:47"/><circle cx="234" cy="62" r="5.2" class="d" style="--i:48"/><circle cx="178" cy="76" r="5.2" class="d" style="--i:49"/><circle cx="234" cy="76" r="5.2" class="d" style="--i:50"/><circle cx="178" cy="90" r="5.2" class="d" style="--i:51"/><circle cx="234" cy="90" r="5.2" class="d" style="--i:52"/><g fill="none" stroke="#F2F4F6" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M290,6V90H330"/><path d="M362,90L394,6L426,90M373,62H415"/><path d="M458,6V90H488A22,22 0 0 0 488,46H458M484,46A20,20 0 0 0 484,6H458"/><path d="M574,24C569,2 531,2 532,27C533,50 575,44 577,68C579,94 535,96 529,72"/></g></svg></header>
-<main>
-<p class="state"><i aria-hidden="true"></i>RENEWAL IN PROGRESS</p>
-<h1>리뉴얼<br>작업 중입니다</h1>
-<p class="lead">더 나은 모습으로 찾아뵙기 위해 홈페이지를 새로 만들고 있습니다. 그동안 문의는 메일이나 전화로 편하게 연락 주세요.</p>
-<div class="links">
-<a href="mailto:hello@dnalabs.kr"><span>MAIL</span>hello@dnalabs.kr</a>
-<a href="tel:010-4642-3477"><span>TEL</span>010-4642-3477</a>
+<a class="skip" href="#main">본문으로 건너뛰기</a>
+<header class="hd" id="hd">
+<div class="wrap hd-in">
+<a class="hd-logo" href="#top" aria-label="디엔에이랩스 처음으로"><video class="logo-v" autoplay muted loop playsinline preload="auto" poster="images/logo-poster.png" width="480" height="96" aria-hidden="true"><source src="images/logo-loop.mp4" type="video/mp4"></video></a>
+<button class="hd-btn" id="menuBtn" type="button" aria-expanded="false" aria-controls="nav" aria-label="메뉴 열기"><span></span><span></span></button>
+<nav class="nav" id="nav" aria-label="주 메뉴">
+<a href="#about"><span class="nv"><span class="nv-ko">소개</span><span class="nv-en" aria-hidden="true">Introduction</span></span></a>
+<a href="#philosophy"><span class="nv"><span class="nv-ko">철학</span><span class="nv-en" aria-hidden="true">Philosophy</span></span></a>
+<a href="#portfolio"><span class="nv"><span class="nv-ko">포트폴리오</span><span class="nv-en" aria-hidden="true">Portfolio</span></span></a>
+<a href="#ai"><span class="nv"><span class="nv-ko">AI 체험</span><span class="nv-en" aria-hidden="true">AI Lab</span></span></a>
+<a class="nav-cta" href="#contact">상담 요청</a>
+</nav>
 </div>
+</header>
+
+<main id="main">
+<section class="hero" id="top">
+<div class="wrap hero-in">
+<h1><span>웹사이트와 앱,</span><span>기업용 웹서비스를</span><span><em>기획하고 만듭니다.</em></span></h1>
+<span class="stk s1" aria-hidden="true"><i></i>웹사이트</span>
+<span class="stk s2" aria-hidden="true"><i></i>앱</span>
+<span class="stk s3" aria-hidden="true"><i></i>기업용 웹서비스</span>
+<span class="stk s4" aria-hidden="true"><i></i>기획부터 출시까지</span>
+<div class="hero-foot">
+<p class="hero-lead">보기 좋은 화면보다 먼저, 사업에 실제로 도움이 되는지를 봅니다.</p>
+<div class="hero-act"><a class="btn" href="#contact">상담 요청하기</a><a class="btn btn-ghost" href="#portfolio">포트폴리오 보기</a></div>
+</div>
+</div>
+<div class="ticker" aria-hidden="true"><div class="ticker-in"><span>WEBSITE</span><span>APP</span><span>B2B WEB SERVICE</span><span>WEBSITE</span><span>APP</span><span>B2B WEB SERVICE</span><span>WEBSITE</span><span>APP</span><span>B2B WEB SERVICE</span><span>WEBSITE</span><span>APP</span><span>B2B WEB SERVICE</span></div></div>
+</section>
+
+<section class="sec is-paper" id="about">
+<div class="wrap">
+<div class="strings" id="strings" role="img" aria-label="DNA LABS">
+<svg viewBox="0 0 1200 300" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+<defs><clipPath id="strClip"><text x="600" y="262" text-anchor="middle" textLength="1180" lengthAdjust="spacingAndGlyphs" font-family="SUIT, Pretendard, sans-serif" font-weight="900" font-size="330">DNA LABS</text></clipPath></defs>
+<g id="strLines" clip-path="url(#strClip)" fill="none" stroke="currentColor" stroke-width="4.4"></g>
+</svg>
+</div>
+<h2 class="about-h">하는 일</h2>
+<ul class="jobs">
+<li class="job"><h3>웹사이트 개발</h3><p>회사·가게·기관의 홈페이지를 만듭니다. 처음 온 사람이 무엇을 하는 곳인지 바로 알 수 있게 구성합니다.</p></li>
+<li class="job"><h3>앱 개발</h3><p>휴대폰에서 쓰는 앱을 만듭니다. 기획부터 화면 설계, 출시까지 함께합니다.</p></li>
+<li class="job"><h3>기업용 웹서비스 개발</h3><p>주문·재고·고객 관리처럼 회사 안에서 매일 쓰는 업무 도구를 업무 흐름에 맞춰 만듭니다.</p></li>
+</ul>
+</div>
+</section>
+
+<section class="sec phil" id="philosophy">
+<div class="wrap phil-in">
+<h2 class="phil-h">최상의 작업 결과물을<br>만듭니다.</h2>
+<div class="phil-body">
+<p>클라이언트를 괴롭혀서라도 더 좋은 작업물을 만들어 드리도록 노력하겠습니다.</p>
+<p>정갈한 디자인과 화려한 기능에 집중하기 전에, 업체의 입장과 업황, 핵심 역량과 표현하고자 하는 요소를 정확히 파악하는 데 몰두합니다.</p>
+<p>전환율을 높이는 결과물은 물론, 추후 ‘덕 봤다’ 싶은 웹/앱을 제공하고, 궁극적으로는 먼 미래에도 고객님의 사업에 실질적인 도움이 되는 서비스를 제공하는 것을 목표로 합니다.</p>
+</div>
+</div>
+</section>
+
+<section class="sec is-paper" id="portfolio">
+<div class="wrap pf-head">
+<div><h2>포트폴리오</h2></div>
+<div class="tabs" role="tablist" aria-label="포트폴리오 종류">
+<button class="tab is-on" role="tab" id="tab-web" aria-selected="true" aria-controls="pane-web" type="button">웹사이트</button>
+<button class="tab" role="tab" id="tab-app" aria-selected="false" aria-controls="pane-app" type="button" tabindex="-1">앱</button>
+</div>
+</div>
+<div class="pane" id="pane-web" role="tabpanel" aria-labelledby="tab-web">
+<ul class="track" tabindex="0" aria-label="웹사이트 작업물 — 좌우로 넘겨 보세요">
+<li class="work work-web"><span class="clay" data-nolink><!-- 교체: 실제 사이트 주소를 넣으면 눌러서 이동합니다 --><span class="clay-face"><img src="images/web-midbar.jpg" alt="교회 웹사이트 메인 화면" width="960" height="600" loading="lazy"><span class="clay-shine" aria-hidden="true"></span></span></span><p class="work-cap">교회</p></li>
+<li class="work work-web"><a class="clay" href="https://motodna.github.io/bkt/" target="_blank" rel="noopener" aria-label="제본소 사이트 새 창으로 열기"><span class="clay-face"><img src="images/web-bkt.jpg" alt="제본소 웹사이트 메인 화면" width="960" height="600" loading="lazy"><span class="clay-shine" aria-hidden="true"></span></span></a><p class="work-cap">제본소</p></li>
+<li class="work work-web"><a class="clay" href="https://linnj.kr" target="_blank" rel="noopener" aria-label="인테리어 업체 사이트 새 창으로 열기"><span class="clay-face"><img src="images/web-linnj.jpg" alt="인테리어 업체 웹사이트 메인 화면" width="960" height="600" loading="lazy"><span class="clay-shine" aria-hidden="true"></span></span></a><p class="work-cap">인테리어 업체</p></li>
+<li class="work work-web"><a class="clay" href="https://activacover.co.kr" target="_blank" rel="noopener" aria-label="표지 소재 사이트 새 창으로 열기"><span class="clay-face"><img src="images/web-activa.jpg" alt="표지 소재 웹사이트 메인 화면" width="960" height="600" loading="lazy"><span class="clay-shine" aria-hidden="true"></span></span></a><p class="work-cap">표지 소재</p></li>
+<li class="work work-web"><span class="clay" data-nolink><!-- 링크 없음(요청) --><span class="clay-face"><img src="images/web-paperdamda.jpg" alt="문구 · 다이어리 웹사이트 휴대폰 화면" width="960" height="600" loading="lazy"><span class="clay-shine" aria-hidden="true"></span></span></span><p class="work-cap">문구 · 다이어리</p></li>
+<li class="work work-web"><span class="clay" data-nolink><!-- 교체: 실제 사이트 주소를 넣으면 눌러서 이동합니다 --><span class="clay-face"><img src="images/web-kidslab.jpg" alt="초등 교육 웹사이트 메인 화면" width="960" height="600" loading="lazy"><span class="clay-shine" aria-hidden="true"></span></span></span><p class="work-cap">초등 교육</p></li>
+<li class="work work-web"><a class="clay" href="https://activacover.co.kr/sample3d.html" target="_blank" rel="noopener" aria-label="표지 3D 샘플 도구 새 창으로 열기"><span class="clay-face"><img src="images/web-sample3d.jpg" alt="표지 3D 샘플 도구 웹사이트 화면" width="960" height="600" loading="lazy"><span class="clay-shine" aria-hidden="true"></span></span></a><p class="work-cap">표지 3D 샘플 도구</p></li>
+<li class="work work-web"><a class="clay" href="https://activacover.co.kr/package3d.html" target="_blank" rel="noopener" aria-label="패키지 전개도 도구 새 창으로 열기"><span class="clay-face"><img src="images/web-package3d.jpg" alt="패키지 전개도 도구 웹사이트 화면" width="960" height="600" loading="lazy"><span class="clay-shine" aria-hidden="true"></span></span></a><p class="work-cap">패키지 전개도 도구</p></li>
+<li class="work work-web"><a class="clay" href="https://kfestival.site" target="_blank" rel="noopener" aria-label="지역 축제 정보 새 창으로 열기"><span class="clay-face"><img src="images/web-festival.jpg" alt="지역 축제 정보 웹사이트 화면" width="960" height="600" loading="lazy"><span class="clay-shine" aria-hidden="true"></span></span></a><p class="work-cap">지역 축제 정보</p></li>
+</ul>
+</div>
+<div class="pane" id="pane-app" role="tabpanel" aria-labelledby="tab-app" hidden>
+<ul class="track" tabindex="0" aria-label="앱 작업물 — 좌우로 넘겨 보세요">
+<li class="work work-app"><a class="clay" href="https://apps.apple.com/kr/app/motodna/id6791039800" target="_blank" rel="noopener" aria-label="바이크 라이프 앱 스토어 새 창으로 열기"><span class="clay-face"><img src="images/app-motodna.jpg" alt="바이크 라이프 앱 메인 화면" width="480" height="1040" loading="lazy"><span class="clay-shine" aria-hidden="true"></span></span></a><p class="work-cap">바이크 라이프</p></li>
+<li class="work work-app"><a class="clay" href="https://apps.apple.com/kr/app/growi/id6797151528" target="_blank" rel="noopener" aria-label="습관 관리 앱 스토어 새 창으로 열기"><span class="clay-face"><img src="images/app-growi.jpg" alt="습관 관리 앱 메인 화면" width="480" height="1040" loading="lazy"><span class="clay-shine" aria-hidden="true"></span></span></a><p class="work-cap">습관 관리</p></li>
+<li class="work work-app"><span class="clay" data-nolink><!-- 교체: 실제 사이트 주소를 넣으면 눌러서 이동합니다 --><span class="clay-face"><img src="images/app-hanpanman.jpg" alt="미니 게임 앱 메인 화면" width="480" height="1040" loading="lazy"><span class="clay-shine" aria-hidden="true"></span></span></span><p class="work-cap">미니 게임</p></li>
+<li class="work work-app"><span class="clay" data-nolink><!-- 교체: 실제 사이트 주소를 넣으면 눌러서 이동합니다 --><span class="clay-face"><img src="images/app-petid.jpg" alt="반려동물 사진 앱 메인 화면" width="480" height="1040" loading="lazy"><span class="clay-shine" aria-hidden="true"></span></span></span><p class="work-cap">반려동물 사진</p></li>
+<li class="work work-app"><span class="clay" data-nolink><!-- 교체: 실제 사이트 주소를 넣으면 눌러서 이동합니다 --><span class="clay-face"><img src="images/app-donghaeng.jpg" alt="동행 앱 메인 화면" width="480" height="1040" loading="lazy"><span class="clay-shine" aria-hidden="true"></span></span></span><p class="work-cap">동행</p></li>
+<li class="work work-app"><span class="clay" data-nolink><span class="clay-face"><img src="images/app-studyquest.jpg" alt="학습 관리 앱 화면" width="480" height="1040" loading="lazy"><span class="clay-shine" aria-hidden="true"></span></span></span><p class="work-cap">학습 관리</p></li>
+<li class="work work-app"><span class="clay" data-nolink><span class="clay-face"><img src="images/app-solokorea.jpg" alt="여행 앱 화면" width="480" height="1040" loading="lazy"><span class="clay-shine" aria-hidden="true"></span></span></span><p class="work-cap">여행</p></li>
+</ul>
+</div>
+<div class="wrap pf-foot"><div class="pf-bar" aria-hidden="true"><i id="pfBar"></i></div><div class="pf-arrows"><button type="button" id="pfPrev" aria-label="이전 작업물">←</button><button type="button" id="pfNext" aria-label="다음 작업물">→</button></div></div>
+</section>
+
+<section class="sec ai" id="ai">
+<div class="wrap">
+<h2>직접 써 보세요</h2>
+<p class="ai-lead">홈페이지에 이런 기능도 넣을 수 있습니다. 아래 두 가지는 지금 바로 써 보실 수 있습니다.</p>
+<div class="tabs ai-tabs" role="tablist" aria-label="AI 기능 고르기">
+<button class="tab is-on" role="tab" id="aitab-rec" aria-selected="true" aria-controls="aipane-rec" type="button">구성 추천</button>
+<button class="tab" role="tab" id="aitab-diag" aria-selected="false" aria-controls="aipane-diag" type="button" tabindex="-1">홈페이지 진단</button>
+</div>
+
+<div class="ai-pane" id="aipane-rec" role="tabpanel" aria-labelledby="aitab-rec">
+<form class="ai-form" id="recForm" novalidate>
+<h3>내 사업에 맞는 홈페이지 구성</h3>
+<p class="ai-desc">업종과 목적을 알려 주시면 메뉴와 첫 화면 문구 초안을 그 자리에서 제안합니다.</p>
+<label class="f"><span>업종 <b>*</b></span><input name="industry" type="text" maxlength="60" required placeholder="예: 동네 필라테스 스튜디오"></label>
+<label class="f"><span>홈페이지로 얻고 싶은 것 <b>*</b></span>
+<select name="goal" required><option value="">선택해 주세요</option><option>전화·상담 문의 늘리기</option><option>예약 받기</option><option>견적 요청 받기</option><option>매장 방문 늘리기</option><option>상품 판매</option><option>회사 신뢰도 높이기</option></select></label>
+<label class="f"><span>덧붙일 말</span><textarea name="note" rows="3" maxlength="400" placeholder="예: 40~50대 손님이 많고, 지금은 인스타그램만 있습니다."></textarea></label>
+<button class="btn" type="submit">구성 추천 받기</button>
+<p class="ai-note">입력한 내용은 추천을 만들기 위해 AI(Claude)로 전달됩니다. 이름·전화번호 같은 개인정보는 적지 마세요.</p>
+<p class="form-msg" id="recMsg" role="status" aria-live="polite"></p>
+</form>
+<div class="ai-out" id="recOut" aria-live="polite" hidden></div>
+</div>
+
+<div class="ai-pane" id="aipane-diag" role="tabpanel" aria-labelledby="aitab-diag" hidden>
+<form class="ai-form" id="diagForm" novalidate>
+<h3>지금 쓰는 홈페이지 진단</h3>
+<p class="ai-desc">주소를 넣으면 첫 화면의 글을 읽고, 처음 온 손님 입장에서 고칠 점 3가지를 알려 드립니다.</p>
+<label class="f"><span>홈페이지 주소 <b>*</b></span><input name="url" type="text" inputmode="url" autocapitalize="none" maxlength="300" required placeholder="예: example.co.kr"></label>
+<button class="btn" type="submit">진단 받기</button>
+<p class="ai-note">공개된 첫 화면의 글만 읽습니다. 디자인·속도처럼 글로 확인할 수 없는 부분은 판단하지 않습니다.</p>
+<p class="form-msg" id="diagMsg" role="status" aria-live="polite"></p>
+</form>
+<div class="ai-out" id="diagOut" aria-live="polite" hidden></div>
+</div>
+</div>
+</section>
+
+<section class="sec contact is-paper" id="contact">
+<div class="wrap contact-in">
+<div class="contact-card">
+<h2>상담 요청</h2>
+<p class="contact-lead">아직 정리되지 않은 생각이어도 괜찮습니다. 지금 어떻게 일하고 계신지부터 듣겠습니다.</p>
+<div class="bc-stage">
+<div class="bc-shadow" aria-hidden="true"></div>
+<button class="bc-btn" id="bcBtn" type="button" aria-label="최환준 명함 — 누르면 명함이 한 바퀴 날아갑니다">
+<span class="bc" id="bc">
+<span class="bc-top"><svg class="bc-logo" role="img" aria-label="DNA LABS" viewBox="-2 -2 586 100"><circle cx="6" cy="6" r="5.2" class="lm"/><circle cx="20" cy="6" r="5.2" class="lm"/><circle cx="34" cy="6" r="5.2" class="lm"/><circle cx="48" cy="6" r="5.2" class="lm"/><circle cx="6" cy="20" r="5.2" class="lm"/><circle cx="62" cy="20" r="5.2" class="lm"/><circle cx="6" cy="34" r="5.2" class="lm"/><circle cx="62" cy="34" r="5.2" class="lm"/><circle cx="6" cy="48" r="5.2" class="lm"/><circle cx="62" cy="48" r="5.2" class="lm"/><circle cx="6" cy="62" r="5.2" class="lm"/><circle cx="62" cy="62" r="5.2" class="lm"/><circle cx="6" cy="76" r="5.2" class="lm"/><circle cx="62" cy="76" r="5.2" class="lm"/><circle cx="6" cy="90" r="5.2" class="lm"/><circle cx="20" cy="90" r="5.2" class="lm"/><circle cx="34" cy="90" r="5.2" class="lm"/><circle cx="48" cy="90" r="5.2" class="lm"/><circle cx="92" cy="6" r="5.2" class="lm"/><circle cx="148" cy="6" r="5.2" class="lm"/><circle cx="92" cy="20" r="5.2" class="lm"/><circle cx="106" cy="20" r="5.2" class="ls"/><circle cx="148" cy="20" r="5.2" class="lm"/><circle cx="92" cy="34" r="5.2" class="lm"/><circle cx="120" cy="34" r="5.2" class="ls"/><circle cx="148" cy="34" r="5.2" class="lm"/><circle cx="92" cy="48" r="5.2" class="lm"/><circle cx="134" cy="48" r="5.2" class="ls"/><circle cx="148" cy="48" r="5.2" class="lm"/><circle cx="92" cy="62" r="5.2" class="lm"/><circle cx="148" cy="62" r="5.2" class="lm"/><circle cx="92" cy="76" r="5.2" class="lm"/><circle cx="148" cy="76" r="5.2" class="lm"/><circle cx="92" cy="90" r="5.2" class="lm"/><circle cx="148" cy="90" r="5.2" class="lm"/><circle cx="192" cy="6" r="5.2" class="lm"/><circle cx="206" cy="6" r="5.2" class="lm"/><circle cx="220" cy="6" r="5.2" class="lm"/><circle cx="178" cy="20" r="5.2" class="lm"/><circle cx="234" cy="20" r="5.2" class="lm"/><circle cx="178" cy="34" r="5.2" class="lm"/><circle cx="234" cy="34" r="5.2" class="lm"/><circle cx="178" cy="48" r="5.2" class="lm"/><circle cx="192" cy="48" r="5.2" class="lm"/><circle cx="206" cy="48" r="5.2" class="lm"/><circle cx="220" cy="48" r="5.2" class="lm"/><circle cx="234" cy="48" r="5.2" class="lm"/><circle cx="178" cy="62" r="5.2" class="lm"/><circle cx="234" cy="62" r="5.2" class="lm"/><circle cx="178" cy="76" r="5.2" class="lm"/><circle cx="234" cy="76" r="5.2" class="lm"/><circle cx="178" cy="90" r="5.2" class="lm"/><circle cx="234" cy="90" r="5.2" class="lm"/><g class="ll" fill="none" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M290,6V90H330"/><path d="M362,90L394,6L426,90M373,62H415"/><path d="M458,6V90H488A22,22 0 0 0 488,46H458M484,46A20,20 0 0 0 484,6H458"/><path d="M574,24C569,2 531,2 532,27C533,50 575,44 577,68C579,94 535,96 529,72"/></g></svg><span class="bc-tag">APP · WEB · SOFTWARE</span></span>
+<span class="bc-bot">
+<span class="bc-name"><b>최환준</b><i>대표</i><u>디엔에이랩스</u></span>
+<span class="bc-rule"></span>
+<span class="bc-grid"><span><i>T</i>010·4642·3477</span><span><i>E</i>hello@dnalabs.kr</span><span><i>W</i>dnalabs.kr</span><span><i>A</i>경기도 파주시 문발로 140</span></span>
+</span>
+</span>
+</button>
+</div>
+<p class="bc-hint">명함을 눌러 보세요</p>
+</div>
+
+<form class="form" id="form" novalidate data-client="dnalabs" data-endpoint="https://script.google.com/macros/s/AKfycbzqxtP6tYTGIsjLdH_TWFhisn2u77UIPDrqCHa7RwJcGDU7AWaCWap_P9B0H7u07sNa/exec">
+<h3 class="form-h">상담 신청</h3>
+<div class="f-row">
+<label class="f"><span>이름 <b>*</b></span><input name="name" type="text" autocomplete="name" required maxlength="40"></label>
+<label class="f"><span>연락처 <b>*</b></span><input name="phone" type="tel" inputmode="tel" autocomplete="tel" required maxlength="40" placeholder="전화번호"></label>
+</div>
+<label class="f"><span>상호명</span><input name="company" type="text" autocomplete="organization" maxlength="60"></label>
+<label class="f"><span>희망 상담 내용 <b>*</b></span>
+<select name="want" required>
+<option value="">선택해 주세요</option>
+<option>웹사이트 제작</option>
+<option>앱 제작</option>
+<option>기업용 웹서비스 제작</option>
+<option>아직 잘 모르겠어요</option>
+</select></label>
+<label class="f"><span>메시지</span><textarea name="message" rows="5" maxlength="2000" placeholder="만들고 싶은 것, 지금 불편한 점을 편하게 적어 주세요."></textarea></label>
+<label class="f-hp" aria-hidden="true">홈페이지<input name="website" type="text" tabindex="-1" autocomplete="off"></label>
+<label class="f-agree"><input name="agree" type="checkbox" required><span>상담을 위한 개인정보(이름·연락처·상호명) 수집·이용에 동의합니다. 내용 정리를 위해 AI(Claude)로 전달될 수 있습니다. <a href="privacy.html">개인정보 처리방침</a></span></label>
+<button class="btn btn-send" type="submit">상담 신청 보내기</button>
+<p class="form-msg" id="formMsg" role="status" aria-live="polite"></p>
+</form>
+</div>
+</section>
 </main>
-<footer>
-<div>디엔에이랩스 (DNA Labs) · 대표 최환준 · 사업자등록번호 119-37-01707<br>경기도 파주시 문발로 140, 301-D57호</div>
-<div><a href="/reservice">고객 로그인</a> · <a href="terms.html">이용약관</a> · <a href="privacy.html">개인정보 처리방침</a></div>
-</footer>
+
+<footer class="ft">
+<div class="wrap ft-in">
+<div><svg class="logo" role="img" aria-label="DNA LABS" viewBox="-2 -2 586 100"><circle cx="6" cy="6" r="5.2" class="lm"/><circle cx="20" cy="6" r="5.2" class="lm"/><circle cx="34" cy="6" r="5.2" class="lm"/><circle cx="48" cy="6" r="5.2" class="lm"/><circle cx="6" cy="20" r="5.2" class="lm"/><circle cx="62" cy="20" r="5.2" class="lm"/><circle cx="6" cy="34" r="5.2" class="lm"/><circle cx="62" cy="34" r="5.2" class="lm"/><circle cx="6" cy="48" r="5.2" class="lm"/><circle cx="62" cy="48" r="5.2" class="lm"/><circle cx="6" cy="62" r="5.2" class="lm"/><circle cx="62" cy="62" r="5.2" class="lm"/><circle cx="6" cy="76" r="5.2" class="lm"/><circle cx="62" cy="76" r="5.2" class="lm"/><circle cx="6" cy="90" r="5.2" class="lm"/><circle cx="20" cy="90" r="5.2" class="lm"/><circle cx="34" cy="90" r="5.2" class="lm"/><circle cx="48" cy="90" r="5.2" class="lm"/><circle cx="92" cy="6" r="5.2" class="lm"/><circle cx="148" cy="6" r="5.2" class="lm"/><circle cx="92" cy="20" r="5.2" class="lm"/><circle cx="106" cy="20" r="5.2" class="ls"/><circle cx="148" cy="20" r="5.2" class="lm"/><circle cx="92" cy="34" r="5.2" class="lm"/><circle cx="120" cy="34" r="5.2" class="ls"/><circle cx="148" cy="34" r="5.2" class="lm"/><circle cx="92" cy="48" r="5.2" class="lm"/><circle cx="134" cy="48" r="5.2" class="ls"/><circle cx="148" cy="48" r="5.2" class="lm"/><circle cx="92" cy="62" r="5.2" class="lm"/><circle cx="148" cy="62" r="5.2" class="lm"/><circle cx="92" cy="76" r="5.2" class="lm"/><circle cx="148" cy="76" r="5.2" class="lm"/><circle cx="92" cy="90" r="5.2" class="lm"/><circle cx="148" cy="90" r="5.2" class="lm"/><circle cx="192" cy="6" r="5.2" class="lm"/><circle cx="206" cy="6" r="5.2" class="lm"/><circle cx="220" cy="6" r="5.2" class="lm"/><circle cx="178" cy="20" r="5.2" class="lm"/><circle cx="234" cy="20" r="5.2" class="lm"/><circle cx="178" cy="34" r="5.2" class="lm"/><circle cx="234" cy="34" r="5.2" class="lm"/><circle cx="178" cy="48" r="5.2" class="lm"/><circle cx="192" cy="48" r="5.2" class="lm"/><circle cx="206" cy="48" r="5.2" class="lm"/><circle cx="220" cy="48" r="5.2" class="lm"/><circle cx="234" cy="48" r="5.2" class="lm"/><circle cx="178" cy="62" r="5.2" class="lm"/><circle cx="234" cy="62" r="5.2" class="lm"/><circle cx="178" cy="76" r="5.2" class="lm"/><circle cx="234" cy="76" r="5.2" class="lm"/><circle cx="178" cy="90" r="5.2" class="lm"/><circle cx="234" cy="90" r="5.2" class="lm"/><g class="ll" fill="none" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M290,6V90H330"/><path d="M362,90L394,6L426,90M373,62H415"/><path d="M458,6V90H488A22,22 0 0 0 488,46H458M484,46A20,20 0 0 0 484,6H458"/><path d="M574,24C569,2 531,2 532,27C533,50 575,44 577,68C579,94 535,96 529,72"/></g></svg><p>디엔에이랩스 (DNA Labs) · 대표 최환준 · 사업자등록번호 119-37-01707<br>경기도 파주시 문발로 140, 301-D57호 · <a href="mailto:hello@dnalabs.kr">hello@dnalabs.kr</a> · <a href="tel:010-4642-3477">010-4642-3477</a></p></div>
+<nav aria-label="바닥 메뉴"><a href="#about">소개</a><a href="#philosophy">철학</a><a href="#portfolio">포트폴리오</a><a href="#ai">AI 체험</a><a href="#contact">상담 요청</a><a href="/reservice">고객 로그인</a><a href="terms.html">이용약관</a><a href="privacy.html">개인정보 처리방침</a></nav>
 </div>
+<div class="ft-wordwrap"><svg class="ft-word" aria-hidden="true" viewBox="-2 -2 586 100"><circle cx="6" cy="6" r="5.2" class="lm"/><circle cx="20" cy="6" r="5.2" class="lm"/><circle cx="34" cy="6" r="5.2" class="lm"/><circle cx="48" cy="6" r="5.2" class="lm"/><circle cx="6" cy="20" r="5.2" class="lm"/><circle cx="62" cy="20" r="5.2" class="lm"/><circle cx="6" cy="34" r="5.2" class="lm"/><circle cx="62" cy="34" r="5.2" class="lm"/><circle cx="6" cy="48" r="5.2" class="lm"/><circle cx="62" cy="48" r="5.2" class="lm"/><circle cx="6" cy="62" r="5.2" class="lm"/><circle cx="62" cy="62" r="5.2" class="lm"/><circle cx="6" cy="76" r="5.2" class="lm"/><circle cx="62" cy="76" r="5.2" class="lm"/><circle cx="6" cy="90" r="5.2" class="lm"/><circle cx="20" cy="90" r="5.2" class="lm"/><circle cx="34" cy="90" r="5.2" class="lm"/><circle cx="48" cy="90" r="5.2" class="lm"/><circle cx="92" cy="6" r="5.2" class="lm"/><circle cx="148" cy="6" r="5.2" class="lm"/><circle cx="92" cy="20" r="5.2" class="lm"/><circle cx="106" cy="20" r="5.2" class="ls"/><circle cx="148" cy="20" r="5.2" class="lm"/><circle cx="92" cy="34" r="5.2" class="lm"/><circle cx="120" cy="34" r="5.2" class="ls"/><circle cx="148" cy="34" r="5.2" class="lm"/><circle cx="92" cy="48" r="5.2" class="lm"/><circle cx="134" cy="48" r="5.2" class="ls"/><circle cx="148" cy="48" r="5.2" class="lm"/><circle cx="92" cy="62" r="5.2" class="lm"/><circle cx="148" cy="62" r="5.2" class="lm"/><circle cx="92" cy="76" r="5.2" class="lm"/><circle cx="148" cy="76" r="5.2" class="lm"/><circle cx="92" cy="90" r="5.2" class="lm"/><circle cx="148" cy="90" r="5.2" class="lm"/><circle cx="192" cy="6" r="5.2" class="lm"/><circle cx="206" cy="6" r="5.2" class="lm"/><circle cx="220" cy="6" r="5.2" class="lm"/><circle cx="178" cy="20" r="5.2" class="lm"/><circle cx="234" cy="20" r="5.2" class="lm"/><circle cx="178" cy="34" r="5.2" class="lm"/><circle cx="234" cy="34" r="5.2" class="lm"/><circle cx="178" cy="48" r="5.2" class="lm"/><circle cx="192" cy="48" r="5.2" class="lm"/><circle cx="206" cy="48" r="5.2" class="lm"/><circle cx="220" cy="48" r="5.2" class="lm"/><circle cx="234" cy="48" r="5.2" class="lm"/><circle cx="178" cy="62" r="5.2" class="lm"/><circle cx="234" cy="62" r="5.2" class="lm"/><circle cx="178" cy="76" r="5.2" class="lm"/><circle cx="234" cy="76" r="5.2" class="lm"/><circle cx="178" cy="90" r="5.2" class="lm"/><circle cx="234" cy="90" r="5.2" class="lm"/><g class="ll" fill="none" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M290,6V90H330"/><path d="M362,90L394,6L426,90M373,62H415"/><path d="M458,6V90H488A22,22 0 0 0 488,46H458M484,46A20,20 0 0 0 484,6H458"/><path d="M574,24C569,2 531,2 532,27C533,50 575,44 577,68C579,94 535,96 529,72"/></g></svg></div>
+</footer>
+<div class="cur" id="cur" aria-hidden="true"><b></b></div>
+<script src="home.js"></script>
 <script>
+/* 방문 세기 — 기존과 같은 곳으로 날짜×경로 횟수만 보냅니다(개인정보 없음) */
 try{var K="sb_publishable_G5wx-YdgwUU630x1vKmZmQ_15BgxvEX";fetch("https://izrtclsqhsgkuwsffifn.supabase.co/functions/v1/site",{method:"POST",headers:{"Content-Type":"application/json",apikey:K,Authorization:"Bearer "+K},body:JSON.stringify({action:"hit",path:"/"})}).catch(function(){})}catch(e){}
 </script>
 </body>
