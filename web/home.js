@@ -209,7 +209,7 @@
   });
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
   function block(label, node) { var d = el("div"); d.appendChild(el("p", "ai-k", label)); d.appendChild(node); return d; }
-  function badge(out, demo) { out.appendChild(el("span", "ai-badge" + (demo ? " demo" : ""), demo ? "예시 결과 · 시안에서는 AI가 연결되어 있지 않습니다" : "AI가 만든 초안 · 참고용")); }
+  function badge(out, demo) { out.appendChild(el("span", "ai-badge" + (demo ? " demo" : ""), demo ? "예시 결과 · 시안에서는 AI가 연결되어 있지 않습니다" : "AI가 만든 초안입니다")); }
   function loading(out, text) { out.hidden = false; out.textContent = ""; var l = el("p", "ai-load"); l.appendChild(el("i")); l.appendChild(document.createTextNode(text)); out.appendChild(l); }
   var ERR = { limit: "잠시 사용이 많습니다. 조금 뒤에 다시 시도해 주세요.", bad_url: "주소를 다시 확인해 주세요. (예: example.co.kr)", unreachable: "그 주소의 첫 화면을 읽지 못했습니다. 주소를 확인하거나 다른 주소로 시도해 주세요.", required: "필요한 칸을 채워 주세요." };
   function call(path, payload) {
